@@ -18,7 +18,7 @@ class AutoComplete {
         else {
             this.clear();
             for (let l of this.list)
-                if (l.startsWith(start))
+                if (l.toLowerCase().startsWith(start.toLowerCase()))
                     this.found.push(l);
         }
         return this.found[this.chosenFoundIndex];
@@ -57,6 +57,20 @@ class TextAreaManager {
     jumpTo(line) {
         let endOfLine = this.lines.slice(0, line + 1).join('\n').length;
         textarea.selectionStart = textarea.selectionEnd = endOfLine;
+        let tempElement = document.createElement('div');
+
+        tempElement.style.position = 'absolute';
+        tempElement.style.visibility = 'hidden';
+        tempElement.style.whiteSpace = 'pre-wrap';
+        tempElement.style.fontFamily = textarea.style.fontFamily;
+        tempElement.style.fontSize = textarea.style.fontSize;
+        tempElement.innerHTML = textarea.value.substring(0, endOfLine);
+        document.body.appendChild(tempElement);
+        let lineHeight = tempElement.offsetHeight / (line + 1);
+        let scrollTop = line * lineHeight;
+        textarea.scrollTop = scrollTop;
+        document.body.removeChild(tempElement);
+        textarea.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
     }
 }
 class TagScanner {
@@ -84,6 +98,7 @@ class TagScanner {
 }
 let characters = new AutoComplete();
 let tags = new AutoComplete(['[Character]', '[Jump]', '[Anchor]']);
+let anchorCompleter = new AutoComplete();
 let characterScanner = new TagScanner('[Character]');
 let anchorScanner = new TagScanner('[Anchor]');
 textarea.addEventListener('keydown', processKeyDown);
@@ -96,12 +111,14 @@ function processKeyDown(event) {
 }
 function autoComplete(event) {
     let manager = new TextAreaManager();
+    event.preventDefault();
     if (manager.currentLine().startsWith('[') && (manager.currentLine().search(']') == -1
         || manager.currentLineFrontContent().trim().endsWith(']')))
         completeTag(event);
-        else {
-            completeCharaterName(event);
-        }
+    else {
+        completeCharaterName(event);
+        completeJump(event);
+    }
 }
 function completeCharaterName(_) {
     let manager = new TextAreaManager();
@@ -118,8 +135,15 @@ function completeTag(_) {
     let tag = tags.complete('[' + line.replaceAll('[', '').replaceAll(']', ''), line.search(']') === -1);
     if (tag != undefined) manager.edit(manager.currentLineCount(), tag)
 }
-function completeAnchor(_) {
-    //TODO
+function completeJump(_) {
+    let manager = new TextAreaManager();
+    let line = manager.currentLine();
+    if (!line.startsWith('[Jump]')) return;
+    let anchors = anchorScanner.scanList();
+    anchorCompleter.list = anchors;
+    let anchorPart = line.replace('[Jump]', '').trim();
+    let anchor = anchorCompleter.complete(anchorPart, !anchors.includes(anchorPart));
+    if (anchor != undefined) manager.edit(manager.currentLineCount(), '[Jump] ' + anchor);
 }
 function jumpTo(event) {
     if (!event.ctrlKey) return;
