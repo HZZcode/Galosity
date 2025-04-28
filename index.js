@@ -44,6 +44,9 @@ class TextAreaManager {
     currentLineCount() {
         return this.content.substring(0, this.start).split(/\r?\n/).length - 1;
     }
+    currentEndLineCount() {
+        return this.content.substring(0, this.end).split(/\r?\n/).length - 1;
+    }
     currentColumn() {
         return this.currentLineFrontContent().length;
     }
@@ -219,11 +222,16 @@ function jumpTo(event) {
 }
 function comment(_) {
     let manager = new TextAreaManager();
-    let line = manager.currentLine();
-    if (line.trim().startsWith('//'))
-        line = line.replace('//', '').trim();
-    else line = '// ' + line;
-    manager.edit(manager.currentLineCount(), line);
+    let start = manager.currentLineCount();
+    let end = manager.currentEndLineCount();
+    let lines = manager.lines.slice(start, end + 1);
+    if (lines.every(line => line.trim().startsWith('//')))
+        for (let [index, line] of lines.entries())
+            lines[index] = line.replace('//', '').trim();
+    else for (let [index, line] of lines.entries())
+        lines[index] = '// ' + line;
+    for (let [index, line] of lines.entries())
+        manager.edit(start + index, line);
 }
 class ControlBlock {
     startPos;
