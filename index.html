@@ -30,7 +30,7 @@
         textarea {
             margin-left: 10%;
             width: 80%;
-            height: 80%;
+            height: 75%;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -40,11 +40,15 @@
             font-size: large;
         }
 
-        #info {
+        #info, #error {
             margin-left: 10%;
             width: 80%;
             font-family: Consolas, sans-serif;
             font-size: medium;
+        }
+
+        #error {
+            color: red;
         }
     </style>
     <title>Galosity</title>
@@ -54,6 +58,7 @@
     <h1>Galosity</h1>
     <textarea id="input" spellcheck="false"></textarea>
     <div id="info">Line 0, Column 0</div>
+    <div id="error"></div>
     <script src="index.js"></script>
 </body>
 

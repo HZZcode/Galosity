@@ -99,7 +99,23 @@ class TagScanner {
         return -1;
     }
 }
+class ErrorManager {
+    element;
+    constructor() {
+        this.element = document.getElementById('error');
+    }
+    error(msg) {
+        this.element.innerText = msg;
+    }
+    assert(condition, msg) {
+        if (!condition) this.error(msg);
+    }
+    clear() {
+        this.element.innerText = '';
+    }
+}
 const info = document.getElementById('info');
+const error = new ErrorManager();
 let characters = new AutoComplete();
 let tags = new AutoComplete(['[Character]', '[Jump]', '[Anchor]', '[Select]', '[Switch]', '[Case]', '[End]']);
 let anchorCompleter = new AutoComplete();
@@ -110,8 +126,10 @@ textarea.addEventListener('mouseup', jumpTo);
 textarea.addEventListener('input', updateInfo);
 textarea.addEventListener('selectionchange', updateInfo);
 function updateInfo(_) {
+    error.clear();
     let manager = new TextAreaManager();
     info.innerText = `Line ${manager.currentLineCount()}, Column ${manager.currentColumn()}`;
+    scanControlBlocks();
 }
 function processKeyDown(event) {
     let key = event.key;
@@ -229,14 +247,14 @@ function scanControlBlocks() {
         }
         if (line.startsWith('[Case]')) {
             if (stack.length === 0)
-                console.error(`Error: [Case] tag out of control block at line ${index}`);
+                error.error(`Error: [Case] tag out of control block at line ${index}`);
             else {
                 stack[stack.length - 1].casesPosList.push(index);
             }
         }
         if (line.startsWith('[End]')) {
             if (stack.length === 0)
-                console.error(`Error: Extra [End] found at line ${index}`);
+                error.error(`Error: Extra [End] found at line ${index}`);
             else {
                 let block = stack.pop();
                 block.endPos = index;
@@ -244,6 +262,6 @@ function scanControlBlocks() {
             }
         }
     }
-    console.assert(stack.length === 0, `Error: Control Block ([Select]-[End] or [Switch]-[End]) not closed`);
+    error.assert(stack.length === 0, `Error: Control Block ([Select]-[End] or [Switch]-[End]) not closed`);
     return ans;
 }
