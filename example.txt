@@ -1,5 +1,38 @@
+[Part] Galosity Example Tutorial
 [Character] ZZ
 ZZ: Hi! I'm ZZ.
 [Character] Ichiku
 Ichiku: Hi, I'm Ichiku nya~
 ZZ: Welcome to Galosity, a lite pure-text galgame editor. Hope you enjoy this journey.
+
+--Basic Editing Functions--
+ZZ: There are several shortcuts that you'll need to know.
+ZZ: Ctrl+S to save, and Ctrl+Shift+S to save as file.
+Ichiku: By default, your file will be automatically saved every 5 minutes.
+ZZ: Ctrl+O to open file, and Ctrl+N to create new file.
+Ichiku: Press F5 to see how your script look like.
+
+--Character & Speeches--
+ZZ: Define a character with tag `[Character]`.
+Ichiku: Try: input `[ch` on a new line and press Tab. Galosity contains many Tab completions to improve productivity.
+ZZ: Now input `[Character] ZZ`. This tells the system that there will be a character named ZZ.
+Ichiku: Try: input `z` on a new line and press Tab.
+
+--Parts & Notes--
+[Part] Notice this!
+ZZ: It is recommended to organize long document with parts.
+Ichiku: Have you noticed that the part has changed? Look at the top-left text.
+[Part] You can also enter something like chapter name here...
+Ichiku: Try: input `[Part] Chapter 0721`.
+
+[Part] Notes
+ZZ: Let's move on to notes.
+ZZ: Notes are designed to show info which cannot be easily shown with pure text...
+ZZ: This is to keep script-writers concentrated on scripts, instead of being disturbed by scenes, music, etc.
+[Note] Yes pretend this is a beautiful photo of Ichiku
+Ichiku: Try: input `[Note] sample note`.
+
+[Part] Note? Comment?
+ZZ: There is another similar function: input `//` at the start of a new line to create comments. The difference is that comments will be completely ignored by the system.
+// Therefore you cannot see this comment nya~
+Ichiku: Try: input some text on a new line and press Ctrl+/.

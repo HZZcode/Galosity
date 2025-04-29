@@ -1,7 +1,9 @@
 const { ipcRenderer } = require('electron');
+const parser = require('./parser')
 
 const character = document.getElementById('character');
 const speech = document.getElementById('speech');
+const part = document.getElementById('part');
 
 class Manager {
     lines = [];
@@ -11,16 +13,28 @@ class Manager {
         this.lines = lines;
         this.update();
     }
-    update () {
+    update() {
         let line = this.lines[this.currentLine];
         if (line === undefined) return;
-        let index = line.search(':');
-        character.innerText = line.substring(0, index);
-        speech.innerText = line.substring(index + 1);
+        if (line.trim().startsWith('[Note]')) {
+            character.innerText = '[Note]';
+            character.style.color = 'gray';
+            speech.innerText = line.replace('[Note]', '').trim();
+            speech.style.color = 'gray';
+        }
+        else {
+            let index = line.search(':');
+            character.innerText = line.substring(0, index).trim();
+            character.style.color = 'black';
+            speech.innerText = line.substring(index + 1).trim();
+            speech.style.color = 'black';
+        }
+        part.innerText = parser.getPartAt(this.lines, this.currentLine);
     }
     process() {
         let line = this.lines[this.currentLine];
-        if (line.trim().startsWith('[') || line === undefined)
+        if ((line.trim().startsWith('[') && !line.trim().startsWith('[Note]'))
+            || line === undefined || line.trim() === '' || line.trim().startsWith('//'))
             return true;
         this.update();
         return false;

@@ -136,6 +136,8 @@ class SaveLoadManager {
         if (success) {
             this.currentFile = path;
             updateInfo();
+            info.innerText += ' Saved!';
+            setTimeout(updateInfo, 1000);
         }
     }
     async read(path) {
@@ -180,10 +182,6 @@ class SaveLoadManager {
     }
     async autoSave() {
         await this.write(this.currentFile);
-        if (this.currentFile !== null) {
-            info.innerText += ' Auto Saved!';
-            setTimeout(updateInfo, 1000);
-        }
     }
     async save(event) {
         if (event !== undefined) event.preventDefault();

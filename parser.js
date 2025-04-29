@@ -37,3 +37,11 @@ export function scanControlBlocks(lines) {
     if(stack.length !== 0) throw `Error: Control Block ([Select]-[End] or [Switch]-[End]) not closed`;
     return ans;
 }
+export function getPartAt(lines, index) {
+    for (let i = index; i >= 0; i--) {
+        let line = lines[i];
+        if (line.trim().startsWith('[Part]'))
+            return line.replace('[Part]', '').trim();
+    }
+    return '';
+}
