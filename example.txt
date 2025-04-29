@@ -4,6 +4,7 @@ ZZ: Hi! I'm ZZ.
 [Character] Ichiku
 Ichiku: Hi, I'm Ichiku nya~
 ZZ: Welcome to Galosity, a lite pure-text galgame editor. Hope you enjoy this journey.
+ZZ: Here you can press Enter to the next sentence, and Backspace to the previous.
 
 --Basic Editing Functions--
 ZZ: There are several shortcuts that you'll need to know.
@@ -17,6 +18,7 @@ ZZ: Define a character with tag `[Character]`.
 Ichiku: Try: input `[ch` on a new line and press Tab. Galosity contains many Tab completions to improve productivity.
 ZZ: Now input `[Character] ZZ`. This tells the system that there will be a character named ZZ.
 Ichiku: Try: input `z` on a new line and press Tab.
+Ichiku: Then input `ZZ: Hello Galosity!` and see how it is presented.
 
 --Parts & Notes--
 [Part] Notice this!
@@ -36,3 +38,18 @@ Ichiku: Try: input `[Note] sample note`.
 ZZ: There is another similar function: input `//` at the start of a new line to create comments. The difference is that comments will be completely ignored by the system.
 // Therefore you cannot see this comment nya~
 Ichiku: Try: input some text on a new line and press Ctrl+/.
+
+--Jumps & Anchors--
+[Part] Goto Statement Considered Helpful
+ZZ: These 2 functions are designed to make script structure clearer.
+Ichiku: Try: input `[Anchor] anchor`...
+Ichiku: Then input `[Jump] a` and press Tab.
+ZZ: You might be familiar with these if you have written some low-level programming languages...
+Ichiku: Anyway. Let's [Jump] onto the next part.
+[Jump] Control Blocks
+Ichiku: ...And of course you won't see this sentence nya~
+ZZ: But notice that [Part] tags still work, just like this:
+
+[Part] Under Control
+[Anchor] Control Blocks
+[Note] (not completed)

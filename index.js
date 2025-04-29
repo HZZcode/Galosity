@@ -243,6 +243,7 @@ async function processKeyDown(event) {
     else if (event.ctrlKey && key.toLowerCase() === 's') await file.save(event);
     else if (event.ctrlKey && key.toLowerCase() === 'o') await file.open(event);
     else if (event.ctrlKey && key.toLowerCase() === 'n') await file.new(event);
+    else if (event.ctrlKey && key.toLowerCase() === 'h') await help(event);
     else if (key === 'F5') test();
 }
 function autoComplete(event) {
@@ -346,4 +347,13 @@ function scanControlBlocks() {
 }
 function test() {
     ipcRenderer.invoke('test', { content: textarea.value });
+}
+async function help(event) {
+    event.preventDefault();
+    let success = true;
+    let content = await ipcRenderer.invoke('readFile', 'example.txt').catch(_ => {
+        error.error(`Cannot find example.txt`);
+        success = false;
+    });
+    ipcRenderer.invoke('test', { content: content });
 }

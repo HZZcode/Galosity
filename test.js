@@ -5,7 +5,16 @@ const character = document.getElementById('character');
 const speech = document.getElementById('speech');
 const part = document.getElementById('part');
 
+function findAnchor(lines, name) {
+    for (let [index, line] of lines.entries())
+        if (line.trim().startsWith('[Anchor]')
+            && line.replace('[Anchor]', '').trim() == name)
+            return index;
+    return -1;
+}
+
 class Manager {
+    history = [];
     lines = [];
     currentLine = -1;
     constructor() { }
@@ -33,6 +42,11 @@ class Manager {
     }
     process() {
         let line = this.lines[this.currentLine];
+        if (line.trim().startsWith('[Jump]')) {
+            let name = line.replace('[Jump]', '').trim();
+            let index = findAnchor(this.lines, name);
+            if (index !== -1) this.currentLine = index;
+        }
         if ((line.trim().startsWith('[') && !line.trim().startsWith('[Note]'))
             || line === undefined || line.trim() === '' || line.trim().startsWith('//'))
             return true;
@@ -40,16 +54,18 @@ class Manager {
         return false;
     }
     previous() {
-        do {
-            if (this.currentLine <= 0) return;
-            this.currentLine--;
-        } while (this.process());
+        if (this.history.length !== 0) {
+            this.currentLine = this.history.pop();
+            this.update();
+        }
     }
     next() {
+        let current = this.currentLine;
         do {
             if (this.currentLine >= this.lines.length - 1) return;
             this.currentLine++;
         } while (this.process());
+        this.history.push(current);
     }
 }
 
