@@ -1,0 +1,5 @@
+[Character] ZZ
+ZZ: Hi! I'm ZZ.
+[Character] Ichiku
+Ichiku: Hi, I'm Ichiku nya~
+ZZ: Welcome to Galosity, a lite pure-text galgame editor. Hope you enjoy this journey.

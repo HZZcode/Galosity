@@ -1,6 +1,7 @@
-"use strict";
+'use strict';
 
-const { ipcRenderer } = require("electron");
+const { ipcRenderer } = require('electron');
+const parser = require('./parser');
 
 class AutoComplete {
     list;
@@ -212,7 +213,12 @@ class SaveLoadManager {
 const info = document.getElementById('info');
 const error = new ErrorManager();
 let characters = new AutoComplete();
-let tags = new AutoComplete(['[Character]', '[Jump]', '[Anchor]', '[Select]', '[Switch]', '[Case]', '[End]']);
+let tags = new AutoComplete([
+    '[Character]', '[Part]', '[Note]',
+    '[Jump]', '[Anchor]',
+    '[Select]', '[Switch]', '[Case]', '[End]'
+]);
+// [Note] I hope to use less words with same beginning letters for better Tab completing
 let anchorCompleter = new AutoComplete();
 let characterScanner = new TagScanner('[Character]');
 let anchorScanner = new TagScanner('[Anchor]');
@@ -239,6 +245,7 @@ async function processKeyDown(event) {
     else if (event.ctrlKey && key.toLowerCase() === 's') await file.save(event);
     else if (event.ctrlKey && key.toLowerCase() === 'o') await file.open(event);
     else if (event.ctrlKey && key.toLowerCase() === 'n') await file.new(event);
+    else if (key === 'F5') test();
 }
 function autoComplete(event) {
     let manager = new TextAreaManager();
@@ -331,43 +338,14 @@ function comment(_) {
     for (let [index, line] of lines.entries())
         manager.edit(start + index, line);
 }
-class ControlBlock {
-    startPos;
-    casesPosList;
-    endPos;
-    constructor(startPos, casesPosList, endPos) {
-        this.startPos = startPos;
-        this.casesPosList = casesPosList;
-        this.endPos = endPos;
-    }
-}
 function scanControlBlocks() {
     let manager = new TextAreaManager();
-    let controlTags = ['[Select]', '[Switch]'];
-    let isControlTag = line => controlTags.some(value => line.startsWith(value));
-    let ans = [];
-    let stack = [];
-    for (let [index, line] of manager.lines.entries()) {
-        if (isControlTag(line)) {
-            stack.push(new ControlBlock(index, [], -1));
-        }
-        else if (line.startsWith('[Case]')) {
-            if (stack.length === 0)
-                error.error(`Error: [Case] tag out of control block at line ${index}`);
-            else {
-                stack[stack.length - 1].casesPosList.push(index);
-            }
-        }
-        else if (line.startsWith('[End]')) {
-            if (stack.length === 0)
-                error.error(`Error: Extra [End] found at line ${index}`);
-            else {
-                let block = stack.pop();
-                block.endPos = index;
-                ans.push(block);
-            }
-        }
+    try {
+        return parser.scanControlBlocks(manager.lines);
+    } catch (err) {
+        error.error(err);
     }
-    error.assert(stack.length === 0, `Error: Control Block ([Select]-[End] or [Switch]-[End]) not closed`);
-    return ans;
+}
+function test() {
+    ipcRenderer.invoke('test', { content: textarea.value });
 }
