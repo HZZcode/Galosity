@@ -1,4 +1,5 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain } from 'electron';
+import fs from 'fs';
 
 function createWindow() {
     const win = new BrowserWindow({
@@ -6,6 +7,8 @@ function createWindow() {
         height: 800,
         webPreferences: {
             nodeIntegration: true,
+            contextIsolation: false,
+            enableRemoteModule: true,
         },
     });
 
@@ -17,6 +20,13 @@ app.whenReady().then(() => {
 
     const win = BrowserWindow.getAllWindows()[0];
     win.webContents.openDevTools();
+
+    ipcMain.handle('showSaveDialog', async (event, options) =>
+        dialog.showSaveDialog(BrowserWindow.fromWebContents(event.sender), options));
+    ipcMain.handle('showOpenDialog', async (event, options) =>
+        dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender), options));
+    ipcMain.handle('writeFile', (_, path, content) => fs.promises.writeFile(path, content, 'utf-8'));
+    ipcMain.handle('readFile', (_, path) => fs.promises.readFile(path, 'utf-8'));
 });
 
 app.on('window-all-closed', () => {

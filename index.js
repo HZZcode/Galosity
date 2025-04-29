@@ -1,4 +1,7 @@
 "use strict";
+
+const { ipcRenderer } = require("electron");
+
 class AutoComplete {
     list;
     chosenFoundIndex = 0;
@@ -117,6 +120,95 @@ class ErrorManager {
         this.element.innerText = '';
     }
 }
+class SaveLoadManager {
+    currentFile = null;
+    constructor() { }
+    async write(path) {
+        if (path === null) return;
+        const manager = new TextAreaManager();
+        const content = manager.content;
+        let success = true;
+        await ipcRenderer.invoke('writeFile', path, content).catch(_ => {
+            error.error(`Failed to Write to ${path}`);
+            success = false;
+        });
+        if (success) {
+            this.currentFile = path;
+            updateInfo();
+        }
+    }
+    async read(path) {
+        if (path === null) return;
+        let success = true;
+        let content = await ipcRenderer.invoke('readFile', path).catch(_ => {
+            error.error(`Failed to Read from ${path}`);
+            success = false;
+        });
+        if (success) {
+            textarea.value = content;
+            this.currentFile = path;
+            updateInfo();
+        }
+    }
+    async getSavePath() {
+        let path = null;
+        await ipcRenderer.invoke('showSaveDialog', {
+            defaultPath: 'gal.txt',
+            filters: [
+                { name: 'Text Files', extensions: ['txt'] },
+                { name: 'All Files', extensions: ['*'] }
+            ]
+        }).then(async result => {
+            if (result.canceled) return;
+            path = result.filePath;
+        });
+        return path;
+    }
+    async getOpenPath() {
+        let path = null;
+        await ipcRenderer.invoke('showOpenDialog', {
+            filters: [
+                { name: 'Text Files', extensions: ['txt'] },
+                { name: 'All Files', extensions: ['*'] }
+            ]
+        }).then(async result => {
+            if (result.canceled) return;
+            path = result.filePaths[0];
+        });
+        return path;
+    }
+    async autoSave() {
+        await this.write(this.currentFile);
+        if (this.currentFile !== null) {
+            info.innerText += ' Auto Saved!';
+            setTimeout(updateInfo, 1000);
+        }
+    }
+    async save(event) {
+        if (event !== undefined) event.preventDefault();
+        let path = this.currentFile;
+        if (path === null && textarea.value === '') return;
+        if (path === null) path = await this.getSavePath();
+        await this.write(path);
+    }
+    async saveAs(event) {
+        event.preventDefault();
+        let path = await this.getSavePath();
+        await this.write(path);
+    }
+    async open(event) {
+        event.preventDefault();
+        this.save();
+        let path = await this.getOpenPath();
+        await this.read(path);
+    }
+    async new(event) {
+        event.preventDefault();
+        this.save();
+        textarea.value = '';
+        this.currentFile = null;
+    }
+}
 const info = document.getElementById('info');
 const error = new ErrorManager();
 let characters = new AutoComplete();
@@ -124,23 +216,29 @@ let tags = new AutoComplete(['[Character]', '[Jump]', '[Anchor]', '[Select]', '[
 let anchorCompleter = new AutoComplete();
 let characterScanner = new TagScanner('[Character]');
 let anchorScanner = new TagScanner('[Anchor]');
+let file = new SaveLoadManager();
 textarea.addEventListener('keydown', processKeyDown);
 textarea.addEventListener('mouseup', jumpTo);
+updateInfo();
 textarea.addEventListener('input', updateInfo);
 textarea.addEventListener('selectionchange', updateInfo);
+setInterval(file.autoSave.bind(file), 60000);
 function updateInfo(_) {
     error.clear();
     let manager = new TextAreaManager();
-    info.innerText = `Line ${manager.currentLineCount()}, Column ${manager.currentColumn()}`;
+    let filename = file.currentFile === null ? 'Unnamed' : file.currentFile;
+    info.innerText = `${filename}: Line ${manager.currentLineCount()}, Column ${manager.currentColumn()}`;
     scanControlBlocks();
 }
-function processKeyDown(event) {
+async function processKeyDown(event) {
     let key = event.key;
     characters.list = characterScanner.scanList();
-    if (key === 'Tab')
-        autoComplete(event);
-    if (event.ctrlKey && key === '/')
-        comment(event);
+    if (key === 'Tab') autoComplete(event);
+    else if (event.ctrlKey && key === '/') comment(event);
+    else if (event.ctrlKey && event.shiftKey && key.toLowerCase() === 's') await file.saveAs(event);
+    else if (event.ctrlKey && key.toLowerCase() === 's') await file.save(event);
+    else if (event.ctrlKey && key.toLowerCase() === 'o') await file.open(event);
+    else if (event.ctrlKey && key.toLowerCase() === 'n') await file.new(event);
 }
 function autoComplete(event) {
     let manager = new TextAreaManager();
@@ -253,14 +351,14 @@ function scanControlBlocks() {
         if (isControlTag(line)) {
             stack.push(new ControlBlock(index, [], -1));
         }
-        if (line.startsWith('[Case]')) {
+        else if (line.startsWith('[Case]')) {
             if (stack.length === 0)
                 error.error(`Error: [Case] tag out of control block at line ${index}`);
             else {
                 stack[stack.length - 1].casesPosList.push(index);
             }
         }
-        if (line.startsWith('[End]')) {
+        else if (line.startsWith('[End]')) {
             if (stack.length === 0)
                 error.error(`Error: Extra [End] found at line ${index}`);
             else {
