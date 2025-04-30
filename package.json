@@ -22,7 +22,12 @@
       "output": "build"
     },
     "files": [
-      "**/*"
+      "**/*",
+      "!example.txt",
+      "!gal.txt"
+    ],
+    "extraFiles": [
+      "example.txt"
     ],
     "win": {
       "target": "nsis"
