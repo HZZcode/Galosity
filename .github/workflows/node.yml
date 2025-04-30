@@ -21,10 +21,12 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Set GH_TOKEN environment variable
+        if: ${{ matrix.os != 'windows-latest' }}
         run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $GITHUB_ENV
         shell: bash
 
       - name: Set GH_TOKEN environment variable (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}
         run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $env:GITHUB_ENV
         shell: pwsh
 
@@ -35,12 +37,12 @@ jobs:
         run: npm run build --if-present
 
       - name: Check if build output exists (Linux/Mac)
-        if: always()
+        if: always() && matrix.os != 'windows-latest'
         run: ls -la build/
         shell: bash
 
       - name: Check if build output exists (Windows)
-        if: always()
+        if: always() && matrix.os == 'windows-latest'
         run: dir build\
         shell: cmd
 
