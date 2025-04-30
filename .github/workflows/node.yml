@@ -3,28 +3,49 @@ name: Node.js Build
 on: [push, pull_request]
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
+  build:
+    runs-on: ${{ matrix.os }}
 
-        strategy:
-            matrix:
-                node-version: [20]
-                
-        steps:
-            - uses: actions/checkout@v3
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [20]
 
-            - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v3
-              with:
-                node-version: ${{ matrix.node-version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-            - name: Install dependencies
-              run: npm install 
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
 
-            - run: npm run build --if-present
+      - name: Set GH_TOKEN environment variable
+        run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $GITHUB_ENV
+        shell: bash
 
-            - name: Upload artifact
-              uses: actions/upload-artifact@v4
-              with:
-                name: galosity-build-ubuntu
-                path: build/ 
+      - name: Set GH_TOKEN environment variable (Windows)
+        run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $env:GITHUB_ENV
+        shell: pwsh
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the application
+        run: npm run build --if-present
+
+      - name: Check if build output exists (Linux/Mac)
+        if: always()
+        run: ls -la build/
+        shell: bash
+
+      - name: Check if build output exists (Windows)
+        if: always()
+        run: dir build\
+        shell: cmd
+
+      - name: Upload artifact for ${{ matrix.os }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: galosity-build-${{ matrix.os }}
+          path: build/
