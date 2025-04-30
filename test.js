@@ -83,6 +83,7 @@ class Manager {
         }
         currentLine.innerText = `At line ${this.currentLine}`;
         part.innerText = parser.getPartAt(this.lines, this.currentLine);
+        MathJax.typeset();
     }
     process() {
         let line = this.lines[this.currentLine];
@@ -189,7 +190,7 @@ async function main() {
         let index = lineInput.value;
         if (isNum(index)) manager.jump(index);
     }
-    jump.addEventListener('click', _ => jumpLine);
+    jump.addEventListener('click', _ => jumpLine());
     lineInput.addEventListener('keyup', event => {
         if (event.key === 'Enter') jumpLine();
     })

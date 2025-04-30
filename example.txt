@@ -12,6 +12,10 @@ ZZ: Ctrl+S to save, and Ctrl+Shift+S to save as file.
 Ichiku: By default, your file will be automatically saved every 5 minutes.
 ZZ: Ctrl+O to open file, and Ctrl+N to create new file.
 Ichiku: Press F5 to see how your script look like.
+ZZ: By the way, $$\LaTeX$$ is supported in Galosity.
+Ichiku: Just put your formula between two $$s or \​( and \​).
+ZZ: For example: $$a^2+b^2=c^2$$
+
 
 --Character & Speeches--
 ZZ: Define a character with tag `[Character]`.
