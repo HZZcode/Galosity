@@ -45,3 +45,11 @@ export function getPartAt(lines, index) {
     }
     return '';
 }
+export function getCaseLine(lines, index) {
+    for (let i = index; i >= 0; i--) {
+        let line = lines[i];
+        if (line.trim().startsWith('[Case]'))
+            return i;
+    }
+    return -1;
+}

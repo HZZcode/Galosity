@@ -209,12 +209,15 @@ class SaveLoadManager {
     }
 }
 const info = document.getElementById('info');
+const helpButton = document.getElementById('help');
+helpButton.addEventListener('click', help);
 const error = new ErrorManager();
 let characters = new AutoComplete();
 let tags = new AutoComplete([
     '[Character]', '[Part]', '[Note]',
     '[Jump]', '[Anchor]',
-    '[Select]', '[Switch]', '[Case]', '[End]'
+    '[Select]', '[Case]', '[Break]', '[End]',
+    '[Switch]' // [Note] This should be used with variables
 ]);
 // [Note] I hope to use less words with same beginning letters for better Tab completing
 let anchorCompleter = new AutoComplete();

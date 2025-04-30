@@ -17,17 +17,38 @@
             background-color: white;
             border-radius: 15px;
             width: 80%;
-            height: 25%;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: center;
             align-items: center;
             margin: auto;
             position: absolute;
-            bottom: 20px;
+            text-align: center;
             left: 50%;
             transform: translateX(-50%);
-            text-align: center;
+        }
+
+        .button:hover {
+            background-color: #c4c4c4;
+        }
+
+        #main {
+            height: 25%;
+            bottom: 20px;
+        }
+
+        #buttons {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        #buttons .button {
+            pointer-events: auto;
         }
 
         #character {
@@ -58,16 +79,41 @@
 
         #part {
             position: absolute;
-            top: 5%;
+            top: 8%;
             left: 5%;
+        }
+
+        /* WebKit browsers */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        #error {
+            color: red;
         }
     </style>
     <title>Galosity Test</title>
 </head>
 
 <body>
+    <div id="current-line"></div>
+    <div>
+        Jump to Line:
+        <input type="number" id="line" name="line" min="0">
+        <button id="jump">Go</button><br>
+        <div id="error"></div>
+    </div>
+    <div id="buttons"></div>
     <div id="part"></div>
-    <div class="container">
+    <div class="container" id="main">
         <div id="character"></div>
         <div id="speech"></div>
     </div>

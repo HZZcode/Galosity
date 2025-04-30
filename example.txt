@@ -52,4 +52,21 @@ ZZ: But notice that [Part] tags still work, just like this:
 
 [Part] Under Control
 [Anchor] Control Blocks
-[Note] (not completed)
+ZZ: Of course, an important part of galgame is selection.
+ZZ: If you've ever used something like switch-case statements while programming, you will feel this very natural.
+Ichiku: Try: first input a sentence, then input `[Select]` on a new line.
+Ichiku: Then input `[Case] 1:`, `case1`, `[Case] 2:`, `case2`, `[End]` on the following lines.
+ZZ: As you see, there will be 2 selection buttons which leads you to different branches.
+ZZ: In order not to pass through the following cases, input `[Break]` at the end of a branch.
+Ichiku: Have you learnt how to use control blocks now?
+[Select]
+[Case] Yes:
+[Jump] End of Tutorial
+[Case] No:
+ZZ: Fine... Let's learn again.
+[Jump] Control Blocks
+[End]
+
+[Anchor] End of Tutorial
+ZZ: Here is the end of this tutorial.
+Ichiku: Hope you enjoy editing with Galosity nya~
