@@ -24,7 +24,9 @@
     "files": [
       "**/*",
       "!example.txt",
-      "!gal.txt"
+      "!gal.txt",
+      "!README.md",
+      "!LICENSE.txt"
     ],
     "extraFiles": [
       "example.txt"
