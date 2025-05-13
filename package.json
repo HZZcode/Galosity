@@ -40,5 +40,8 @@
     "linux": {
       "target": "AppImage"
     }
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
   }
 }

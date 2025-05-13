@@ -1,5 +1,6 @@
 const { ipcRenderer } = require('electron');
-const parser = require('./parser')
+const parser = require('./parser');
+const vars = require('./vars');
 
 const character = document.getElementById('character');
 const speech = document.getElementById('speech');
@@ -8,12 +9,39 @@ const jump = document.getElementById('jump');
 const lineInput = document.getElementById('line');
 const currentLine = document.getElementById('current-line');
 
-function findAnchor(lines, name) {
-    for (let [index, line] of lines.entries())
-        if (line.trim().startsWith('[Anchor]')
-            && line.replace('[Anchor]', '').trim() == name)
-            return index;
-    return -1;
+class ErrorManager {
+    element;
+    constructor() {
+        this.element = document.getElementById('error');
+    }
+    error(msg) {
+        this.element.innerText = msg;
+    }
+    clear() {
+        this.element.innerText = '';
+    }
+}
+const error = new ErrorManager();
+
+class TextManager {
+    outputText(name, text, color = 'black') {
+        character.innerText = name;
+        speech.innerHTML = text;
+        speech.style.color = color;
+        MathJax.typeset();
+    }
+    outputNote(note) {
+        this.outputText('[Note]', note, 'gray');
+    }
+}
+
+class InfoManager {
+    setPart(name) {
+        part.innerText = name;
+    }
+    setLine(line) {
+        currentLine.innerText = `At line ${line}`;
+    }
 }
 
 class ButtonData {
@@ -53,110 +81,122 @@ class ButtonsManager {
     }
 }
 
+function interpolate(text, varsFrame) {
+    text = text.trim();
+    const regex = /(\$\{([^}]+)\})/g;
+    let matches = [];
+    let match;
+    while ((match = regex.exec(text)) !== null)
+        matches.push(match[1]);
+    for (let sub of matches) {
+        try {
+            let value = varsFrame.evaluate(sub.substring(2, sub.length - 1));
+            text = text.replaceAll(sub, value.toString());
+        } catch (_) {}
+    }
+    return text;
+}
+
+class Frame {
+    pos;
+    varsFrame;
+    constructor(pos, varsFrame) {
+        this.pos = pos;
+        this.varsFrame = varsFrame;
+    }
+}
+
 class Manager {
-    history = [];
-    lines = [];
-    currentLine = -1;
+    varsFrame;
+    paragraph;
+    currentPos = -1;
+    history = []; //list of `Frame`s
+    info = new InfoManager();
+    texts = new TextManager();
     buttons = new ButtonsManager();
     constructor() { }
     set(lines) {
-        this.lines = lines;
-        this.update();
+        this.varsFrame = new vars.GalVars();
+        this.paragraph = new parser.Paragraph(lines);
     }
-    update() {
-        let line = this.lines[this.currentLine];
-        if (line === undefined) return;
-        if (line.trim().startsWith('[Note]')) {
-            this.buttons.clear();
-            character.innerText = '[Note]';
-            character.style.color = 'gray';
-            speech.innerText = line.replace('[Note]', '').trim();
-            speech.style.color = 'gray';
-        }
-        else if (!line.trim().startsWith('[Select]'))  {
-            this.buttons.clear();
-            let index = line.search(':');
-            character.innerText = line.substring(0, index).trim();
-            character.style.color = 'black';
-            speech.innerText = line.substring(index + 1).trim();
-            speech.style.color = 'black';
-        }
-        currentLine.innerText = `At line ${this.currentLine}`;
-        part.innerText = parser.getPartAt(this.lines, this.currentLine);
-        MathJax.typeset();
+    isSelecting() {
+        let data = this.paragraph.dataList[this.currentPos];
+        return data !== undefined && data.type === 'select'
     }
-    process() {
-        let line = this.lines[this.currentLine];
-        if (line.trim().startsWith('[Jump]')) {
-            let name = line.replace('[Jump]', '').trim();
-            let index = findAnchor(this.lines, name);
-            if (index !== -1) this.currentLine = index;
-        }
-        if (line.trim().startsWith('[Select]')) {
-            try {
-                let blocks = parser.scanControlBlocks(this.lines);
-                let found = blocks.filter(block => block.startPos == this.currentLine);
-                if (found.length === 0)
-                    throw `Cannot find control block starting at line ${this.currentLine}`;
-                let block = found[0];
-                let choices = block.casesPosList;
-                let buttons = choices.map(index => {
-                    let line = this.lines[index];
-                    let trimComma = str => (str.substring(0, str.lastIndexOf(':'))
-                        + str.substring(str.lastIndexOf(':') + 1));
-                    let text = trimComma(line.replace('[Case]', '')).trim();
-                    return new ButtonData(text, _ => this.jump(index));
-                });
+    process(data) {
+        if (this.currentPos >= this.paragraph.dataList.length) return true;
+        if (data === undefined) return false;
+        this.buttons.clear();
+        switch (data.type) {
+            case 'sentence': {
+                if (data.character.trim() === '' && data.sentence.trim() === '')
+                    return false;
+                this.texts.outputText(interpolate(data.character, this.varsFrame),
+                    interpolate(data.sentence, this.varsFrame));
+                return true;
+            }
+            case 'note': {
+                this.texts.outputNote(interpolate(data.note, this.varsFrame));
+                return true;
+            }
+            case 'jump': {
+                let pos = this.paragraph.findAnchorPos(data.anchor);
+                if (pos === -1) throw `Anchor not found: ${data.anchor}`;
+                this.currentPos = pos;
+                return false;
+            }
+            case 'select': {
+                let block = this.paragraph.findStartControlBlock(this.currentPos);
+                let buttons = block.casesPosList.map(pos =>
+                    new ButtonData(interpolate(this.paragraph.dataList[pos].text, this.varsFrame),
+                        () => this.jump(new Frame(pos, this.varsFrame.copy()))))
                 this.buttons.drawButtons(buttons);
-            } catch (err) {
-                document.getElementById('error').innerText = err;
+                return true;
+            }
+            case 'break': {
+                let casePos = this.paragraph.getCasePosAt(this.currentPos);
+                let block = this.paragraph.findCaseControlBlock(casePos);
+                if (block === undefined) throw `[Break] at line ${this.currentPos} is not in control block`;
+                let endPos = block.endPos;
+                this.currentPos = endPos;
+                return false;
+            }
+            case 'var': {
+                this.varsFrame.vars[data.name] = this.varsFrame.evaluate(data.expr);
+                return false;
+            }
+            case 'enum': {
+                let name = data.name.trim();
+                let values = data.values.map(value => value.trim());
+                this.varsFrame.defEnumType(new vars.GalEnumType(name, values));
+                return false;
             }
         }
-        if (line.trim().startsWith('[Break]')) {
-            try {
-                let blocks = parser.scanControlBlocks(this.lines);
-                let previousCase = parser.getCaseLine(this.lines, this.currentLine);
-                let found = blocks.filter(block => block.casesPosList.some(pos => pos == previousCase));
-                if (found.length === 0)
-                    throw `Case block at line ${previousCase} not in control block`;
-                let block = found[0];
-                this.jump(block.endPos);
-            } catch (err) {
-                document.getElementById('error').innerText = err;
-            }
-        }
-        if ((line.trim().startsWith('[') && !line.trim().startsWith('[Note]')
-            && !line.trim().startsWith('[Select]'))
-            || line === undefined || line.trim() === '' || line.trim().startsWith('//'))
-            return true;
-        this.update();
-        return false;
     }
     previous() {
-        if (this.history.length !== 0) {
-            this.currentLine = this.history.pop();
-            this.update();
-        }
+        if (this.history.length <= 1) return;
+        this.history.pop();
+        let frame = this.history.pop();
+        this.jump(frame);
     }
     next() {
-        let current = this.currentLine;
+        if (this.isSelecting()) return;
+        if (this.currentPos >= this.paragraph.dataList.length) return;
         do {
-            if (this.currentLine >= this.lines.length - 1) return;
-            let line = this.lines[this.currentLine];
-            if (line !== undefined && line.trim().startsWith('[Select]')) return;
-            this.currentLine++;
-        } while (this.process());
-        this.history.push(current);
+            this.currentPos++;
+            this.info.setLine(this.currentPos);
+            this.info.setPart(this.paragraph.getPartAt(this.currentPos));
+        } while (!this.process(this.paragraph.dataList[this.currentPos]));
+        this.history.push(new Frame(this.currentPos, this.varsFrame.copy()));
     }
-    jump(index) {
-        if (index < 0 || index >= this.lines.length) return;
-        let current = this.currentLine;
-        this.currentLine = index;
-        while (this.process()) {
-            if (this.currentLine >= this.lines.length - 1) return;
-            this.currentLine++;
-        }
-        this.history.push(current);
+    jump(frame) {
+        if (frame.pos === undefined) return;
+        this.currentPos = frame.pos;
+        if (frame.varsFrame !== undefined) this.varsFrame = frame.varsFrame;
+        this.info.setLine(this.currentPos);
+        this.info.setPart(this.paragraph.getPartAt(this.currentPos));
+        while (!this.process(this.paragraph.dataList[this.currentPos])) this.currentPos++;
+        this.history.push(new Frame(this.currentPos, this.varsFrame.copy()));
     }
 }
 
@@ -174,26 +214,38 @@ let initPromise = new Promise((resolve, reject) => {
     }
 });
 
+let errorHandled = f => arg => {
+    error.clear();
+    try {
+        return f(arg);
+    } catch (err) {
+        error.error(err);
+    }
+};
+
+let handleError = true;
+if (!handleError) errorHandled = f => f;
+
 function isNum(value) {
     return Number.isFinite(Number(value)) && value != '';
 }
 
 async function main() {
     await initPromise;
-    window.addEventListener('keydown', event => {
+    window.addEventListener('keydown', errorHandled(event => {
         if (event.target.tagName.toLowerCase() === 'input') return;
         let key = event.key;
         if (key === 'Backspace') manager.previous();
         else if (key === 'Enter') manager.next();
-    });
+    }));
     function jumpLine() {
         let index = lineInput.value;
-        if (isNum(index)) manager.jump(index);
+        if (isNum(index)) manager.jump(new Frame(index));
     }
-    jump.addEventListener('click', _ => jumpLine());
-    lineInput.addEventListener('keyup', event => {
+    jump.addEventListener('click', errorHandled(_ => jumpLine()));
+    lineInput.addEventListener('keyup', errorHandled(event => {
         if (event.key === 'Enter') jumpLine();
-    })
+    }))
 }
 
 main();

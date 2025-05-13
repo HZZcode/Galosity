@@ -60,6 +60,14 @@ class TextAreaManager {
     currentLineFrontContent() {
         return this.content.substring(0, this.start).split(/\r?\n/)[this.currentLineCount()];
     }
+    insert(text) {
+        let line = this.currentLine();
+        let pos = this.currentColumn();
+        let modified = line.substring(0, pos) + text + line.substring(pos + 1);
+        let start = this.start;
+        this.edit(this.currentLineCount(), modified);
+        textarea.selectionStart = textarea.selectionEnd = start + 1;
+    }
     edit(line, modified) {
         this.lines[line] = modified;
         this.sync();
@@ -217,6 +225,7 @@ let tags = new AutoComplete([
     '[Character]', '[Part]', '[Note]',
     '[Jump]', '[Anchor]',
     '[Select]', '[Case]', '[Break]', '[End]',
+    '[Var]', '[Enum]',
     '[Switch]' // [Note] This should be used with variables
 ]);
 // [Note] I hope to use less words with same beginning letters for better Tab completing
@@ -248,13 +257,27 @@ async function processKeyDown(event) {
     else if (event.ctrlKey && key.toLowerCase() === 'n') await file.new(event);
     else if (event.ctrlKey && key.toLowerCase() === 'h') await help(event);
     else if (key === 'F5') test();
+    else if (key === '{') completeBraces(event);
+}
+function completeBraces(event) {
+    let manager = new TextAreaManager();
+    let line = manager.currentLine();
+    let pos = manager.currentColumn();
+    if (line[pos - 1] === '$') {
+        manager.insert('{}');
+        event.preventDefault();
+    }
 }
 function autoComplete(event) {
     let manager = new TextAreaManager();
     event.preventDefault();
     let line = manager.currentLine();
     let front = manager.currentLineFrontContent();
-    if (line.startsWith('[') && (line.search(']') == -1 || front.trim().endsWith(']')))
+    if (line.trim().startsWith('【')) {
+        line = line.replace('【', '[');
+        manager.edit(manager.currentLineCount(), line);
+    }
+    if (line.trim().startsWith('[') && (line.search(']') == -1 || front.trim().endsWith(']')))
         completeTag(event);
     else {
         completeCharaterName(event);
@@ -275,7 +298,7 @@ function completeTag(_) {
     let line = manager.currentLine();
     let tag = tags.complete('[' + line.replaceAll('[', '').replaceAll(']', ''), line.search(']') === -1);
     if (tag !== undefined) manager.edit(manager.currentLineCount(), tag);
-    if (tag === '[Case]') {
+    if (['[Case]', '[Var]', '[Enum]'].some(t => t === tag)) {
         manager.edit(manager.currentLineCount(), tag + ':');
         textarea.selectionStart--;
         textarea.selectionEnd--;
@@ -343,7 +366,7 @@ function comment(_) {
 function scanControlBlocks() {
     let manager = new TextAreaManager();
     try {
-        return parser.scanControlBlocks(manager.lines);
+        return new parser.Paragraph(manager.lines).getControlBlocks();
     } catch (err) {
         error.error(err);
     }
