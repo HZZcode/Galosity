@@ -63,7 +63,7 @@ class TextAreaManager {
     insert(text) {
         let line = this.currentLine();
         let pos = this.currentColumn();
-        let modified = line.substring(0, pos) + text + line.substring(pos + 1);
+        let modified = line.substring(0, pos) + text + line.substring(pos);
         let start = this.start;
         this.edit(this.currentLineCount(), modified);
         textarea.selectionStart = textarea.selectionEnd = start + 1;

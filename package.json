@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder",
+    "grammar": "npx pegjs -o grammar.cjs grammar.pegjs"
   },
   "keywords": [],
   "author": "",
@@ -42,6 +43,7 @@
     }
   },
   "dependencies": {
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "pegjs": "^0.10.0"
   }
 }

@@ -9,16 +9,41 @@ const jump = document.getElementById('jump');
 const lineInput = document.getElementById('line');
 const currentLine = document.getElementById('current-line');
 
+const handleError = true;
+
+let errorHandled = f => arg => {
+    error.clear();
+    try {
+        return f(arg);
+    } catch (err) {
+        error.error(err);
+    }
+};
+let errorHandledAsWarning = f => arg => {
+    error.clear();
+    try {
+        return f(arg);
+    } catch (err) {
+        error.warn('Warning: ' + err);
+    }
+}
+if (!handleError) errorHandled = errorHandledAsWarning = f => f;
+
 class ErrorManager {
-    element;
+    errorElement;
+    warnElement;
     constructor() {
-        this.element = document.getElementById('error');
+        this.errorElement = document.getElementById('error');
+        this.warnElement = document.getElementById('warning');
     }
     error(msg) {
-        this.element.innerText = msg;
+        this.errorElement.innerText = msg;
+    }
+    warn(msg) {
+        this.warnElement.innerText = msg;
     }
     clear() {
-        this.element.innerText = '';
+        this.errorElement.innerText = this.warnElement.innerText = '';
     }
 }
 const error = new ErrorManager();
@@ -89,10 +114,12 @@ function interpolate(text, varsFrame) {
     while ((match = regex.exec(text)) !== null)
         matches.push(match[1]);
     for (let sub of matches) {
-        try {
+        varsFrame.warn = '';
+        errorHandledAsWarning(() => {
             let value = varsFrame.evaluate(sub.substring(2, sub.length - 1));
             text = text.replaceAll(sub, value.toString());
-        } catch (_) {}
+        })();
+        if (varsFrame.warn !== '') error.warn('Warning' + varsFrame.warn);
     }
     return text;
 }
@@ -162,7 +189,9 @@ class Manager {
                 return false;
             }
             case 'var': {
-                this.varsFrame.vars[data.name] = this.varsFrame.evaluate(data.expr);
+                this.varsFrame.warn = '';
+                errorHandled(() => this.varsFrame.vars[data.name] = this.varsFrame.evaluate(data.expr))();
+                if (this.varsFrame.warn !== '') error.warn('Warning: ' + this.varsFrame.warn);
                 return false;
             }
             case 'enum': {
@@ -213,18 +242,6 @@ let initPromise = new Promise((resolve, reject) => {
         reject(error);
     }
 });
-
-let errorHandled = f => arg => {
-    error.clear();
-    try {
-        return f(arg);
-    } catch (err) {
-        error.error(err);
-    }
-};
-
-let handleError = true;
-if (!handleError) errorHandled = f => f;
 
 function isNum(value) {
     return Number.isFinite(Number(value)) && value != '';
