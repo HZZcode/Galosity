@@ -131,6 +131,12 @@ ZZ: ${x}|${y} is ${x|y};
 ZZ: ${x}==${y} is ${x==y};
 ZZ: ${x}!=${y} is ${x!=y};
 
+[Part] Built-in Variables
+ZZ: There are a few built-in vars in Galosity: `random` returns a random number from 0 to 1, and `randBool` returns a random bool.
+Ichiku: Try: input `$​{random}`.
+ZZ: These vars might have different values every time you use it.
+ZZ: For instance, one call might return ${random} while the other returns ${random}.
+
 [Part] Switch-Case
 ZZ: [Switch]-[Case] blocks are used often with variables.
 ZZ: It's very similar to [Select]-[Case]: just change [Select] into [Switch].

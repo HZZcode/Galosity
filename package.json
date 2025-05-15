@@ -27,7 +27,8 @@
       "!example.txt",
       "!gal.txt",
       "!README.md",
-      "!LICENSE.txt"
+      "!LICENSE.txt",
+      "!sum.txt"
     ],
     "extraFiles": [
       "example.txt"

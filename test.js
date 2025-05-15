@@ -117,7 +117,7 @@ function interpolate(text, varsFrame) {
         varsFrame.warn = '';
         errorHandledAsWarning(() => {
             let value = varsFrame.evaluate(sub.substring(2, sub.length - 1));
-            text = text.replaceAll(sub, value.toString());
+            text = text.replace(sub, value.toString());
         })();
         if (varsFrame.warn !== '') error.warn('Warning' + varsFrame.warn);
     }
@@ -144,6 +144,7 @@ class Manager {
     constructor() { }
     set(lines) {
         this.varsFrame = new vars.GalVars();
+        this.varsFrame.initBuiltins();
         this.paragraph = new parser.Paragraph(lines);
     }
     isSelecting() {
@@ -164,12 +165,13 @@ class Manager {
             }
             case 'note': {
                 this.texts.outputNote(interpolate(data.note, this.varsFrame));
+                console.log('here 1');
                 return true;
             }
             case 'jump': {
                 let pos = this.paragraph.findAnchorPos(data.anchor);
                 if (pos === -1) throw `Anchor not found: ${data.anchor}`;
-                this.currentPos = pos;
+                this.currentPos = pos - 1;
                 return false;
             }
             case 'select': {
@@ -190,7 +192,7 @@ class Manager {
                         let next = block.next(this.currentPos);
                         if (next === undefined) throw `Case error at line ${this.currentPos}`;
                         if (!this.varsFrame.equal(value, matchValue))
-                            this.jump(new Frame(next, this.varsFrame.copy()));
+                            this.currentPos = next;
                     } catch (e) {
                         error.error(e);
                     }
@@ -242,9 +244,9 @@ class Manager {
         if (frame.varsFrame !== undefined) this.varsFrame = frame.varsFrame;
         this.info.setLine(this.currentPos);
         this.info.setPart(this.paragraph.getPartAt(this.currentPos));
-        while (!this.process(this.paragraph.dataList[this.currentPos])) this.currentPos++;
+        do this.currentPos++; while (!this.process(this.paragraph.dataList[this.currentPos]));
         this.history.push(new Frame(this.currentPos, this.varsFrame.copy()));
-    }
+    } // DO NOT call `jump` directly in `process`!!!
 }
 
 let manager = new Manager();

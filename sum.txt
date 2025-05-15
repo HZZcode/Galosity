@@ -1,0 +1,17 @@
+[Var] n: 10000
+[Var] s: 0
+[Var] i: 0
+[Anchor] A
+[Var] s: s + random
+[Var] i: i + 1
+// [Note] s=${s}, i=${i}
+[Switch] i < n
+[Case] true:
+[Jump] A
+[Case] false:
+[Jump] E
+[End]
+[Anchor] E
+[Var] average: s / n
+[Note] sum=${s}<br>num=${n}<br>average=${average}
+[Note] diff=${average-0.5}

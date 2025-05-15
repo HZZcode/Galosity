@@ -108,17 +108,38 @@ const BoolType = new GalEnumType('bool', ['false', 'true']);
 BoolType.toBool = b => !!b.valueIndex;
 BoolType.ofBool = b => BoolType.getValue(b ? 'true' : 'false');
 
+class BuiltinVar {
+    factory;
+    constructor(factory) {
+        this.factory = factory;
+    }
+    get() {
+        return this.factory();
+    }
+}
+
 export class GalVars {
     enumTypes = [BoolType];
     vars = {};
+    builtins = {};
 
     warn = '';
 
     copy() {
         let clone = new GalVars();
+        clone.builtins = this.builtins;
         clone.enumTypes = this.enumTypes;
         clone.vars = lodash.cloneDeep(this.vars);
         return clone;
+    }
+
+    registerBuiltin(name, func) {
+        this.builtins[name] = new BuiltinVar(func);
+    }
+
+    initBuiltins() {
+        this.registerBuiltin('random', () => new GalNum(Math.random()));
+        this.registerBuiltin('randBool', () => BoolType.ofBool(Math.random() < 0.5));
     }
 
     defEnumType(enumType) {
@@ -129,11 +150,6 @@ export class GalVars {
 
     getEnumType(name) {
         return this.enumTypes.find(type => type.name === name);
-    }
-
-    getVar(name) {
-        if (name in this.vars) return this.vars[name];
-        throw `No such var named ${name}`;
     }
 
     getEnumValues() {
@@ -182,6 +198,7 @@ export class GalVars {
                 let enumType = this.getEnumType(node.enumType.value);
                 return enumType.getValue(node.value.value);
             case 'identifier':
+                if (node.value in this.builtins) return this.builtins[node.value].get();
                 if (node.value in this.vars) return this.vars[node.value];
                 let enumValue = this.getEnumValue(node.value);
                 if (enumValue !== undefined) return enumValue;
@@ -312,5 +329,3 @@ export class GalVars {
         if (!condition) throw message;
     }
 }
-
-//TODO: special vars (e.g. random)
