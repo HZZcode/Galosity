@@ -65,12 +65,80 @@ ZZ: In order not to pass through the following cases, input `[Break]` at the end
 Ichiku: Have you learnt how to use control blocks now?
 [Select]
 [Case] Yes:
-[Jump] End of Tutorial
+[Jump] Variables
 [Case] No:
 ZZ: Fine... Let's learn again.
 [Jump] Control Blocks
 [End]
 
+[Anchor] Variables
+--Variables--
+[Part] Variables & Enums
+ZZ: Variables are used for more flexible controlling.
+Ichiku: Try: input `[Var] x: 1`. This allows you to create a new variable, or assign to an existing variable.
+ZZ: There are only 2 types of variables in Galosity: numbers and enums.
+ZZ: Enums are use to represent value with several possible values.
+Ichiku: For example, define an enum by `[Enum] Sex: Male, Female, Other`.
+Ichiku: Then you can define an variable with type 'Sex' and value 'Male' by `[Var] sex: Sex.Male`.
+ZZ: You can also simplify `Sex.Male` into `Male`. Galosity is smart enough to guess which you expect to use, as long as there are only one enum value named `Male`.
+ZZ: By putting expressions between $​{ and }, you can interpolate them into messages.
+Ichiku: Try: input `[Note] Your sex in $​{sex}`, and see how it's presented.
+[Enum] Sex: Male, Female, Other
+ZZ: You can choose your sex from a selection:
+[Select]
+[Case] Male:
+[Var] sex: Male
+[Break]
+[Case] Female:
+[Var] sex: Female
+[Break]
+[Case] Other:
+[Var] sex: Other
+[Break]
+[End]
+ZZ: You've selected: ${sex}.
+ZZ: And there's a special enum type: bool. It has only 2 values: `bool.true` and `bool.false`.
+
+[Part] Operators
+ZZ: Galosity supports a set of operators.
+Ichiku: Try: input `1+2=$​{1+2}`.
+ZZ: Below are all the operators:
+[Var] x: 42
+[Var] y: 3.14
+ZZ: +${x} is ${+x};
+ZZ: -${x} is ${-x};
+ZZ: ${x}+${y} is ${x+y};
+ZZ: ${x}-${y} is ${x-y};
+ZZ: ${x}*${y} is ${x*y};
+ZZ: ${x}/${y} is ${x/y};
+ZZ: ${x}//${y} is ${x//y};
+ZZ: ${x}%${y} is ${x%y};
+ZZ: ${x}<=${y} is ${x<=y};
+ZZ: ${x}>=${y} is ${x>=y};
+ZZ: ${x}<${y} is ${x<y};
+ZZ: ${x}>${y} is ${x>y};
+ZZ: ${x}==${y} is ${x==y};
+ZZ: ${x}!=${y} is ${x!=y};
+ZZ: ${x}^${y} is ${x^y};
+[Var] x: true
+[Var] y: false
+ZZ: !${x} is ${!x};
+ZZ: !${y} is ${!y};
+ZZ: ${x}&${y} is ${x&y};
+ZZ: ${x}|${y} is ${x|y};
+[Var] x: Male
+[Var] y: Female
+ZZ: ${x}==${y} is ${x==y};
+ZZ: ${x}!=${y} is ${x!=y};
+
+[Part] Switch-Case
+ZZ: [Switch]-[Case] blocks are used often with variables.
+ZZ: It's very similar to [Select]-[Case]: just change [Select] into [Switch].
+Ichiku: Try: input `[Switch] 1+1`, `[Case] 0:`, `[Note] 1+1=0`, `[Case] 1:`, `[Note] 1+1=1`, `[Case] 2:`, `[Note] 1+1=2`, and then `[End]`.
+ZZ: [Switch]-[Case] blocks can also fall through; but at every case, the condition is checked.
+[Note] TODO: Here we'll need an number input function.
+
 [Anchor] End of Tutorial
+[Part] The End
 ZZ: Here is the end of this tutorial.
 Ichiku: Hope you enjoy editing with Galosity nya~

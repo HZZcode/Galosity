@@ -180,6 +180,23 @@ class Manager {
                 this.buttons.drawButtons(buttons);
                 return true;
             }
+            case 'case': {
+                if (this.paragraph.getCaseType(this.currentPos) === 'switch') {
+                    let block = this.paragraph.findCaseControlBlock(this.currentPos);
+                    let switchData = this.paragraph.dataList[block.startPos];
+                    try {
+                        let value = this.varsFrame.evaluate(switchData.expr);
+                        let matchValue = this.varsFrame.evaluate(data.text);
+                        let next = block.next(this.currentPos);
+                        if (next === undefined) throw `Case error at line ${this.currentPos}`;
+                        if (!this.varsFrame.equal(value, matchValue))
+                            this.jump(new Frame(next, this.varsFrame.copy()));
+                    } catch (e) {
+                        error.error(e);
+                    }
+                    return false;
+                }
+            }
             case 'break': {
                 let casePos = this.paragraph.getCasePosAt(this.currentPos);
                 let block = this.paragraph.findCaseControlBlock(casePos);
@@ -200,6 +217,7 @@ class Manager {
                 this.varsFrame.defEnumType(new vars.GalEnumType(name, values));
                 return false;
             }
+            default: return false;
         }
     }
     previous() {
@@ -266,3 +284,5 @@ async function main() {
 }
 
 main();
+
+//TODO: inputting

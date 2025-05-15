@@ -161,7 +161,7 @@ export class GalVars {
     }
 
     isBool(value) {
-        return value.type === 'enum' && value.enumType === BoolType;
+        return value.type === 'enum' && value.enumType.name === 'bool';
     }
 
     evaluate(expr) {
@@ -218,7 +218,7 @@ export class GalVars {
         if (this.isNum(x) && this.isNum(y))
             return Math.abs(x.value - y.value) <= 1e-5;
         if (this.isEnum(x) && this.isEnum(y))
-            if (x.enumType === y.enumType)
+            if (x.enumType.name === y.enumType.name)
                 return x.valueIndex === y.valueIndex;
         this.warn = `Trying to compare ${x.getType()} and ${y.getType()}`;
         return false;
@@ -312,3 +312,5 @@ export class GalVars {
         if (!condition) throw message;
     }
 }
+
+//TODO: special vars (e.g. random)

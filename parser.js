@@ -83,6 +83,13 @@ export class EnumData {
         this.values = values;
     }
 }
+export class SwitchData {
+    type = 'switch';
+    expr;
+    constructor(expr) {
+        this.expr = expr;
+    }
+}
 
 function parseSpeech(line) {
     let index = line.search(':');
@@ -111,6 +118,7 @@ export function parseLine(line) {
         case 'Jump': return new JumpData(nonTagPart);
         case 'Anchor': return new AnchorData(nonTagPart);
         case 'Select': return new SelectData(nonTagPart);
+        case 'Switch': return new SwitchData(nonTagPart);
         case 'Case': return new CaseData(trimComma(nonTagPart).trim());
         case 'Break': return new BreakData();
         case 'End': return new EndData();
@@ -136,6 +144,11 @@ export class ControlBlock {
         this.casesPosList = casesPosList;
         this.endPos = endPos;
     }
+    next(casePos) {
+        for (let [i, pos] of this.casesPosList.entries())
+            if (pos === casePos)
+                return i === this.casesPosList.length - 1 ? this.endPos : this.casesPosList[i + 1];
+    }
 }
 
 export class Paragraph {
@@ -149,7 +162,7 @@ export class Paragraph {
         return sub.at(-1).part;
     }
     getControlBlocks() {
-        let isControlTag = data => ['select'].some(type => type === data.type);
+        let isControlTag = data => ['select', 'switch'].some(type => type === data.type);
         let ans = [];
         let stack = [];
         for (let [index, data] of this.dataList.entries()) {
@@ -179,6 +192,11 @@ export class Paragraph {
             if (this.dataList[i].type === 'case')
                 return i;
         return -1;
+    }
+    getCaseType(casePos) {
+        let block = this.findCaseControlBlock(casePos);
+        let data = this.dataList[block.startPos];
+        return data.type;
     }
     findStartControlBlock(startPos) {
         return this.getControlBlocks().find(block => block.startPos === startPos);
