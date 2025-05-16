@@ -205,6 +205,9 @@ export class Paragraph {
     scanEnumsAt(pos) {
         return this.dataList.slice(0, pos + 1).filter(data => data.type === 'enum');
     }
+    scanEnums() {
+        return this.scanEnumsAt(this.dataList.length);
+    }
     scanVarsAt(pos) {
         return this.dataList.slice(0, pos + 1).filter(data => data.type === 'enum');
     }

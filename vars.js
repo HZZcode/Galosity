@@ -141,7 +141,6 @@ export class GalVars {
     copy() {
         let clone = new GalVars();
         clone.builtins = this.builtins;
-        // clone.enumTypes = this.enumTypes;
         clone.vars = lodash.cloneDeep(this.vars);
         return clone;
     }

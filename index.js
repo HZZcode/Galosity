@@ -60,13 +60,20 @@ class TextAreaManager {
     currentLineFrontContent() {
         return this.content.substring(0, this.start).split(/\r?\n/)[this.currentLineCount()];
     }
-    insert(text) {
+    currentLineBackContent() {
+        return this.content.substring(this.start).split(/\r?\n/)[0];
+    }
+    insert(text, length = 0) {
         let line = this.currentLine();
         let pos = this.currentColumn();
-        let modified = line.substring(0, pos) + text + line.substring(pos);
+        let modified = line.substring(0, pos - length) + text + line.substring(pos);
         let start = this.start;
         this.edit(this.currentLineCount(), modified);
-        textarea.selectionStart = textarea.selectionEnd = start + 1;
+        textarea.selectionStart = textarea.selectionEnd = start + text.length - length;
+    }
+    move(step) {
+        textarea.selectionStart += step;
+        textarea.selectionEnd += step;
     }
     edit(line, modified) {
         this.lines[line] = modified;
@@ -230,6 +237,7 @@ let tags = new AutoComplete([
 ]);
 // [Note] I hope to use less words with same beginning letters for better Tab completing
 let anchorCompleter = new AutoComplete();
+let symbolCompleter = new AutoComplete();
 let characterScanner = new TagScanner('[Character]');
 let anchorScanner = new TagScanner('[Anchor]');
 let file = new SaveLoadManager();
@@ -265,6 +273,7 @@ function completeBraces(event) {
     let pos = manager.currentColumn();
     if (line[pos - 1] === '$') {
         manager.insert('{}');
+        manager.move(-1);
         event.preventDefault();
     }
 }
@@ -282,6 +291,7 @@ function autoComplete(event) {
     else {
         completeCharaterName(event);
         completeJump(event);
+        completeSymbol(event);
     }
 }
 function completeCharaterName(_) {
@@ -300,20 +310,48 @@ function completeTag(_) {
     if (tag !== undefined) manager.edit(manager.currentLineCount(), tag);
     if (['[Case]', '[Var]', '[Enum]'].some(t => t === tag)) {
         manager.edit(manager.currentLineCount(), tag + ':');
-        textarea.selectionStart--;
-        textarea.selectionEnd--;
+        manager.move(-1);
     }
 }
 function completeJump(_) {
     let manager = new TextAreaManager();
     let line = manager.currentLine();
-    if (!line.startsWith('[Jump]')) return;
+    if (!line.trim().startsWith('[Jump]')) return;
     let anchors = anchorScanner.scanList();
     anchorCompleter.list = anchors;
     let anchorPart = line.replace('[Jump]', '').trim();
     let anchor = anchorCompleter.complete(anchorPart, !anchors.includes(anchorPart));
-    if (anchor != undefined) manager.edit(manager.currentLineCount(), '[Jump] ' + anchor);
+    if (anchor !== undefined) manager.edit(manager.currentLineCount(), '[Jump] ' + anchor);
 }
+function completeSymbol(_) {
+    let manager = new TextAreaManager();
+    if (!needSymbol()) return;
+    let symbols = scanSymbols();
+    symbolCompleter.list = symbols;
+    let symbolPart = manager.currentLineFrontContent().replaceAll('${', ' ').split(/\s/).at(-1);
+    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(symbolPart)) return;
+    let symbol = symbolCompleter.complete(symbolPart, !symbols.includes(symbolPart));
+    if (symbol !== undefined) manager.insert(symbol, symbolPart.length);
+}
+function needSymbol() {
+    let manager = new TextAreaManager();
+    let isVar = /^\[Var\].*?\:/.test(manager.currentLineFrontContent().trim());
+    let isSwitch = manager.currentLineFrontContent().trim().startsWith('[Switch]');
+    let leftInterpolate = manager.currentLineFrontContent().replaceAll(/\$\{.*?\}/g, '').includes('${');
+    let rightInterpolate = manager.currentLineBackContent().replaceAll(/\$\{.*?\}/g, '').includes('}');
+    return isVar || isSwitch || (leftInterpolate && rightInterpolate);
+}
+function scanSymbols() {
+    let manager = new TextAreaManager();
+    let paragraph = new parser.Paragraph(manager.lines);
+    let dataList = paragraph.dataList;
+    let varList = dataList.filter(data => data.type === 'var').map(data => data.name);
+    let enumList = paragraph.scanEnums();
+    let enumTypes = enumList.map(data => data.name);
+    let enumValues = enumList.map(data => data.values).flat();
+    return [... new Set(varList.concat(enumTypes).concat(enumValues))]
+        .filter(symbol => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(symbol));
+} //Scans: var name; enum type; enum value;
 function jumpTo(event) {
     if (!event.ctrlKey) return;
     let manager = new TextAreaManager();
