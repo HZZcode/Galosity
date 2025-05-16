@@ -90,6 +90,15 @@ export class SwitchData {
         this.expr = expr;
     }
 }
+export class InputData {
+    type = 'input';
+    valueVar;
+    errorVar;
+    constructor(valueVar, errorVar) {
+        this.valueVar = valueVar;
+        this.errorVar = errorVar;
+    }
+}
 
 function parseSpeech(line) {
     let index = line.search(':');
@@ -106,10 +115,12 @@ export function parseLine(line) {
     let tag = line.substring(leftBracket + 1, rightBracket).trim();
     let nonTagPart = line.substring(rightBracket + 1).trim();
 
-    let trimComma = str => str.substring(0, str.lastIndexOf(':'))
+    let trimQuote = str => str.substring(0, str.lastIndexOf(':'))
         + str.substring(str.lastIndexOf(':') + 1);
-    let splitWithComma = str => [str.substring(0, str.lastIndexOf(':')),
+    let splitWithQuote = str => [str.substring(0, str.lastIndexOf(':')),
     str.substring(str.lastIndexOf(':') + 1)];
+    let splitWithComma = str => [str.substring(0, str.lastIndexOf(',')).trim(),
+    str.substring(str.lastIndexOf(',') + 1).trim()];
 
     switch (tag) {
         case 'Character': return new CharacterData(nonTagPart);
@@ -119,16 +130,20 @@ export function parseLine(line) {
         case 'Anchor': return new AnchorData(nonTagPart);
         case 'Select': return new SelectData(nonTagPart);
         case 'Switch': return new SwitchData(nonTagPart);
-        case 'Case': return new CaseData(trimComma(nonTagPart).trim());
+        case 'Case': return new CaseData(trimQuote(nonTagPart).trim());
         case 'Break': return new BreakData();
         case 'End': return new EndData();
         case 'Var': {
-            let [name, expr] = splitWithComma(nonTagPart);
+            let [name, expr] = splitWithQuote(nonTagPart);
             return new VarData(name, expr);
         }
         case 'Enum': {
-            let [name, values] = splitWithComma(nonTagPart);
+            let [name, values] = splitWithQuote(nonTagPart);
             return new EnumData(name, values.split(','));
+        }
+        case 'Input': {
+            let [valueVar, errorVar] = splitWithComma(nonTagPart);
+            return new InputData(valueVar, errorVar);
         }
     }
 
@@ -186,6 +201,12 @@ export class Paragraph {
         }
         if (stack.length !== 0) throw `Error: Control Block ([Select]-[End] or [Switch]-[End]) not closed`;
         return ans;
+    }
+    scanEnumsAt(pos) {
+        return this.dataList.slice(0, pos + 1).filter(data => data.type === 'enum');
+    }
+    scanVarsAt(pos) {
+        return this.dataList.slice(0, pos + 1).filter(data => data.type === 'enum');
     }
     getCasePosAt(pos) {
         for (let i = pos; i >= 0; i--)

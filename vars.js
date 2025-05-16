@@ -104,7 +104,7 @@ export class GalEnum {
     }
 }
 
-const BoolType = new GalEnumType('bool', ['false', 'true']);
+export const BoolType = new GalEnumType('bool', ['false', 'true']);
 BoolType.toBool = b => !!b.valueIndex;
 BoolType.ofBool = b => BoolType.getValue(b ? 'true' : 'false');
 
@@ -125,10 +125,23 @@ export class GalVars {
 
     warn = '';
 
+    setVar(name, value) {
+        if (!isIdentifier(name)) throw `Invalid variable name: ${name}`;
+        this.vars[name] = value;
+    }
+
+    clearEnumTypes() {
+        this.enumTypes = [BoolType];
+    }
+
+    clearVars() {
+        this.vars = {};
+    }
+
     copy() {
         let clone = new GalVars();
         clone.builtins = this.builtins;
-        clone.enumTypes = this.enumTypes;
+        // clone.enumTypes = this.enumTypes;
         clone.vars = lodash.cloneDeep(this.vars);
         return clone;
     }
@@ -181,7 +194,6 @@ export class GalVars {
     }
 
     evaluate(expr) {
-        expr = expr.replaceAll(/\s/g, '');
         let result = this.evaluateNode(grammar.parse(expr));
         if (result === undefined)
             throw `Unexpected expression: ${expr}`;
@@ -211,6 +223,8 @@ export class GalVars {
                 return this.evaluateRightBinaries(node);
             case 'comparing':
                 return this.evaluateComparings(node);
+            case 'matching':
+                return this.evaluateMatching(node);
         }
     }
 
@@ -323,6 +337,13 @@ export class GalVars {
                 return BoolType.ofBool(false);
         }
         return BoolType.ofBool(true);
+    }
+
+    evaluateMatching(node) {
+        let value = this.evaluateNode(node.value);
+        let type = node.enumType;
+        if (type === 'num') return BoolType.ofBool(this.isNum(value));
+        return BoolType.ofBool(this.isEnum(value) && value.enumType.name === type);
     }
 
     assert(condition, message = 'Assertion failed') {

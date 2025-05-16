@@ -130,6 +130,10 @@ ZZ: ${x}|${y} is ${x|y};
 [Var] y: Female
 ZZ: ${x}==${y} is ${x==y};
 ZZ: ${x}!=${y} is ${x!=y};
+ZZ: (${1} is num) is ${1 is num}
+ZZ: (${true} is bool) is ${true is bool}
+ZZ: (${Male} is Sex) is ${Male is Sex}
+ZZ: (${1} is Sex) is ${1 is Sex}
 
 [Part] Built-in Variables
 ZZ: There are a few built-in vars in Galosity: `random` returns a random number from 0 to 1, and `randBool` returns a random bool.
@@ -143,6 +147,42 @@ ZZ: It's very similar to [Select]-[Case]: just change [Select] into [Switch].
 Ichiku: Try: input `[Switch] 1+1`, `[Case] 0:`, `[Note] 1+1=0`, `[Case] 1:`, `[Note] 1+1=1`, `[Case] 2:`, `[Note] 1+1=2`, and then `[End]`.
 ZZ: [Switch]-[Case] blocks can also fall through; but at every case, the condition is checked.
 [Note] TODO: Here we'll need an number input function.
+
+[Part] Inputting
+ZZ: You can get an input from the user with [Input] tag.
+Ichiku: Try: input `[Input] result, error`.
+ZZ: Here, user input will be evaluated to a var; if the evaluation succeeded, `result` will be assigned and `error` will be false; if evaluation failed, `result` will not be defined, and `error` will be true.
+Ichiku: Remember that you'll need to deal with errors yourself!
+ZZ: For example, let's input two numbers below...
+ZZ: First number:
+[Anchor] num1
+[Input] n1, err
+[Switch] err
+[Case] true:
+ZZ: Error: cannot evaluate!
+[Jump] num1
+[End]
+[Switch] n1 is num
+[Case] false:
+ZZ: Error: not a num!
+[Jump] num1
+[End]
+ZZ: You inputted ${n1}!
+ZZ: Second number:
+[Anchor] num2
+[Input] n2, err
+[Switch] err
+[Case] true:
+ZZ: Error: cannot evaluate!
+[Jump] num2
+[End]
+[Switch] n2 is num
+[Case] false:
+ZZ: Error: not a num!
+[Jump] num2
+[End]
+ZZ: You inputted ${n2}!
+ZZ: ${n1} * ${n2} = ${n1*n2}.
 
 [Anchor] End of Tutorial
 [Part] The End

@@ -79,8 +79,16 @@ class ButtonData {
 }
 class ButtonsManager {
     parent = document.getElementById('buttons');
+    inputFunc = null;
     clear() {
+        let inputs = this.getInput();
+        if (inputs.length !== 0 && this.inputFunc !== null)
+            this.inputFunc(inputs[0].value);
+        this.inputFunc = null;
         this.parent.innerHTML = '';
+    }
+    getInput() {
+        return this.parent.getElementsByTagName('input');
     }
     drawButton(button, bottom) {
         let name = button.text;
@@ -103,6 +111,12 @@ class ButtonsManager {
             this.drawButton(button, height + '%');
         }
         //65% -> 35%, height = 7%, distance = 3%
+    }
+    drawInput(func = null) {
+        let element = document.createElement('input');
+        element.className = 'container input';
+        this.inputFunc = func;
+        this.parent.appendChild(element);
     }
 }
 
@@ -151,10 +165,19 @@ class Manager {
         let data = this.paragraph.dataList[this.currentPos];
         return data !== undefined && data.type === 'select'
     }
+    setEnums() {
+        this.varsFrame.clearEnumTypes();
+        for (let data of this.paragraph.scanEnumsAt(this.currentPos)) {
+            let name = data.name.trim();
+            let values = data.values.map(value => value.trim());
+            this.varsFrame.defEnumType(new vars.GalEnumType(name, values));
+        }
+    }
     process(data) {
         if (this.currentPos >= this.paragraph.dataList.length) return true;
         if (data === undefined) return false;
         this.buttons.clear();
+        this.setEnums();
         switch (data.type) {
             case 'sentence': {
                 if (data.character.trim() === '' && data.sentence.trim() === '')
@@ -165,7 +188,6 @@ class Manager {
             }
             case 'note': {
                 this.texts.outputNote(interpolate(data.note, this.varsFrame));
-                console.log('here 1');
                 return true;
             }
             case 'jump': {
@@ -209,15 +231,23 @@ class Manager {
             }
             case 'var': {
                 this.varsFrame.warn = '';
-                errorHandled(() => this.varsFrame.vars[data.name] = this.varsFrame.evaluate(data.expr))();
+                errorHandled(() => this.varsFrame.setVar(data.name, this.varsFrame.evaluate(data.expr)))();
                 if (this.varsFrame.warn !== '') error.warn('Warning: ' + this.varsFrame.warn);
                 return false;
             }
-            case 'enum': {
-                let name = data.name.trim();
-                let values = data.values.map(value => value.trim());
-                this.varsFrame.defEnumType(new vars.GalEnumType(name, values));
-                return false;
+            case 'input': {
+                this.buttons.drawInput(expr => {
+                    try {
+                        console.log(`'${expr}'`);
+                        let value = this.varsFrame.evaluate(expr);
+                        this.varsFrame.setVar(data.valueVar, value);
+                        this.varsFrame.setVar(data.errorVar, vars.BoolType.ofBool(false));
+                    } catch (e) {
+                        error.error(e);
+                        this.varsFrame.setVar(data.errorVar, vars.BoolType.ofBool(true));
+                    }
+                });
+                return true;
             }
             default: return false;
         }
@@ -282,9 +312,7 @@ async function main() {
     jump.addEventListener('click', errorHandled(_ => jumpLine()));
     lineInput.addEventListener('keyup', errorHandled(event => {
         if (event.key === 'Enter') jumpLine();
-    }))
+    }));
 }
 
 main();
-
-//TODO: inputting

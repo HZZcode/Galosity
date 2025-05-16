@@ -225,8 +225,8 @@ let tags = new AutoComplete([
     '[Character]', '[Part]', '[Note]',
     '[Jump]', '[Anchor]',
     '[Select]', '[Case]', '[Break]', '[End]',
-    '[Var]', '[Enum]',
-    '[Switch]' // [Note] This should be used with variables
+    '[Var]', '[Enum]', '[Switch]',
+    '[Input]'
 ]);
 // [Note] I hope to use less words with same beginning letters for better Tab completing
 let anchorCompleter = new AutoComplete();

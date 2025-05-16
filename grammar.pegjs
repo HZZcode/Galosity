@@ -1,10 +1,10 @@
 Root = Logical
 
 Logical
-    = head:Comparing tail:(("&" / "|") Comparing)* {
+    = head:Comparing tail:(_ ("&" / "|") _ Comparing)* {
         if (tail.length === 0) return head;
         let result = [head];
-        for (let [op, value] of tail) {
+        for (let [_, op, __, value] of tail) {
             result.push(op);
             result.push(value);
         }
@@ -12,21 +12,27 @@ Logical
     }
 
 Comparing
-    = head:Addition tail:(("<=" / ">=" / "<" / ">" / "==" / "!=") Addition)* {
+    = head:Matching tail:(_ ("<=" / ">=" / "<" / ">" / "==" / "!=") _ Matching)* {
         if (tail.length === 0) return head;
         let result = [head];
-        for (let [op, value] of tail) {
+        for (let [_, op, __, value] of tail) {
             result.push(op);
             result.push(value);
         }
         return { type: "comparing", value: result };
     }
 
+Matching
+    = value:Addition _ ("is" / "~") _ enumType:Identifier {
+        return { type: "matching", value: value, enumType: enumType.value }
+    }
+    / value:Addition { return value; }
+
 Addition
-    = head:Multiplication tail:(("+" / "-") Multiplication)* {
+    = head:Multiplication tail:(_ ("+" / "-") _ Multiplication)* {
         if (tail.length === 0) return head;
         let result = [head];
-        for (let [op, value] of tail) {
+        for (let [_, op, __, value] of tail) {
             result.push(op);
             result.push(value);
         }
@@ -34,10 +40,10 @@ Addition
     }
 
 Multiplication 
-    = head:Power tail:(("//" / "%" / "*" / "/") Power)* {
+    = head:Power tail:(_ ("//" / "%" / "*" / "/") _ Power)* {
         if (tail.length === 0) return head;
         let result = [head];
-        for (let [op, value] of tail) {
+        for (let [_, op, __, value] of tail) {
             result.push(op);
             result.push(value);
         }
@@ -45,10 +51,10 @@ Multiplication
     }
 
 Power
-    = head:Factor tail:("^" Factor)* {
+    = head:Factor tail:(_ "^" _ Factor)* {
         if (tail.length === 0) return head;
         let result = [head];
-        for (let [op, value] of tail) {
+        for (let [_, op, __, value] of tail) {
             result.push(op);
             result.push(value);
         }
@@ -56,28 +62,32 @@ Power
     }
 
 Factor
-    = op:("!" / "+" / "-") root:Root { return { type: "factor", operator: op, value: root }; }
+    = op:("!" / "+" / "-") _ root:Root { return { type: "factor", operator: op, value: root }; }
     / value:Primary { return value; }
 
 Primary
-    = "(" root:Root ")" { return root; }
+    = "(" _ root:Root _ ")" { return root; }
     / value:Number { return value; }
     / value:Enum { return value; }
     / value:Identifier { return value; }
 
-Number = intPart:Digits decimalPart: ("." Digits)? {
+Number = _ intPart:Digits decimalPart: ("." Digits)? _ {
     return {
             type: 'num',
             value: intPart.join('') + (decimalPart === null ? '' : '.' + decimalPart[1].join(''))
         };
 }
 
-Enum = enumType:Identifier "." value:Identifier {
+Enum = _ enumType:Identifier "." value:Identifier _ {
         return { type: 'enum', enumType: enumType, value: value };
     }
 
-Identifier = identifier:([a-zA-Z_][a-zA-Z0-9_]*) {
+Identifier = _ identifier:([a-zA-Z_][a-zA-Z0-9_]*) _ {
 	return { type: 'identifier', value: identifier[0] + identifier[1].join('') };
 }
 
 Digits = [0-9]+
+
+_ = [ \t\n\r]* {
+    return null;
+}
