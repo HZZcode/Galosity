@@ -1,4 +1,4 @@
-export class CommentData {
+export class EmptyData {
     type = 'comment';
 }
 export class CharacterData {
@@ -99,14 +99,92 @@ export class InputData {
         this.errorVar = errorVar;
     }
 }
+export class ImageData {
+    type = 'image';
+    imageType;
+    imageFile;
+    constructor(imageType, imageFile) {
+        this.imageType = imageType;
+        this.imageFile = imageFile;
+    }
+}
+export class TransformData {
+    type = 'transform';
+    imageType;
+    translateX = '0px';
+    translateY = '0px';
+    scaleX = 1;
+    scaleY = 1;
+    skewX = 0;
+    skewY = 0;
+    rotate = 0;
+    getArgs() {
+        let args = [];
+        for (let key in this)
+            if (key !== 'type' && key !== 'imageType')
+                args.push(key);
+        return args;
+    }
+    getAllArgs() {
+        let args = [];
+        for (let key of this.getArgs()) {
+            args.push(key);
+            if (['X', 'Y'].includes(key.at(-1)))
+                args.push(key.substring(0, key.length - 1));
+        }
+        return [...new Set(args)].sort();
+    }
+    constructor(imageType, transformations) {
+        this.imageType = imageType;
+        if (transformations === undefined) return;
+        for (let key of this.getArgs()) {
+            if (key in transformations)
+                this[key] = transformations[key];
+            if (['X', 'Y'].includes(key.at(-1))) {
+                let subKey = key.substring(0, key.length - 1);
+                if (subKey in transformations)
+                    this[key] = transformations[subKey];
+            }
+        }
+    }
+    toString() {
+        return `translateX(calc(${this.translateX} - 50%)) `
+            + `translateY(${this.translateY}) `
+            + `scaleX(${this.scaleX}) `
+            + `scaleY(${this.scaleY}) `
+            + `skewX(${this.skewX}) `
+            + `skewY(${this.skewY}) `
+            + `rotate(${this.rotate})`;
+    }
+}
+export class DelayData {
+    type = 'delay';
+    seconds = 0;
+    constructor(seconds) {
+        this.seconds = seconds;
+    }
+}
+export class PauseData {
+    type = 'pause';
+}
 
 function parseSpeech(line) {
     let index = line.search(':');
     return new SpeechData(line.substring(0, index), line.substring(index + 1));
 }
 
+function parseConfig(configs) {
+    let object = {};
+    for (let config of configs.split(',')) {
+        let key = config.substring(0, config.indexOf('=')).trim();
+        let value = config.substring(config.indexOf('=') + 1).trim();
+        object[key] = value;
+    }
+    return object;
+}
+
 export function parseLine(line) {
-    if (line.trim().startsWith('//')) return new CommentData();
+    if (line.trim().startsWith('//')) return new EmptyData();
     if (!line.trim().startsWith('[') || line.search(']') === -1)
         return parseSpeech(line);
 
@@ -115,12 +193,12 @@ export function parseLine(line) {
     let tag = line.substring(leftBracket + 1, rightBracket).trim();
     let nonTagPart = line.substring(rightBracket + 1).trim();
 
-    let trimQuote = str => str.substring(0, str.lastIndexOf(':'))
-        + str.substring(str.lastIndexOf(':') + 1);
-    let splitWithQuote = str => [str.substring(0, str.lastIndexOf(':')),
-    str.substring(str.lastIndexOf(':') + 1)];
-    let splitWithComma = str => [str.substring(0, str.lastIndexOf(',')).trim(),
-    str.substring(str.lastIndexOf(',') + 1).trim()];
+    let trimQuote = str => str.substring(0, str.indexOf(':'))
+        + str.substring(str.indexOf(':') + 1);
+    let splitWithQuote = str => [str.substring(0, str.indexOf(':')).trim(),
+    str.substring(str.indexOf(':') + 1).trim()];
+    let splitWithComma = str => [str.substring(0, str.indexOf(',')).trim(),
+    str.substring(str.indexOf(',') + 1).trim()];
 
     switch (tag) {
         case 'Character': return new CharacterData(nonTagPart);
@@ -139,12 +217,26 @@ export function parseLine(line) {
         }
         case 'Enum': {
             let [name, values] = splitWithQuote(nonTagPart);
-            return new EnumData(name, values.split(','));
+            return new EnumData(name, values.split(',').map(value => value.trim()));
         }
         case 'Input': {
             let [valueVar, errorVar] = splitWithComma(nonTagPart);
             return new InputData(valueVar, errorVar);
         }
+        case 'Image': {
+            let [imageType, imageFile] = splitWithQuote(nonTagPart);
+            return new ImageData(imageType, imageFile);
+        }
+        case 'Transform': {
+            let [imageType, transformationConfigs] = splitWithQuote(nonTagPart);
+            let transformations = parseConfig(transformationConfigs);
+            return new TransformData(imageType, transformations);
+        }
+        case 'Delay': {
+            let seconds = Number(nonTagPart);
+            if (!isNaN(seconds)) return new DelayData(seconds);
+        }
+        case 'Pause': return new PauseData();
     }
 
     return parseSpeech(line);

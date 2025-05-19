@@ -31,6 +31,8 @@ app.whenReady().then(() => {
         dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender), options));
     ipcMain.handle('writeFile', (_, path, content) => fs.promises.writeFile(path, content, 'utf-8'));
     ipcMain.handle('readFile', (_, path) => fs.promises.readFile(path, 'utf-8'));
+    ipcMain.handle('resolve', (_, pathname) => path.resolve(pathname).replaceAll('\\', '/'));
+    ipcMain.handle('directory', _ => __dirname);
     ipcMain.handle('test', (_, data) => {
         let newWindow = new BrowserWindow({
             width: 1200,
@@ -49,7 +51,7 @@ app.whenReady().then(() => {
         });
         newWindow.setMenu(null);
         if (isDebug) newWindow.webContents.openDevTools();
-    })
+    });
 });
 
 app.on('window-all-closed', () => {

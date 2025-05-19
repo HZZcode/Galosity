@@ -1,17 +1,41 @@
-[Var] n: 10000
-[Var] s: 0
-[Var] i: 0
-[Anchor] A
-[Var] s: s + random
-[Var] i: i + 1
-// [Note] s=${s}, i=${i}
-[Switch] i < n
+[Anchor] a
+[Input] n, err
+
+[Switch] err
 [Case] true:
-[Jump] A
-[Case] false:
-[Jump] E
+[Jump] a
 [End]
-[Anchor] E
-[Var] average: s / n
-[Note] sum=${s}<br>num=${n}<br>average=${average}
-[Note] diff=${average-0.5}
+
+[Switch] n is num
+[Case] false:
+[Jump] a
+[End]
+
+[Var] i: 2
+[Var] b: true
+
+[Anchor] s
+
+[Switch] i<n
+[Case] false:
+[Jump] e
+[End]
+
+[Switch] n%i==0
+[Case] true:
+[Var] b: false
+[Jump] e
+[End]
+
+[Var] i:i+1
+
+[Anchor] e
+
+[Switch] b
+[Case] false:
+${n} is not prime
+[Case] true:
+${n} is prime
+[End]
+
+[Jump] a

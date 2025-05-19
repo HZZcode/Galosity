@@ -1,6 +1,7 @@
 const { ipcRenderer } = require('electron');
 const parser = require('./parser');
 const vars = require('./vars');
+const lodash = require('lodash');
 
 const character = document.getElementById('character');
 const speech = document.getElementById('speech');
@@ -115,12 +116,16 @@ class ButtonsManager {
     drawInput(func = null) {
         let element = document.createElement('input');
         element.className = 'container input';
+        element.addEventListener('keyup', errorHandled(async event => {
+            if (event.key === 'Enter') await manager.next();
+        }));
         this.inputFunc = func;
         this.parent.appendChild(element);
     }
 }
 
 function interpolate(text, varsFrame) {
+    if (typeof text !== 'string') return text;
     text = text.trim();
     const regex = /(\$\{([^}]+)\})/g;
     let matches = [];
@@ -147,6 +152,50 @@ class Frame {
     }
 }
 
+class FileManager {
+    filename;
+    constructor(filename = null) {
+        this.filename = filename;
+    }
+    async check() {
+        if (this.filename === null)
+            this.filename = await ipcRenderer.invoke('directory') + '/?';
+    }
+    getPath() {
+        return this.filename.split('/').slice(0, -1).join('/');
+    }
+    getSource(file) {
+        return this.getPath() + '/src/' + file;
+    }
+
+    getBody() {
+        return document.body;
+    }
+    getElement(pos) {
+        return document.getElementById(`${pos}-image`);
+    }
+
+    setElementImage(element, file) {
+        element.style.backgroundImage = file !== 'clear' ? `url("${this.getSource(file)}")` : '';
+    }
+    setBackground(file) {
+        this.setElementImage(this.getBody(), file);
+    }
+    setImage(pos, file) {
+        this.setElementImage(this.getElement(pos), file);
+    }
+
+    transformElement(element, transform) {
+        element.style.transform = transform.toString();
+    }
+    transformBackground(transform) {
+        this.transformElement(this.getBody(), transform);
+    }
+    transformImage(pos, transform) {
+        this.transformElement(this.getElement(pos), transform);
+    }
+}
+
 class Manager {
     varsFrame;
     paragraph;
@@ -155,7 +204,7 @@ class Manager {
     info = new InfoManager();
     texts = new TextManager();
     buttons = new ButtonsManager();
-    constructor() { }
+    files = new FileManager();
     set(lines) {
         this.varsFrame = new vars.GalVars();
         this.varsFrame.initBuiltins();
@@ -173,7 +222,7 @@ class Manager {
             this.varsFrame.defEnumType(new vars.GalEnumType(name, values));
         }
     }
-    process(data) {
+    async process(data) {
         if (this.currentPos >= this.paragraph.dataList.length) return true;
         if (data === undefined) return false;
         this.buttons.clear();
@@ -200,7 +249,7 @@ class Manager {
                 let block = this.paragraph.findStartControlBlock(this.currentPos);
                 let buttons = block.casesPosList.map(pos =>
                     new ButtonData(interpolate(this.paragraph.dataList[pos].text, this.varsFrame),
-                        () => this.jump(new Frame(pos, this.varsFrame.copy()))))
+                        async () => await this.jump(new Frame(pos, this.varsFrame.copy()))))
                 this.buttons.drawButtons(buttons);
                 return true;
             }
@@ -238,7 +287,6 @@ class Manager {
             case 'input': {
                 this.buttons.drawInput(expr => {
                     try {
-                        console.log(`'${expr}'`);
                         let value = this.varsFrame.evaluate(expr);
                         this.varsFrame.setVar(data.valueVar, value);
                         this.varsFrame.setVar(data.errorVar, vars.BoolType.ofBool(false));
@@ -249,32 +297,61 @@ class Manager {
                 });
                 return true;
             }
+            case 'image': {
+                await this.files.check();
+                let file = interpolate(data.imageFile, this.varsFrame);
+                switch (data.imageType) {
+                    case 'background':
+                        this.files.setBackground(file);
+                        break;
+                    case 'left': case 'center': case 'right':
+                        this.files.setImage(data.imageType, file);
+                        break;
+                }
+                return false;
+            }
+            case 'transform': {
+                let interpolated = lodash.cloneDeep(data);
+                for (let key in interpolated)
+                    interpolated[key] = interpolate(data[key], this.varsFrame);
+                switch (interpolated.imageType) {
+                    case 'left': case 'center': case 'right':
+                        this.files.transformImage(interpolated.imageType, interpolated);
+                        break;
+                }
+                return false;
+            }
+            case 'delay': {
+                setTimeout(() => this.next(), data.seconds * 1000);
+                return false;
+            }
+            case 'pause': return true;
             default: return false;
         }
     }
-    previous() {
+    async previous() {
         if (this.history.length <= 1) return;
         this.history.pop();
         let frame = this.history.pop();
-        this.jump(frame);
+        await this.jump(frame);
     }
-    next() {
+    async next() {
         if (this.isSelecting()) return;
         if (this.currentPos >= this.paragraph.dataList.length) return;
         do {
             this.currentPos++;
             this.info.setLine(this.currentPos);
             this.info.setPart(this.paragraph.getPartAt(this.currentPos));
-        } while (!this.process(this.paragraph.dataList[this.currentPos]));
+        } while (!await this.process(this.paragraph.dataList[this.currentPos]));
         this.history.push(new Frame(this.currentPos, this.varsFrame.copy()));
     }
-    jump(frame) {
+    async jump(frame) {
         if (frame.pos === undefined) return;
         this.currentPos = frame.pos;
         if (frame.varsFrame !== undefined) this.varsFrame = frame.varsFrame;
         this.info.setLine(this.currentPos);
         this.info.setPart(this.paragraph.getPartAt(this.currentPos));
-        do this.currentPos++; while (!this.process(this.paragraph.dataList[this.currentPos]));
+        do this.currentPos++; while (!await this.process(this.paragraph.dataList[this.currentPos]));
         this.history.push(new Frame(this.currentPos, this.varsFrame.copy()));
     } // DO NOT call `jump` directly in `process`!!!
 }
@@ -283,9 +360,10 @@ let manager = new Manager();
 
 let initPromise = new Promise((resolve, reject) => {
     try {
-        ipcRenderer.on('send-data', (_, data) => {
+        ipcRenderer.on('send-data', async (_, data) => {
             manager.set(data.content.split(/\r?\n/));
-            manager.next();
+            manager.files.filename = data.filename;
+            await manager.next();
             resolve();
         });
     } catch (error) {
@@ -294,25 +372,25 @@ let initPromise = new Promise((resolve, reject) => {
 });
 
 function isNum(value) {
-    return Number.isFinite(Number(value)) && value != '';
+    return Number.isFinite(Number(value)) && value !== '';
 }
 
 async function main() {
     await initPromise;
-    window.addEventListener('keydown', errorHandled(event => {
+    window.addEventListener('keydown', errorHandled(async event => {
         if (event.target.tagName.toLowerCase() === 'input') return;
         let key = event.key;
         if (key === 'Backspace') manager.previous();
-        else if (key === 'Enter') manager.next();
+        else if (key === 'Enter') await manager.next();
     }));
-    function jumpLine() {
+    async function jumpLine() {
         let index = lineInput.value;
-        if (isNum(index)) manager.jump(new Frame(index));
+        if (isNum(index)) await manager.jump(new Frame(index));
     }
-    jump.addEventListener('click', errorHandled(_ => jumpLine()));
-    lineInput.addEventListener('keyup', errorHandled(event => {
-        if (event.key === 'Enter') jumpLine();
+    jump.addEventListener('click', errorHandled(async _ => await jumpLine()));
+    lineInput.addEventListener('keyup', errorHandled(async event => {
+        if (event.key === 'Enter') await jumpLine();
     }));
-}
+} 
 
 main();

@@ -146,7 +146,6 @@ ZZ: [Switch]-[Case] blocks are used often with variables.
 ZZ: It's very similar to [Select]-[Case]: just change [Select] into [Switch].
 Ichiku: Try: input `[Switch] 1+1`, `[Case] 0:`, `[Note] 1+1=0`, `[Case] 1:`, `[Note] 1+1=1`, `[Case] 2:`, `[Note] 1+1=2`, and then `[End]`.
 ZZ: [Switch]-[Case] blocks can also fall through; but at every case, the condition is checked.
-[Note] TODO: Here we'll need an number input function.
 
 [Part] Inputting
 ZZ: You can get an input from the user with [Input] tag.
@@ -183,6 +182,59 @@ ZZ: Error: not a num!
 [End]
 ZZ: You inputted ${n2}!
 ZZ: ${n1} * ${n2} = ${n1*n2}.
+
+[Part] Delay & Pause
+ZZ: Here are two simple but useful tags.
+ZZ: [Delay] tag requires a number `t` as argument, and jumps to the next line after `t` seconds.
+ZZ: [Pause] tag simply obstructs the parser from going onto the next line. This is often used after [Delay] tag.
+Ichiku: Try: input 3 lines of speeches, and input `[Delay] 1` between the first and the second.
+Ichiku: Then input `[Pause]` after `[Delay] 1` and see what's the difference.
+[Delay] 1
+[Pause]
+
+[Part] Images
+ZZ: Well... I lied. Galosity is not an pure-text editor.
+ZZ: At first it was designed to be... But now it's hypertext.
+Ichiku: Try: on the same path under your script file, create directory `src` and put image file `image.png` under it.
+Ichiku: Then input `[Image] background: image.png` and see what happens.
+[Image] background: bg1.png
+Ichiku: Clear the background with `[Image] background: clear`.
+[Image] background: clear
+ZZ: There are also 3 positions for characters: left, center and right.
+[Note] TODO: There will be customize positions s∞n...
+Ichiku: To use these positions, simply replace `background` with `left`, `center` or `right`.
+[Image] background: bg2.png
+[Image] left: Ichiku.png
+Ichiku: Hi! I'm Ichiku! Am I cute?
+ZZ: Whatever... We're going to the next part~
+
+[Part] Transformations
+ZZ: Transformations are used to transform images...
+Ichiku: Try: insert an image on the left, and input `[Transform] left: rotate=90deg`.
+[Transform] left: rotate=90deg
+ZZ: There are many many arguments for transformations... Most of them come from css transform.
+ZZ: There are: translate, translateX, translateY; scale, scaleX, scaleY; skew, skewX, skewY; and rotate.
+ZZ: Make sure you contain proper units.
+[Transform] left: rotate=0deg
+Ichiku: Interpolations can be used in transformations, so it can be used to create various effects.
+Ichiku: For instance, let me invite Minato here...
+[Image] right: p1.webp
+[Var] theta: 0
+[Anchor] minato
+[Transform] right: rotate=${theta}deg
+[Var] theta: theta + 5
+[Delay] 0.002
+[Pause]
+[Switch] theta < 720
+[Case] false:
+[Jump] end minato
+[End]
+[Jump] minato
+[Anchor] end minato
+[Delay] 1
+[Pause]
+[Image] right: clear
+Ichiku: Isn't it very cool?
 
 [Anchor] End of Tutorial
 [Part] The End

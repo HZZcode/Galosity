@@ -11,10 +11,13 @@
             color: #333;
             height: 100vh;
             margin: 0;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: cover;
         }
 
         .container {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.8);
             border-radius: 15px;
             width: 80%;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -26,10 +29,21 @@
             text-align: center;
             left: 50%;
             transform: translateX(-50%);
+            z-index: 0;
         }
 
         .button:hover {
-            background-color: #c4c4c4;
+            background-color: #c4c4c4c4;
+        }
+
+        #line,
+        #jump {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: auto;
+            font-family: Consolas, sans-serif;
+            font-size: small;
         }
 
         #main {
@@ -37,13 +51,13 @@
             bottom: 20px;
         }
 
-        #buttons {
+        .whole-screen {
             position: fixed;
             width: 100%;
             height: 100%;
             top: 0;
             left: 0;
-            z-index: 0;
+            z-index: -1;
             pointer-events: none;
         }
 
@@ -69,7 +83,7 @@
             height: 10%;
             top: -10%;
             left: -5%;
-            background-color: #ccc;
+            background-color: #cccccccc;
             padding: 10px;
             border-radius: 5px;
             font-family: Consolas, sans-serif;
@@ -115,6 +129,31 @@
         #warning {
             color: orange;
         }
+
+        #images div {
+            position: absolute;
+            height: 50%;
+            bottom: 0;
+            transform: translateX(-50%);
+            width: 100%;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: -1;
+            transition: ease;
+        }
+
+        #images #left-image {
+            left: 20%;
+        }
+
+        #images #center-image {
+            left: 50%;
+        }
+
+        #images #right-image {
+            left: 80%;
+        }
     </style>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <title>Galosity Test</title>
@@ -129,11 +168,16 @@
         <div id="error"></div><br>
         <div id="warning"></div>
     </div>
-    <div id="buttons"></div>
+    <div id="buttons" class="whole-screen"></div>
     <div id="part"></div>
     <div class="container" id="main">
         <div id="character"></div>
         <div id="speech"></div>
+    </div>
+    <div id="images" class="whole-screen">
+        <div id="left-image"></div>
+        <div id="center-image"></div>
+        <div id="right-image"></div>
     </div>
     <script src="test.js" type="module"></script>
 </body>
