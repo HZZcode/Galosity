@@ -152,7 +152,7 @@ class Frame {
     }
 }
 
-class FileManager {
+class ResourceManager {
     filename;
     constructor(filename = null) {
         this.filename = filename;
@@ -164,19 +164,28 @@ class FileManager {
     getPath() {
         return this.filename.split('/').slice(0, -1).join('/');
     }
+    getRelative(file) {
+        return this.getPath() + '/' + file;
+    }
     getSource(file) {
-        return this.getPath() + '/src/' + file;
+        return this.getRelative('src/' + file);
     }
 
     getBody() {
-        // return document.body;
         return this.getElement('background');
     }
     getElement(pos) {
         return document.getElementById(`${pos}-image`);
     }
 
+    clear() {
+        document.getElementById('images').childNodes
+            .forEach(element => this.setElementImage(element, 'clear'));
+        this.setBackground('clear');
+    }
+
     setElementImage(element, file) {
+        if (element === undefined || element.style === undefined) return;
         element.style.backgroundImage = file !== 'clear' ? `url("${this.getSource(file)}")` : '';
     }
     setBackground(file) {
@@ -205,11 +214,14 @@ class Manager {
     info = new InfoManager();
     texts = new TextManager();
     buttons = new ButtonsManager();
-    files = new FileManager();
-    set(lines) {
+    resources = new ResourceManager();
+    async set(lines) {
         this.varsFrame = new vars.GalVars();
         this.varsFrame.initBuiltins();
         this.paragraph = new parser.Paragraph(lines);
+        this.currentPos = -1;
+        this.resources.clear();
+        await this.next();
     }
     isSelecting() {
         let data = this.paragraph.dataList[this.currentPos];
@@ -222,6 +234,15 @@ class Manager {
             let values = data.values.map(value => value.trim());
             this.varsFrame.defEnumType(new vars.GalEnumType(name, values));
         }
+    }
+    async jumpFile(path) {
+        path = this.resources.getRelative(path);
+        await ipcRenderer.invoke('readFile', path)
+            .then(async content => await this.set(content.split(/\r?\n/)))
+            .catch(e => {
+                console.error(e);
+                throw `Cannot open file ${path}`;
+            });
     }
     async process(data) {
         if (this.currentPos >= this.paragraph.dataList.length) return true;
@@ -241,9 +262,12 @@ class Manager {
                 return true;
             }
             case 'jump': {
-                let pos = this.paragraph.findAnchorPos(data.anchor);
-                if (pos === -1) throw `Anchor not found: ${data.anchor}`;
-                this.currentPos = pos - 1;
+                if (data.crossFile) this.jumpFile(data.anchor);
+                else {
+                    let pos = this.paragraph.findAnchorPos(data.anchor);
+                    if (pos === -1) throw `Anchor not found: ${data.anchor}`;
+                    this.currentPos = pos - 1;
+                }
                 return false;
             }
             case 'select': {
@@ -299,14 +323,14 @@ class Manager {
                 return true;
             }
             case 'image': {
-                await this.files.check();
+                await this.resources.check();
                 let file = interpolate(data.imageFile, this.varsFrame);
                 switch (data.imageType) {
                     case 'background':
-                        this.files.setBackground(file);
+                        this.resources.setBackground(file);
                         break;
                     case 'left': case 'center': case 'right':
-                        this.files.setImage(data.imageType, file);
+                        this.resources.setImage(data.imageType, file);
                         break;
                 }
                 return false;
@@ -317,10 +341,10 @@ class Manager {
                     interpolated[key] = interpolate(data[key], this.varsFrame);
                 switch (interpolated.imageType) {
                     case 'background':
-                        this.files.transformBackground(interpolated);
+                        this.resources.transformBackground(interpolated);
                         break;
                     case 'left': case 'center': case 'right':
-                        this.files.transformImage(interpolated.imageType, interpolated);
+                        this.resources.transformImage(interpolated.imageType, interpolated);
                         break;
                 }
                 return false;
@@ -365,9 +389,8 @@ let manager = new Manager();
 let initPromise = new Promise((resolve, reject) => {
     try {
         ipcRenderer.on('send-data', async (_, data) => {
-            manager.set(data.content.split(/\r?\n/));
-            manager.files.filename = data.filename;
-            await manager.next();
+            await manager.set(data.content.split(/\r?\n/));
+            manager.resources.filename = data.filename;
             resolve();
         });
     } catch (error) {
@@ -396,6 +419,6 @@ async function main() {
         if (event.key === 'Enter') await jumpLine();
     }));
 }
-// TODO: cross file jumping
+// TODO: file name completing
 // TODO: custom image position
 main();

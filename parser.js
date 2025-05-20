@@ -33,9 +33,14 @@ export class NoteData {
 }
 export class JumpData {
     type = 'jump';
+    crossFile = false;
     anchor;
     constructor(anchor) {
-        this.anchor = anchor;
+        if (anchor.startsWith('>')) {
+            this.crossFile = true;
+            this.anchor = anchor.substring(1).trim();
+        }
+        else this.anchor = anchor;
     }
 }
 export class AnchorData {
