@@ -396,5 +396,6 @@ async function main() {
         if (event.key === 'Enter') await jumpLine();
     }));
 }
-// TODO: builtin vars: date & time
+// TODO: cross file jumping
+// TODO: custom image position
 main();

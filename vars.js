@@ -152,6 +152,14 @@ export class GalVars {
     initBuiltins() {
         this.registerBuiltin('random', () => new GalNum(Math.random()));
         this.registerBuiltin('randBool', () => BoolType.ofBool(Math.random() < 0.5));
+
+        this.registerBuiltin('yearNow', () => new Date().getFullYear());
+        this.registerBuiltin('monthNow', () => new Date().getMonth() + 1);
+        this.registerBuiltin('dateNow', () => new Date().getDate());
+        this.registerBuiltin('hourNow', () => new Date().getHours());
+        this.registerBuiltin('minuteNow', () => new Date().getMinutes());
+        this.registerBuiltin('secondNow', () => new Date().getSeconds());
+        this.registerBuiltin('timeStamp', () => new Date().getTime());
     }
 
     defEnumType(enumType) {
