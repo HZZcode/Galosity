@@ -169,7 +169,8 @@ class FileManager {
     }
 
     getBody() {
-        return document.body;
+        // return document.body;
+        return this.getElement('background');
     }
     getElement(pos) {
         return document.getElementById(`${pos}-image`);
@@ -212,7 +213,7 @@ class Manager {
     }
     isSelecting() {
         let data = this.paragraph.dataList[this.currentPos];
-        return data !== undefined && data.type === 'select'
+        return data !== undefined && data.type === 'select';
     }
     setEnums() {
         this.varsFrame.clearEnumTypes();
@@ -315,6 +316,9 @@ class Manager {
                 for (let key in interpolated)
                     interpolated[key] = interpolate(data[key], this.varsFrame);
                 switch (interpolated.imageType) {
+                    case 'background':
+                        this.files.transformBackground(interpolated);
+                        break;
                     case 'left': case 'center': case 'right':
                         this.files.transformImage(interpolated.imageType, interpolated);
                         break;
@@ -391,6 +395,6 @@ async function main() {
     lineInput.addEventListener('keyup', errorHandled(async event => {
         if (event.key === 'Enter') await jumpLine();
     }));
-} 
-
+}
+// TODO: builtin vars: date & time
 main();

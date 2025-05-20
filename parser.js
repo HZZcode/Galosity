@@ -148,7 +148,8 @@ export class TransformData {
         }
     }
     toString() {
-        return `translateX(calc(${this.translateX} - 50%)) `
+        // return `translateX(calc(${this.translateX} - 50%)) `
+        return `translateX(${this.translateX}) `
             + `translateY(${this.translateY}) `
             + `scaleX(${this.scaleX}) `
             + `scaleY(${this.scaleY}) `

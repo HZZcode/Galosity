@@ -11,9 +11,6 @@
             color: #333;
             height: 100vh;
             margin: 0;
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: cover;
         }
 
         .container {
@@ -129,18 +126,28 @@
         #warning {
             color: orange;
         }
+        
+        #background-image {
+            margin-left: 0;
+            background-color: #f4f4f9;
+            background-size: cover;
+            z-index: -404;
+        }
 
-        #images div {
-            position: absolute;
-            height: 50%;
-            bottom: 0;
-            transform: translateX(-50%);
-            width: 100%;
+        .image {
+            margin-left: -50%;
             background-size: contain;
             background-position: center;
             background-repeat: no-repeat;
+            transition: transform 0.3s ease;
             z-index: -1;
-            transition: ease;
+        }
+
+        #images .image {
+            position: absolute;
+            height: 50%;
+            bottom: 0;
+            width: 100%;
         }
 
         #images #left-image {
@@ -160,6 +167,7 @@
 </head>
 
 <body>
+    <div class="whole-screen image" id="background-image"></div>
     <div id="current-line"></div>
     <div>
         Jump to Line:
@@ -175,9 +183,9 @@
         <div id="speech"></div>
     </div>
     <div id="images" class="whole-screen">
-        <div id="left-image"></div>
-        <div id="center-image"></div>
-        <div id="right-image"></div>
+        <div class="image" id="left-image"></div>
+        <div class="image" id="center-image"></div>
+        <div class="image" id="right-image"></div>
     </div>
     <script src="test.js" type="module"></script>
 </body>

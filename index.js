@@ -255,7 +255,7 @@ textarea.addEventListener('mouseup', jumpTo);
 updateInfo();
 textarea.addEventListener('input', updateInfo);
 textarea.addEventListener('selectionchange', updateInfo);
-setInterval(file.autoSave.bind(file), 60000);
+setInterval(_ => file.autoSave(), 60000);
 function updateInfo(_) {
     error.clear();
     let manager = new TextAreaManager();
@@ -265,7 +265,6 @@ function updateInfo(_) {
 }
 async function processKeyDown(event) {
     let key = event.key;
-    characters.list = characterScanner.scanList();
     if (key === 'Tab') autoComplete(event);
     else if (event.ctrlKey && key === '/') comment(event);
     else if (event.ctrlKey && event.shiftKey && key.toLowerCase() === 's') await file.saveAs(event);
@@ -333,6 +332,7 @@ function completeTransformType(_) {
     if (type !== undefined) manager.insert(type, typePart.length);
 }
 function completeCharaterName(_) {
+    characters.list = characterScanner.scanList();
     let manager = new TextAreaManager();
     let line = manager.currentLine();
     let colonPos = line.search(':');
@@ -454,6 +454,7 @@ function scanControlBlocks() {
     }
 }
 async function test(fileManager = file, content = textarea.value) {
+    await file.autoSave();
     await ipcRenderer.invoke('test', { content: content, filename: fileManager.currentFile });
 }
 async function help(event) {
