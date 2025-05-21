@@ -2,3 +2,4 @@
 node_modules
 gal.txt
 build
+eslint.config.js

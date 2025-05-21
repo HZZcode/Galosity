@@ -25,14 +25,15 @@ app.whenReady().then(() => {
     const win = BrowserWindow.getAllWindows()[0];
     if (isDebug) win.webContents.openDevTools();
 
-    ipcMain.handle('showSaveDialog', async (event, options) =>
+    ipcMain.handle('showSaveDialog', (event, options) =>
         dialog.showSaveDialog(BrowserWindow.fromWebContents(event.sender), options));
-    ipcMain.handle('showOpenDialog', async (event, options) =>
+    ipcMain.handle('showOpenDialog', (event, options) =>
         dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender), options));
     ipcMain.handle('writeFile', (_, path, content) => fs.promises.writeFile(path, content, 'utf-8'));
     ipcMain.handle('readFile', (_, path) => fs.promises.readFile(path, 'utf-8'));
     ipcMain.handle('resolve', (_, pathname) => path.resolve(pathname).replaceAll('\\', '/'));
     ipcMain.handle('directory', _ => __dirname);
+    ipcMain.handle('readdir', (_, path) => fs.promises.readdir(path));
     ipcMain.handle('test', (_, data) => {
         let newWindow = new BrowserWindow({
             width: 1200,

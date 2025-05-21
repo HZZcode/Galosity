@@ -241,6 +241,7 @@ export function parseLine(line) {
         case 'Delay': {
             let seconds = Number(nonTagPart);
             if (!isNaN(seconds)) return new DelayData(seconds);
+            break;
         }
         case 'Pause': return new PauseData();
     }

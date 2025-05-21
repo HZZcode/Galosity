@@ -13,8 +13,15 @@
   "license": "ISC",
   "description": "Lite Pure-Text Galgame Editor",
   "devDependencies": {
+    "@eslint/js": "^9.27.0",
+    "@eslint/json": "^0.12.0",
     "electron": "^35.2.1",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.0.12",
+    "eslint": "^9.27.0",
+    "eslint-plugin-no-floating-promise": "^2.0.0",
+    "eslint-plugin-perfectionist": "^4.13.0",
+    "eslint-plugin-promise": "^7.2.1",
+    "globals": "^16.1.0"
   },
   "build": {
     "appId": "galosity.zz_404",
@@ -28,7 +35,8 @@
       "!gal.txt",
       "!README.md",
       "!LICENSE.txt",
-      "!sum.txt"
+      "!sum.txt",
+      "!eslint.config.js"
     ],
     "extraFiles": [
       "example.txt"

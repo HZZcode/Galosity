@@ -30,8 +30,7 @@ export class GalNum {
     type = 'num';
     value;
     constructor(value) {
-        if (value === NaN)
-            throw 'Num cannot be NaN';
+        if (isNaN(value)) throw 'Num cannot be NaN';
         this.value = value;
     }
 
@@ -209,19 +208,22 @@ export class GalVars {
 
     evaluateNode(node) {
         switch (node.type) {
-            case 'num':
+            case 'num': {
                 let value = Number.parseFloat(node.value);
-                this.assert(value !== NaN);
+                this.assert(!isNaN(value));
                 return new GalNum(value);
-            case 'enum':
+            }
+            case 'enum': {
                 let enumType = this.getEnumType(node.enumType.value);
                 return enumType.getValue(node.value.value);
-            case 'identifier':
+            }
+            case 'identifier': {
                 if (node.value in this.builtins) return this.builtins[node.value].get();
                 if (node.value in this.vars) return this.vars[node.value];
                 let enumValue = this.getEnumValue(node.value);
                 if (enumValue !== undefined) return enumValue;
                 throw `No such identifier or enum value: ${node.value}`;
+            }
             case 'factor':
                 return this.evaluateFactor(node);
             case 'leftBinary':

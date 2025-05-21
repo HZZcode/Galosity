@@ -3,35 +3,12 @@
 const { ipcRenderer } = require('electron');
 const parser = require('./parser');
 const vars = require('./vars');
+const { AutoComplete, FileComplete } = require('./completer');
+const { Files } = require('./files');
 
-class AutoComplete {
-    list;
-    chosenFoundIndex = 0;
-    found = [];
-    constructor(list = []) {
-        this.list = list;
-    }
-    clear() {
-        this.chosenFoundIndex = 0;
-        this.found = [];
-    }
-    complete(start, isFirstComplete = true) {
-        if (!isFirstComplete) {
-            this.chosenFoundIndex++;
-            this.chosenFoundIndex %= this.found.length;
-        }
-        else {
-            this.clear();
-            for (let l of this.list)
-                if (l.toLowerCase().startsWith(start.toLowerCase()))
-                    this.found.push(l);
-        }
-        return this.found[this.chosenFoundIndex];
-    }
-}
 const textarea = document.getElementById('input');
 class TextAreaManager {
-    content
+    content;
     start;
     end;
     lines;
@@ -137,11 +114,12 @@ class ErrorManager {
         this.element.innerText = '';
     }
 }
-class SaveLoadManager {
-    currentFile = null;
-    constructor() { }
+class SaveLoadManager extends Files {
+    constructor() {
+        super();
+    }
     async ofFile(file) {
-        this.currentFile = await ipcRenderer.invoke('resolve', file);
+        this.filename = await ipcRenderer.invoke('resolve', file);
         return this;
     }
     async write(path) {
@@ -150,11 +128,11 @@ class SaveLoadManager {
         const content = manager.content;
         await ipcRenderer.invoke('writeFile', path, content)
             .then(async _ => {
-                this.currentFile = await ipcRenderer.invoke('resolve', path);
+                this.filename = await ipcRenderer.invoke('resolve', path);
                 updateInfo();
                 info.innerText += ' Saved!';
                 setTimeout(updateInfo, 1000);
-            }).catch(_ => {
+            }).catch(e => {
                 console.error(e);
                 error.error(`Failed to Write to ${path}`);
             });
@@ -164,7 +142,7 @@ class SaveLoadManager {
         await ipcRenderer.invoke('readFile', path)
             .then(async content => {
                 textarea.value = content;
-                this.currentFile = await ipcRenderer.invoke('resolve', path);
+                this.filename = await ipcRenderer.invoke('resolve', path);
                 updateInfo();
                 return content;
             }).catch(e => {
@@ -180,7 +158,7 @@ class SaveLoadManager {
                 { name: 'Text Files', extensions: ['txt'] },
                 { name: 'All Files', extensions: ['*'] }
             ]
-        }).then(async result => {
+        }).then(result => {
             if (result.canceled) return;
             path = result.filePath;
         });
@@ -193,20 +171,20 @@ class SaveLoadManager {
                 { name: 'Text Files', extensions: ['txt'] },
                 { name: 'All Files', extensions: ['*'] }
             ]
-        }).then(async result => {
+        }).then(result => {
             if (result.canceled) return;
             path = result.filePaths[0];
         });
         return path;
     }
     async autoSave() {
-        await this.write(this.currentFile);
+        if (this.valid) await this.write(this.filename);
     }
     async save(event) {
         if (event !== undefined) event.preventDefault();
-        let path = this.currentFile;
-        if (path === null && textarea.value === '') return;
-        if (path === null) path = await this.getSavePath();
+        let path = this.filename;
+        if (!this.valid && textarea.value === '') return;
+        if (!this.valid) path = await this.getSavePath();
         await this.write(path);
     }
     async saveAs(event) {
@@ -220,11 +198,11 @@ class SaveLoadManager {
         let path = await this.getOpenPath();
         await this.read(path);
     }
-    async new(event) {
+    new(event) {
         event.preventDefault();
         this.save();
         textarea.value = '';
-        this.currentFile = null;
+        this.filename = null;
     }
 }
 const info = document.getElementById('info');
@@ -250,6 +228,8 @@ let transformTypeCompleter = new AutoComplete(new parser.TransformData().getAllA
 let characterScanner = new TagScanner('[Character]');
 let anchorScanner = new TagScanner('[Anchor]');
 let file = new SaveLoadManager();
+let fileCompleter = new FileComplete(_ => file.getPath(), 'txt');
+let imageCompleter = new FileComplete(_ => file.getSourcePath());
 textarea.addEventListener('keydown', processKeyDown);
 textarea.addEventListener('mouseup', jumpTo);
 updateInfo();
@@ -259,13 +239,13 @@ setInterval(_ => file.autoSave(), 60000);
 function updateInfo(_) {
     error.clear();
     let manager = new TextAreaManager();
-    let filename = file.currentFile === null ? 'Unnamed' : file.currentFile;
+    let filename = file.valid ? file.filename : 'Unnamed';
     info.innerText = `${filename}: Line ${manager.currentLineCount()}, Column ${manager.currentColumn()}`;
     scanControlBlocks();
 }
 async function processKeyDown(event) {
     let key = event.key;
-    if (key === 'Tab') autoComplete(event);
+    if (key === 'Tab') await autoComplete(event);
     else if (event.ctrlKey && key === '/') comment(event);
     else if (event.ctrlKey && event.shiftKey && key.toLowerCase() === 's') await file.saveAs(event);
     else if (event.ctrlKey && key.toLowerCase() === 's') await file.save(event);
@@ -293,7 +273,7 @@ function completeBraces(event) {
         }
     }
 }
-function autoComplete(event) {
+async function autoComplete(event) {
     let manager = new TextAreaManager();
     event.preventDefault();
     let line = manager.currentLine();
@@ -303,63 +283,81 @@ function autoComplete(event) {
         manager.edit(manager.currentLineCount(), line);
     }
     if (line.trim().startsWith('[') && (line.search(']') === -1 || front.trim().endsWith(']')))
-        completeTag(event);
+        await completeTag(event);
     else {
-        completeCharaterName(event);
-        completeJump(event);
-        completeSymbol(event);
-        completeImageType(event);
-        completeTransformType(event);
+        await completeCharaterName(event);
+        await completeJump(event);
+        await completeSymbol(event);
+        await completeImageType(event);
+        await completeTransformType(event);
+        await completeFile(event);
+        await completeImage(event);
     }
 }
-function completeImageType(_) {
+async function completeFile(_) {
+    let manager = new TextAreaManager();
+    let front = manager.currentLineFrontContent();
+    if (!front.trim().startsWith('[Jump]') || front.search('>') === -1) return;
+    let filePart = front.substring(front.search('>') + 1).trim();
+    let file = await fileCompleter.completeInclude(filePart);
+    if (file !== undefined) manager.insert(file, filePart.length);
+}
+async function completeImage(_) {
+    let manager = new TextAreaManager();
+    let front = manager.currentLineFrontContent();
+    if (!front.trim().startsWith('[Image]') || front.search(':') === -1) return;
+    let imagePart = front.substring(front.search(':') + 1).trim();
+    let image = await imageCompleter.completeInclude(imagePart);
+    if (image !== undefined) manager.insert(image, imagePart.length);
+}
+async function completeImageType(_) {
     let manager = new TextAreaManager();
     let front = manager.currentLineFrontContent();
     if (!['[Image]', '[Transform]'].some(tag => front.trim().startsWith(tag))
         || front.search(':') !== -1) return;
     let typePart = front.substring(front.search(/\]/) + 1).trim();
-    let type = imageTypeCompleter.complete(typePart, !imageTypeCompleter.list.includes(typePart));
+    let type = await imageTypeCompleter.completeInclude(typePart);
     if (type !== undefined) manager.insert(type, typePart.length);
 }
-function completeTransformType(_) {
+async function completeTransformType(_) {
     let manager = new TextAreaManager();
     let front = manager.currentLineFrontContent();
     if (!front.trim().startsWith('[Transform]')
         || front.replaceAll(/=.*?,/g, '').includes('=')) return;
     let typePart = front.substring(Math.max(front.indexOf(':'),
         front.lastIndexOf(',')) + 1).replace('[Transform]', '').trim();
-    let type = transformTypeCompleter.complete(typePart, !transformTypeCompleter.list.includes(typePart));
+    let type = await transformTypeCompleter.completeInclude(typePart);
     if (type !== undefined) manager.insert(type, typePart.length);
 }
-function completeCharaterName(_) {
-    characters.list = characterScanner.scanList();
+async function completeCharaterName(_) {
+    characters.setList(characterScanner.scanList());
     let manager = new TextAreaManager();
     let line = manager.currentLine();
     let colonPos = line.search(':');
     if (colonPos !== -1 && colonPos !== line.length - 1) return;
     if (line.trim().startsWith('[')) return;
     let namePart = line;
-    let name = characters.complete(namePart, colonPos === -1);
+    let name = await characters.complete(namePart, colonPos === -1);
     if (name !== undefined) manager.edit(manager.currentLineCount(), name + ':');
 }
-function completeTag(_) {
+async function completeTag(_) {
     let manager = new TextAreaManager();
     let line = manager.currentLine();
-    let tag = tags.complete('[' + line.replaceAll('[', '').replaceAll(']', ''), line.search(']') === -1);
+    let tag = await tags.complete('[' + line.replaceAll('[', '').replaceAll(']', ''), line.search(']') === -1);
     if (tag !== undefined) manager.edit(manager.currentLineCount(), tag);
     if (['[Case]', '[Var]', '[Enum]', '[Image]', '[Transform]'].some(t => t === tag)) {
         manager.edit(manager.currentLineCount(), tag + ':');
         manager.move(-1);
     }
 }
-function completeJump(_) {
+async function completeJump(_) {
     let manager = new TextAreaManager();
     let line = manager.currentLine();
     if (!line.trim().startsWith('[Jump]')) return;
     let anchors = anchorScanner.scanList();
-    anchorCompleter.list = anchors;
+    anchorCompleter.setList(anchors);
     let anchorPart = line.replace('[Jump]', '').trim();
-    let anchor = anchorCompleter.complete(anchorPart, !anchors.includes(anchorPart));
+    let anchor = await anchorCompleter.completeInclude(anchorPart);
     if (anchor !== undefined) manager.edit(manager.currentLineCount(), '[Jump] ' + anchor);
 }
 function getBuiltins() {
@@ -367,19 +365,19 @@ function getBuiltins() {
     frame.initBuiltins();
     return Object.keys(frame.builtins);
 }
-function completeSymbol(_) {
+async function completeSymbol(_) {
     let manager = new TextAreaManager();
     if (!needSymbol()) return;
     let symbols = scanSymbols().concat(getBuiltins());
-    symbolCompleter.list = symbols;
+    symbolCompleter.setList(symbols);
     let symbolPart = manager.currentLineFrontContent().replaceAll('${', ' ').split(/\s/).at(-1);
     if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(symbolPart)) return;
-    let symbol = symbolCompleter.complete(symbolPart, !symbols.includes(symbolPart));
+    let symbol = await symbolCompleter.completeInclude(symbolPart);
     if (symbol !== undefined) manager.insert(symbol, symbolPart.length);
 }
 function needSymbol() {
     let manager = new TextAreaManager();
-    let isVar = /^\[Var\].*?\:/.test(manager.currentLineFrontContent().trim());
+    let isVar = /^\[Var\].*?:/.test(manager.currentLineFrontContent().trim());
     let isSwitch = manager.currentLineFrontContent().trim().startsWith('[Switch]');
     let leftInterpolate = manager.currentLineFrontContent().replaceAll(/\$\{.*?\}/g, '').includes('${');
     let rightInterpolate = manager.currentLineBackContent().replaceAll(/\$\{.*?\}/g, '').includes('}');
@@ -455,13 +453,12 @@ function scanControlBlocks() {
 }
 async function test(fileManager = file, content = textarea.value) {
     await file.autoSave();
-    await ipcRenderer.invoke('test', { content: content, filename: fileManager.currentFile });
+    await ipcRenderer.invoke('test', { content: content, filename: fileManager.filename });
 }
 async function help(event) {
     event.preventDefault();
     let content = await ipcRenderer.invoke('readFile', 'example.txt').catch(_ => {
         error.error(`Cannot find example.txt`);
-        success = false;
     });
-    test(await new SaveLoadManager().ofFile('example.txt'), content);
+    await test(await new SaveLoadManager().ofFile('example.txt'), content);
 }

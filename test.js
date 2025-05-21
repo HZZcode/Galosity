@@ -2,6 +2,7 @@ const { ipcRenderer } = require('electron');
 const parser = require('./parser');
 const vars = require('./vars');
 const lodash = require('lodash');
+const { Files } = require('./files');
 
 const character = document.getElementById('character');
 const speech = document.getElementById('speech');
@@ -54,6 +55,7 @@ class TextManager {
         character.innerText = name;
         speech.innerHTML = text;
         speech.style.color = color;
+        // eslint-disable-next-line no-undef
         MathJax.typeset();
     }
     outputNote(note) {
@@ -152,23 +154,9 @@ class Frame {
     }
 }
 
-class ResourceManager {
-    filename;
+class ResourceManager extends Files {
     constructor(filename = null) {
-        this.filename = filename;
-    }
-    async check() {
-        if (this.filename === null)
-            this.filename = await ipcRenderer.invoke('directory') + '/?';
-    }
-    getPath() {
-        return this.filename.split('/').slice(0, -1).join('/');
-    }
-    getRelative(file) {
-        return this.getPath() + '/' + file;
-    }
-    getSource(file) {
-        return this.getRelative('src/' + file);
+        super(filename);
     }
 
     getBody() {
@@ -178,21 +166,21 @@ class ResourceManager {
         return document.getElementById(`${pos}-image`);
     }
 
-    clear() {
+    async clear() {
         document.getElementById('images').childNodes
-            .forEach(element => this.setElementImage(element, 'clear'));
-        this.setBackground('clear');
+            .forEach(async element => await this.setElementImage(element, 'clear'));
+        await this.setBackground('clear');
     }
 
-    setElementImage(element, file) {
+    async setElementImage(element, file) {
         if (element === undefined || element.style === undefined) return;
-        element.style.backgroundImage = file !== 'clear' ? `url("${this.getSource(file)}")` : '';
+        element.style.backgroundImage = file !== 'clear' ? `url("${await this.getSource(file)}")` : '';
     }
-    setBackground(file) {
-        this.setElementImage(this.getBody(), file);
+    async setBackground(file) {
+        await this.setElementImage(this.getBody(), file);
     }
-    setImage(pos, file) {
-        this.setElementImage(this.getElement(pos), file);
+    async setImage(pos, file) {
+        await this.setElementImage(this.getElement(pos), file);
     }
 
     transformElement(element, transform) {
@@ -220,7 +208,7 @@ class Manager {
         this.varsFrame.initBuiltins();
         this.paragraph = new parser.Paragraph(lines);
         this.currentPos = -1;
-        this.resources.clear();
+        await this.resources.clear();
         await this.next();
     }
     isSelecting() {
@@ -236,7 +224,7 @@ class Manager {
         }
     }
     async jumpFile(path) {
-        path = this.resources.getRelative(path);
+        path = await this.resources.getRelative(path);
         await ipcRenderer.invoke('readFile', path)
             .then(async content => await this.set(content.split(/\r?\n/)))
             .catch(e => {
@@ -292,8 +280,8 @@ class Manager {
                     } catch (e) {
                         error.error(e);
                     }
-                    return false;
                 }
+                return false;
             }
             case 'break': {
                 let casePos = this.paragraph.getCasePosAt(this.currentPos);
@@ -327,10 +315,10 @@ class Manager {
                 let file = interpolate(data.imageFile, this.varsFrame);
                 switch (data.imageType) {
                     case 'background':
-                        this.resources.setBackground(file);
+                        await this.resources.setBackground(file);
                         break;
                     case 'left': case 'center': case 'right':
-                        this.resources.setImage(data.imageType, file);
+                        await this.resources.setImage(data.imageType, file);
                         break;
                 }
                 return false;
@@ -421,4 +409,6 @@ async function main() {
 }
 // TODO: file name completing
 // TODO: custom image position
+
+// eslint-disable-next-line floatingPromise/no-floating-promise
 main();
