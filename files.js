@@ -4,14 +4,17 @@ export class Files {
     filename;
     valid = false;
     constructor(filename = null) {
-        this.filename = filename;
-        this.valid = filename !== null;
+        this.setFile(filename);
     }
     async check() {
         if (this.filename === null) {
             this.filename = await ipcRenderer.invoke('directory') + '/?';
             this.valid = false;
         }
+    }
+    setFile(filename) {
+        this.filename = filename;
+        this.valid = filename !== null;
     }
     async getPath() {
         await this.check();

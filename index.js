@@ -119,7 +119,7 @@ class SaveLoadManager extends Files {
         super();
     }
     async ofFile(file) {
-        this.filename = await ipcRenderer.invoke('resolve', file);
+        this.setFile(await ipcRenderer.invoke('resolve', file));
         return this;
     }
     async write(path) {
@@ -128,7 +128,7 @@ class SaveLoadManager extends Files {
         const content = manager.content;
         await ipcRenderer.invoke('writeFile', path, content)
             .then(async _ => {
-                this.filename = await ipcRenderer.invoke('resolve', path);
+                this.setFile(await ipcRenderer.invoke('resolve', path));
                 updateInfo();
                 info.innerText += ' Saved!';
                 setTimeout(updateInfo, 1000);
@@ -142,7 +142,7 @@ class SaveLoadManager extends Files {
         await ipcRenderer.invoke('readFile', path)
             .then(async content => {
                 textarea.value = content;
-                this.filename = await ipcRenderer.invoke('resolve', path);
+                this.setFile(await ipcRenderer.invoke('resolve', path));
                 updateInfo();
                 return content;
             }).catch(e => {
@@ -202,7 +202,7 @@ class SaveLoadManager extends Files {
         event.preventDefault();
         this.save();
         textarea.value = '';
-        this.filename = null;
+        this.setFile(null);
     }
 }
 const info = document.getElementById('info');
@@ -250,7 +250,7 @@ async function processKeyDown(event) {
     else if (event.ctrlKey && event.shiftKey && key.toLowerCase() === 's') await file.saveAs(event);
     else if (event.ctrlKey && key.toLowerCase() === 's') await file.save(event);
     else if (event.ctrlKey && key.toLowerCase() === 'o') await file.open(event);
-    else if (event.ctrlKey && key.toLowerCase() === 'n') await file.new(event);
+    else if (event.ctrlKey && key.toLowerCase() === 'n') file.new(event);
     else if (event.ctrlKey && key.toLowerCase() === 'h') await help(event);
     else if (key === 'F5') await test();
     else if (key === '{') completeBraces(event);

@@ -4,8 +4,8 @@
   "main": "main.js",
   "type": "module",
   "scripts": {
-    "start": "electron .",
-    "build": "electron-builder",
+    "start": "cross-env NODE_ENV=development electron .",
+    "build": "cross-env NODE_ENV=production electron-builder",
     "grammar": "npx pegjs -o grammar.cjs grammar.pegjs"
   },
   "keywords": [],
@@ -15,6 +15,7 @@
   "devDependencies": {
     "@eslint/js": "^9.27.0",
     "@eslint/json": "^0.12.0",
+    "cross-env": "^7.0.3",
     "electron": "^35.2.1",
     "electron-builder": "^26.0.12",
     "eslint": "^9.27.0",

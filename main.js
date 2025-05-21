@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import fs from 'fs';
 import path from 'path';
 
-const isDebug = true;
+const isDebug = process.env.NODE_ENV === 'development';
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 function createWindow() {

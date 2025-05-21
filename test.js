@@ -203,9 +203,11 @@ class Manager {
     texts = new TextManager();
     buttons = new ButtonsManager();
     resources = new ResourceManager();
-    async set(lines) {
+    init() {
         this.varsFrame = new vars.GalVars();
         this.varsFrame.initBuiltins();
+    }
+    async set(lines) {
         this.paragraph = new parser.Paragraph(lines);
         this.currentPos = -1;
         await this.resources.clear();
@@ -377,6 +379,7 @@ let manager = new Manager();
 let initPromise = new Promise((resolve, reject) => {
     try {
         ipcRenderer.on('send-data', async (_, data) => {
+            manager.init();
             await manager.set(data.content.split(/\r?\n/));
             manager.resources.filename = data.filename;
             resolve();
@@ -407,7 +410,6 @@ async function main() {
         if (event.key === 'Enter') await jumpLine();
     }));
 }
-// TODO: file name completing
 // TODO: custom image position
 
 // eslint-disable-next-line floatingPromise/no-floating-promise
