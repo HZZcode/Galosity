@@ -78,25 +78,25 @@ class TextAreaManager {
 }
 class TagScanner {
     tag;
-    list = [];
     constructor(tag) {
         this.tag = tag;
     }
-    scanList() {
+    scanRawList() {
         let manager = new TextAreaManager();
-        this.list = [];
-        for (let line of manager.lines)
-            if (line.startsWith(this.tag))
-                this.list.push(line.substring(this.tag.length).trim());
-        return this.list;
+        return manager.lines.filter(line => line.startsWith(this.tag));
+    }
+    scanList() {
+        return this.scanRawList().map(line => line.substring(this.tag.length).trim());
+    }
+    scanLines(name) {
+        let manager = new TextAreaManager();
+        return manager.lines.filter(line => line.startsWith(this.tag)
+            && line.substring(this.tag.length).trim() === name.trim())
+            .map((_, index) => index);
     }
     scanLine(name) {
-        let manager = new TextAreaManager();
-        this.list = [];
-        for (let [index, line] of manager.lines.entries())
-            if (line.startsWith(this.tag) && line.substring(this.tag.length).trim() === name.trim())
-                return index;
-        return -1;
+        let lines = this.scanLines(name);
+        return lines.length === 0 ? -1 : lines[0];
     }
 }
 class ErrorManager {
@@ -221,12 +221,12 @@ let tags = new AutoComplete([
 // [Note] I hope to use less words with same beginning letters for better Tab completing
 let anchorCompleter = new AutoComplete();
 let symbolCompleter = new AutoComplete();
-let imageTypeCompleter = new AutoComplete([
-    'background', 'left', 'center', 'right'
-]);
+const imageTypes = ['background', 'left', 'center', 'right'];
+let imageTypeCompleter = new AutoComplete();
 let transformTypeCompleter = new AutoComplete(new parser.TransformData().getAllArgs());
 let characterScanner = new TagScanner('[Character]');
 let anchorScanner = new TagScanner('[Anchor]');
+let imageTypeScanner = new TagScanner('[Image]');
 let file = new SaveLoadManager();
 let fileCompleter = new FileComplete(_ => file.getPath(), 'txt');
 let imageCompleter = new FileComplete(_ => file.getSourcePath());
@@ -310,8 +310,16 @@ async function completeImage(_) {
     let image = await imageCompleter.completeInclude(imagePart);
     if (image !== undefined) manager.insert(image, imagePart.length);
 }
+function scanImageTypes() {
+    return imageTypeScanner.scanRawList()
+        .map(parser.parseLine)
+        .filter(data => data.imageFile.trim().startsWith('@'))
+        .map(data => data.imageType)
+        .concat(imageTypes);
+}
 async function completeImageType(_) {
     let manager = new TextAreaManager();
+    imageTypeCompleter.setList(scanImageTypes());
     let front = manager.currentLineFrontContent();
     if (!['[Image]', '[Transform]'].some(tag => front.trim().startsWith(tag))
         || front.search(':') !== -1) return;

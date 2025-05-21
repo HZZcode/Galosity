@@ -203,12 +203,15 @@ Ichiku: Then input `[Image] background: image.png` and see what happens.
 Ichiku: Clear the background with `[Image] background: clear`.
 [Image] background: clear
 ZZ: There are also 3 positions for characters: left, center and right.
-[Note] TODO: There will be customize positions s∞n...
 Ichiku: To use these positions, simply replace `background` with `left`, `center` or `right`.
 [Image] background: bg2.png
 [Image] left: Ichiku.png
 Ichiku: Hi! I'm Ichiku! Am I cute?
-ZZ: Whatever... We're going to the next part~
+ZZ: Whatever...
+ZZ: You can also insert an custom position, with an argument representing the distance from the left side.
+Ichiku: Try: input `[Image] pos: @40%`, and then `[Image] pos: image.png`.
+[Image] pos: @40%
+[Image] pos: Ichiku.png
 
 [Part] Transformations
 ZZ: Transformations are used to transform images...

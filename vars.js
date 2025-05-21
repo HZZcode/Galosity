@@ -39,7 +39,10 @@ export class GalNum {
     }
 
     toString() {
-        return this.value.toString().replace(/(\.\d*?)0{5,}.*$/, '$1').replace(/\.$/, '');
+        return this.value.toString()
+            .replace(/(\.\d*?)0{5,}.*$/, '$1')
+            .replace(/(\.\d*?)9{5,}.*$/, '$1')
+            .replace(/\.$/, '');
     }
 }
 
@@ -53,7 +56,7 @@ export class GalEnumType {
         let duplicates = findDuplicates(values);
         if (duplicates.length !== 0)
             throw `Found duplicate enum value: ${name}.${duplicates[0]}`
-        
+
         if (!isIdentifier(name)) throw `Name of enum ${name} is invalid`;
         let nonIdentifiers = values.filter(value => !isIdentifier(value));
         if (nonIdentifiers.length !== 0)

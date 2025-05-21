@@ -155,39 +155,51 @@ class Frame {
 }
 
 class ResourceManager extends Files {
+    parent = document.getElementById('images');
     constructor(filename = null) {
         super(filename);
     }
-
-    getBody() {
-        return this.getElement('background');
+    getImageElements() {
+        return [...this.parent.querySelectorAll('.image')];
+    }
+    getElements() {
+        return this.getImageElements().concat([this.getElement('background')]);
     }
     getElement(pos) {
         return document.getElementById(`${pos}-image`);
     }
 
     async clear() {
-        document.getElementById('images').childNodes
-            .forEach(async element => await this.setElementImage(element, 'clear'));
-        await this.setBackground('clear');
+        this.getImageElements().forEach(async element => await this.setElementImage(element, 'clear'));
+        await this.setImage('background', 'clear');
+    }
+
+    defImagePos(pos, left) {
+        let id = `${pos}-image`;
+        if (this.getElements().some(element => element.id === id))
+            this.getElement(pos).style.left = left;
+        let element = document.createElement('div');
+        element.className = 'image';
+        element.id = id;
+        element.style.left = left;
+        this.parent.appendChild(element);
     }
 
     async setElementImage(element, file) {
         if (element === undefined || element.style === undefined) return;
         element.style.backgroundImage = file !== 'clear' ? `url("${await this.getSource(file)}")` : '';
     }
-    async setBackground(file) {
-        await this.setElementImage(this.getBody(), file);
-    }
     async setImage(pos, file) {
-        await this.setElementImage(this.getElement(pos), file);
+        if (file.trim().startsWith('@')) {
+            let left = file.replace('@', '').trim();
+            this.defImagePos(pos, left);
+        }
+        else await this.setElementImage(this.getElement(pos), file);
     }
 
     transformElement(element, transform) {
+        if (element === undefined || element.style === undefined) return;
         element.style.transform = transform.toString();
-    }
-    transformBackground(transform) {
-        this.transformElement(this.getBody(), transform);
     }
     transformImage(pos, transform) {
         this.transformElement(this.getElement(pos), transform);
@@ -315,28 +327,14 @@ class Manager {
             case 'image': {
                 await this.resources.check();
                 let file = interpolate(data.imageFile, this.varsFrame);
-                switch (data.imageType) {
-                    case 'background':
-                        await this.resources.setBackground(file);
-                        break;
-                    case 'left': case 'center': case 'right':
-                        await this.resources.setImage(data.imageType, file);
-                        break;
-                }
+                await this.resources.setImage(data.imageType, file);
                 return false;
             }
             case 'transform': {
                 let interpolated = lodash.cloneDeep(data);
                 for (let key in interpolated)
                     interpolated[key] = interpolate(data[key], this.varsFrame);
-                switch (interpolated.imageType) {
-                    case 'background':
-                        this.resources.transformBackground(interpolated);
-                        break;
-                    case 'left': case 'center': case 'right':
-                        this.resources.transformImage(interpolated.imageType, interpolated);
-                        break;
-                }
+                this.resources.transformImage(interpolated.imageType, interpolated);
                 return false;
             }
             case 'delay': {
@@ -410,7 +408,7 @@ async function main() {
         if (event.key === 'Enter') await jumpLine();
     }));
 }
-// TODO: custom image position
+// TODO: inplace eval
 
 // eslint-disable-next-line floatingPromise/no-floating-promise
 main();
