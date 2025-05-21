@@ -29,7 +29,8 @@
             z-index: 1;
         }
 
-        :focus-visible, #jump:hover {
+        :focus-visible,
+        .debug-button:hover {
             outline: -webkit-focus-ring-color auto 1px;
         }
 
@@ -37,8 +38,8 @@
             background-color: #c4c4c4c4;
         }
 
-        #line,
-        #jump {
+        .debug-input,
+        .debug-button {
             background-color: rgba(255, 255, 255, 0.8);
             border-radius: 5px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -106,6 +107,8 @@
             position: absolute;
             top: 13%;
             left: 5%;
+            font-size: xx-large;
+            font-style: italic;
         }
 
         /* WebKit browsers */
@@ -128,7 +131,7 @@
         #warning {
             color: orange;
         }
-        
+
         #background-image {
             margin-left: 0;
             background-color: #f4f4f9;
@@ -172,10 +175,17 @@
     <div class="whole-screen image" id="background-image"></div>
     <div id="current-line"></div>
     <div>
-        Jump to Line:
-        <input type="number" id="line" name="line" min="0">
-        <button id="jump">Go</button><br>
-        <div id="error"></div><br>
+        <div>
+            Jump to Line:
+            <input type="number" id="line" class="debug-input" name="line" min="0">
+            <button id="jump" class="debug-button">Go</button>
+        </div>
+        <div>
+            Eval:
+            <input type="text" id="code" class="debug-input" name="code">
+            <button id="eval" class="debug-button">Go</button>
+        </div>
+        <div id="error"></div>
         <div id="warning"></div>
     </div>
     <div id="buttons" class="whole-screen"></div>

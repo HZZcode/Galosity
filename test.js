@@ -10,6 +10,8 @@ const part = document.getElementById('part');
 const jump = document.getElementById('jump');
 const lineInput = document.getElementById('line');
 const currentLine = document.getElementById('current-line');
+const evalButton = document.getElementById('eval');
+const codeInput = document.getElementById('code');
 
 const handleError = true;
 
@@ -370,6 +372,9 @@ class Manager {
         do this.currentPos++; while (!await this.process(this.paragraph.dataList[this.currentPos]));
         this.history.push(new Frame(this.currentPos, this.varsFrame.copy()));
     } // DO NOT call `jump` directly in `process`!!!
+    async eval(line) {
+        await this.process(parser.parseLine(line));
+    }
 }
 
 let manager = new Manager();
@@ -399,6 +404,7 @@ async function main() {
         if (key === 'Backspace') manager.previous();
         else if (key === 'Enter') await manager.next();
     }));
+
     async function jumpLine() {
         let index = lineInput.value;
         if (isNum(index)) await manager.jump(new Frame(index));
@@ -407,8 +413,16 @@ async function main() {
     lineInput.addEventListener('keyup', errorHandled(async event => {
         if (event.key === 'Enter') await jumpLine();
     }));
+
+    async function evalCode() {
+        let code = codeInput.value;
+        await manager.eval(code);
+    }
+    evalButton.addEventListener('click', errorHandled(async _ => await evalCode()));
+    codeInput.addEventListener('keyup', errorHandled(async event => {
+        if (event.key === 'Enter') await evalCode();
+    }));
 }
-// TODO: inplace eval
 
 // eslint-disable-next-line floatingPromise/no-floating-promise
 main();
