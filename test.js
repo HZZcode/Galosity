@@ -176,14 +176,18 @@ class ResourceManager extends Files {
         await this.setImage('background', 'clear');
     }
 
-    defImagePos(pos, left) {
+    defImagePos(pos, left, bottom) {
         let id = `${pos}-image`;
+        let setPos = element => {
+            element.style.left = left;
+            element.style.bottom = bottom;
+        };
         if (this.getElements().some(element => element.id === id))
-            this.getElement(pos).style.left = left;
+            setPos(this.getElement(pos));
         let element = document.createElement('div');
         element.className = 'image';
         element.id = id;
-        element.style.left = left;
+        setPos(element);
         this.parent.appendChild(element);
     }
 
@@ -193,8 +197,13 @@ class ResourceManager extends Files {
     }
     async setImage(pos, file) {
         if (file.trim().startsWith('@')) {
-            let left = file.replace('@', '').trim();
-            this.defImagePos(pos, left);
+            file = file.replace('@', '');
+            let left = file.trim();
+            let bottom = 0;
+            if (file.includes(',')) {
+                [left, bottom] = parser.splitWith(',')(file);
+            }
+            this.defImagePos(pos, left, bottom);
         }
         else await this.setElementImage(this.getElement(pos), file);
     }

@@ -208,9 +208,10 @@ Ichiku: To use these positions, simply replace `background` with `left`, `center
 [Image] left: Ichiku.png
 Ichiku: Hi! I'm Ichiku! Am I cute?
 ZZ: Whatever...
-ZZ: You can also insert an custom position, with an argument representing the distance from the left side.
-Ichiku: Try: input `[Image] pos: @40%`, and then `[Image] pos: image.png`.
-[Image] pos: @40%
+ZZ: You can also insert an custom position, with two argument representing the distance from the left side and from the bottom.
+Ichiku: Try: input `[Image] pos: @40%,20%`, and then `[Image] pos: image.png`.
+Ichiku: The distance from the bottom is defaulted to 0. For example, `[Image] pos: @40%` is valid.
+[Image] pos: @40%,20%
 [Image] pos: Ichiku.png
 
 [Part] Transformations

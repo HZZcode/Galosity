@@ -37,10 +37,12 @@
       "!README.md",
       "!LICENSE.txt",
       "!sum.txt",
-      "!eslint.config.js"
+      "!eslint.config.js",
+      "!src"
     ],
     "extraFiles": [
-      "example.txt"
+      "example.txt",
+      "src"
     ],
     "win": {
       "target": "nsis"

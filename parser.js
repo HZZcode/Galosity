@@ -1,41 +1,49 @@
-export class EmptyData {
-    type = 'comment';
+export class GalData {
+    type;
+    constructor(type) {
+        this.type = type;
+    }
 }
-export class CharacterData {
-    type = 'character';
+export class EmptyData extends GalData {
+    constructor() {
+        super('comment');
+    }
+}
+export class CharacterData extends GalData {
     name;
     constructor(name) {
+        super('character');
         this.name = name;
     }
 }
-export class SpeechData {
-    type = 'sentence';
+export class SpeechData extends GalData {
     character;
     sentence;
     constructor(character, sentence) {
+        super('sentence');
         this.character = character;
         this.sentence = sentence;
     }
 }
-export class PartData {
-    type = 'part';
+export class PartData extends GalData {
     part;
     constructor(part) {
+        super('part');
         this.part = part;
     }
 }
-export class NoteData {
-    type = 'note';
+export class NoteData extends GalData {
     note;
     constructor(note) {
+        super('note');
         this.note = note;
     }
 }
-export class JumpData {
-    type = 'jump';
+export class JumpData extends GalData {
     crossFile = false;
     anchor;
     constructor(anchor) {
+        super('jump');
         if (anchor.startsWith('>')) {
             this.crossFile = true;
             this.anchor = anchor.substring(1).trim();
@@ -43,78 +51,81 @@ export class JumpData {
         else this.anchor = anchor;
     }
 }
-export class AnchorData {
-    type = 'anchor';
+export class AnchorData extends GalData {
     anchor;
     constructor(anchor) {
+        super('anchor');
         this.anchor = anchor;
     }
 }
-export class SelectData {
-    type = 'select';
+export class SelectData extends GalData {
     question;
     constructor(question) {
+        super('select');
         this.question = question;
     }
 }
-export class CaseData {
-    type = 'case';
+export class CaseData extends GalData {
     text;
     constructor(text) {
+        super('case');
         this.text = text;
     }
 }
-export class BreakData {
-    type = 'break';
+export class BreakData extends GalData {
+    constructor() {
+        super('break');
+    }
 }
-export class EndData {
-    type = 'end';
+export class EndData extends GalData {
+    constructor() {
+        super('end');
+    }
 }
-export class VarData {
-    type = 'var';
+export class VarData extends GalData {
     name;
     expr;
     constructor(name, expr) {
+        super('var');
         this.name = name;
         this.expr = expr;
     }
 }
-export class EnumData {
-    type = 'enum';
+export class EnumData extends GalData {
     name;
     values;
     constructor(name, values) {
+        super('enum');
         this.name = name;
         this.values = values;
     }
 }
-export class SwitchData {
-    type = 'switch';
+export class SwitchData extends GalData {
     expr;
     constructor(expr) {
+        super('switch')
         this.expr = expr;
     }
 }
-export class InputData {
-    type = 'input';
+export class InputData extends GalData {
     valueVar;
     errorVar;
     constructor(valueVar, errorVar) {
+        super('input');
         this.valueVar = valueVar;
         this.errorVar = errorVar;
     }
 }
-export class ImageData {
-    type = 'image';
+export class ImageData extends GalData {
     imageType;
     imageFile;
     constructor(imageType, imageFile) {
+        super('image');
         this.imageType = imageType;
         this.imageFile = imageFile;
     }
 }
-export class TransformData {
-    type = 'transform';
+export class TransformData extends GalData {
     imageType;
     translateX = '0px';
     translateY = '0px';
@@ -140,6 +151,7 @@ export class TransformData {
         return [...new Set(args)].sort();
     }
     constructor(imageType, transformations) {
+        super('transform');
         this.imageType = imageType;
         if (transformations === undefined) return;
         for (let key of this.getArgs()) {
@@ -163,15 +175,17 @@ export class TransformData {
             + `rotate(${this.rotate})`;
     }
 }
-export class DelayData {
-    type = 'delay';
+export class DelayData extends GalData {
     seconds = 0;
     constructor(seconds) {
+        super('delay');
         this.seconds = seconds;
     }
 }
-export class PauseData {
-    type = 'pause';
+export class PauseData extends GalData {
+    constructor() {
+        super('pause');
+    }
 }
 
 function parseSpeech(line) {
@@ -189,6 +203,10 @@ function parseConfig(configs) {
     return object;
 }
 
+export const splitWith = char => str =>
+    [str.substring(0, str.indexOf(char)).trim(),
+    str.substring(str.indexOf(char) + 1).trim()];
+
 export function parseLine(line) {
     if (line.trim().startsWith('//')) return new EmptyData();
     if (!line.trim().startsWith('[') || line.search(']') === -1)
@@ -199,12 +217,9 @@ export function parseLine(line) {
     let tag = line.substring(leftBracket + 1, rightBracket).trim();
     let nonTagPart = line.substring(rightBracket + 1).trim();
 
-    let trimQuote = str => str.substring(0, str.indexOf(':'))
-        + str.substring(str.indexOf(':') + 1);
-    let splitWithQuote = str => [str.substring(0, str.indexOf(':')).trim(),
-    str.substring(str.indexOf(':') + 1).trim()];
-    let splitWithComma = str => [str.substring(0, str.indexOf(',')).trim(),
-    str.substring(str.indexOf(',') + 1).trim()];
+    let splitWithQuote = splitWith(':');
+    let splitWithComma = splitWith(',');
+    let trimQuote = str => splitWithQuote(str)[0];
 
     switch (tag) {
         case 'Character': return new CharacterData(nonTagPart);
