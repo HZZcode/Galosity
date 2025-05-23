@@ -86,7 +86,7 @@ class ButtonsManager {
     parent = document.getElementById('buttons');
     inputFunc = null;
     clear() {
-        let inputs = this.getInput();
+        const inputs = this.getInput();
         if (inputs.length !== 0 && this.inputFunc !== null)
             this.inputFunc(inputs[0].value);
         this.inputFunc = null;
@@ -96,8 +96,8 @@ class ButtonsManager {
         return this.parent.getElementsByTagName('input');
     }
     drawButton(button, bottom) {
-        let name = button.text;
-        let element = document.createElement('div');
+        const name = button.text;
+        const element = document.createElement('div');
         element.innerText = name;
         element.className = 'container button';
         element.style.bottom = bottom;
@@ -107,18 +107,18 @@ class ButtonsManager {
         this.parent.appendChild(element);
     }
     drawButtons(buttons) {
-        let num = buttons.length;
-        let midHeight = 50;
-        let totalHeight = num * 10 - 3;
-        let minHeight = midHeight + totalHeight / 2;
-        for (let [i, button] of buttons.entries()) {
-            let height = minHeight - i * 10;
+        const num = buttons.length;
+        const midHeight = 50;
+        const totalHeight = num * 10 - 3;
+        const minHeight = midHeight + totalHeight / 2;
+        for (const [i, button] of buttons.entries()) {
+            const height = minHeight - i * 10;
             this.drawButton(button, height + '%');
         }
         //65% -> 35%, height = 7%, distance = 3%
     }
     drawInput(func = null) {
-        let element = document.createElement('input');
+        const element = document.createElement('input');
         element.className = 'container input';
         element.addEventListener('keyup', errorHandled(async event => {
             if (event.key === 'Enter') await manager.next();
@@ -132,14 +132,14 @@ function interpolate(text, varsFrame) {
     if (typeof text !== 'string') return text;
     text = text.trim();
     const regex = /(\$\{([^}]+)\})/g;
-    let matches = [];
+    const matches = [];
     let match;
     while ((match = regex.exec(text)) !== null)
         matches.push(match[1]);
-    for (let sub of matches) {
+    for (const sub of matches) {
         varsFrame.warn = '';
         errorHandledAsWarning(() => {
-            let value = varsFrame.evaluate(sub.substring(2, sub.length - 1));
+            const value = varsFrame.evaluate(sub.substring(2, sub.length - 1));
             text = text.replace(sub, value.toString());
         })();
         if (varsFrame.warn !== '') error.warn('Warning' + varsFrame.warn);
@@ -177,14 +177,14 @@ class ResourceManager extends Files {
     }
 
     defImagePos(pos, left, bottom) {
-        let id = `${pos}-image`;
-        let setPos = element => {
+        const id = `${pos}-image`;
+        const setPos = element => {
             element.style.left = left;
             element.style.bottom = bottom;
         };
         if (this.getElements().some(element => element.id === id))
             setPos(this.getElement(pos));
-        let element = document.createElement('div');
+        const element = document.createElement('div');
         element.className = 'image';
         element.id = id;
         setPos(element);
@@ -237,14 +237,14 @@ class Manager {
         await this.next();
     }
     isSelecting() {
-        let data = this.paragraph.dataList[this.currentPos];
+        const data = this.paragraph.dataList[this.currentPos];
         return data !== undefined && data.type === 'select';
     }
     setEnums() {
         this.varsFrame.clearEnumTypes();
-        for (let data of this.paragraph.scanEnumsAt(this.currentPos)) {
-            let name = data.name.trim();
-            let values = data.values.map(value => value.trim());
+        for (const data of this.paragraph.scanEnumsAt(this.currentPos)) {
+            const name = data.name.trim();
+            const values = data.values.map(value => value.trim());
             this.varsFrame.defEnumType(new vars.GalEnumType(name, values));
         }
     }
@@ -277,15 +277,15 @@ class Manager {
             case 'jump': {
                 if (data.crossFile) this.jumpFile(data.anchor);
                 else {
-                    let pos = this.paragraph.findAnchorPos(data.anchor);
+                    const pos = this.paragraph.findAnchorPos(data.anchor);
                     if (pos === -1) throw `Anchor not found: ${data.anchor}`;
                     this.currentPos = pos - 1;
                 }
                 return false;
             }
             case 'select': {
-                let block = this.paragraph.findStartControlBlock(this.currentPos);
-                let buttons = block.casesPosList.map(pos =>
+                const block = this.paragraph.findStartControlBlock(this.currentPos);
+                const buttons = block.casesPosList.map(pos =>
                     new ButtonData(interpolate(this.paragraph.dataList[pos].text, this.varsFrame),
                         async () => await this.jump(new Frame(pos, this.varsFrame.copy()))))
                 this.buttons.drawButtons(buttons);
@@ -293,12 +293,12 @@ class Manager {
             }
             case 'case': {
                 if (this.paragraph.getCaseType(this.currentPos) === 'switch') {
-                    let block = this.paragraph.findCaseControlBlock(this.currentPos);
-                    let switchData = this.paragraph.dataList[block.startPos];
+                    const block = this.paragraph.findCaseControlBlock(this.currentPos);
+                    const switchData = this.paragraph.dataList[block.startPos];
                     try {
-                        let value = this.varsFrame.evaluate(switchData.expr);
-                        let matchValue = this.varsFrame.evaluate(data.text);
-                        let next = block.next(this.currentPos);
+                        const value = this.varsFrame.evaluate(switchData.expr);
+                        const matchValue = this.varsFrame.evaluate(data.text);
+                        const next = block.next(this.currentPos);
                         if (next === undefined) throw `Case error at line ${this.currentPos}`;
                         if (!this.varsFrame.equal(value, matchValue))
                             this.currentPos = next;
@@ -309,10 +309,10 @@ class Manager {
                 return false;
             }
             case 'break': {
-                let casePos = this.paragraph.getCasePosAt(this.currentPos);
-                let block = this.paragraph.findCaseControlBlock(casePos);
+                const casePos = this.paragraph.getCasePosAt(this.currentPos);
+                const block = this.paragraph.findCaseControlBlock(casePos);
                 if (block === undefined) throw `[Break] at line ${this.currentPos} is not in control block`;
-                let endPos = block.endPos;
+                const endPos = block.endPos;
                 this.currentPos = endPos;
                 return false;
             }
@@ -325,7 +325,7 @@ class Manager {
             case 'input': {
                 this.buttons.drawInput(expr => {
                     try {
-                        let value = this.varsFrame.evaluate(expr);
+                        const value = this.varsFrame.evaluate(expr);
                         this.varsFrame.setVar(data.valueVar, value);
                         this.varsFrame.setVar(data.errorVar, vars.BoolType.ofBool(false));
                     } catch (e) {
@@ -337,13 +337,13 @@ class Manager {
             }
             case 'image': {
                 await this.resources.check();
-                let file = interpolate(data.imageFile, this.varsFrame);
+                const file = interpolate(data.imageFile, this.varsFrame);
                 await this.resources.setImage(data.imageType, file);
                 return false;
             }
             case 'transform': {
-                let interpolated = lodash.cloneDeep(data);
-                for (let key in interpolated)
+                const interpolated = lodash.cloneDeep(data);
+                for (const key in interpolated)
                     interpolated[key] = interpolate(data[key], this.varsFrame);
                 this.resources.transformImage(interpolated.imageType, interpolated);
                 return false;
@@ -359,7 +359,7 @@ class Manager {
     async previous() {
         if (this.history.length <= 1) return;
         this.history.pop();
-        let frame = this.history.pop();
+        const frame = this.history.pop();
         await this.jump(frame);
     }
     async next() {
@@ -386,9 +386,9 @@ class Manager {
     }
 }
 
-let manager = new Manager();
+const manager = new Manager();
 
-let initPromise = new Promise((resolve, reject) => {
+const initPromise = new Promise((resolve, reject) => {
     try {
         ipcRenderer.on('send-data', async (_, data) => {
             manager.init();
@@ -409,28 +409,27 @@ async function main() {
     await initPromise;
     window.addEventListener('keydown', errorHandled(async event => {
         if (event.target.tagName.toLowerCase() === 'input') return;
-        let key = event.key;
+        const key = event.key;
         if (key === 'Backspace') manager.previous();
         else if (key === 'Enter') await manager.next();
     }));
 
-    async function jumpLine() {
-        let index = lineInput.value;
-        if (isNum(index)) await manager.jump(new Frame(index));
+    const bindInput = (button, input, func) => {
+        button.addEventListener('click', errorHandled(func));
+        input.addEventListener('keyup', errorHandled(async event => {
+            if (event.key === 'Enter') await func();
+        }));
     }
-    jump.addEventListener('click', errorHandled(async _ => await jumpLine()));
-    lineInput.addEventListener('keyup', errorHandled(async event => {
-        if (event.key === 'Enter') await jumpLine();
-    }));
 
-    async function evalCode() {
-        let code = codeInput.value;
+    bindInput(jump, lineInput, async () => {
+        const index = lineInput.value;
+        if (isNum(index)) await manager.jump(new Frame(index));
+    });
+
+    bindInput(evalButton, codeInput, async () => {
+        const code = codeInput.value;
         await manager.eval(code);
-    }
-    evalButton.addEventListener('click', errorHandled(async _ => await evalCode()));
-    codeInput.addEventListener('keyup', errorHandled(async event => {
-        if (event.key === 'Enter') await evalCode();
-    }));
+    });
 }
 
 // eslint-disable-next-line floatingPromise/no-floating-promise

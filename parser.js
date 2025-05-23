@@ -135,15 +135,15 @@ export class TransformData extends GalData {
     skewY = 0;
     rotate = 0;
     getArgs() {
-        let args = [];
-        for (let key in this)
+        const args = [];
+        for (const key in this)
             if (key !== 'type' && key !== 'imageType')
                 args.push(key);
         return args;
     }
     getAllArgs() {
-        let args = [];
-        for (let key of this.getArgs()) {
+        const args = [];
+        for (const key of this.getArgs()) {
             args.push(key);
             if (['X', 'Y'].includes(key.at(-1)))
                 args.push(key.substring(0, key.length - 1));
@@ -154,11 +154,11 @@ export class TransformData extends GalData {
         super('transform');
         this.imageType = imageType;
         if (transformations === undefined) return;
-        for (let key of this.getArgs()) {
+        for (const key of this.getArgs()) {
             if (key in transformations)
                 this[key] = transformations[key];
             if (['X', 'Y'].includes(key.at(-1))) {
-                let subKey = key.substring(0, key.length - 1);
+                const subKey = key.substring(0, key.length - 1);
                 if (subKey in transformations)
                     this[key] = transformations[subKey];
             }
@@ -189,15 +189,15 @@ export class PauseData extends GalData {
 }
 
 function parseSpeech(line) {
-    let index = line.search(':');
+    const index = line.search(':');
     return new SpeechData(line.substring(0, index), line.substring(index + 1));
 }
 
 function parseConfig(configs) {
-    let object = {};
-    for (let config of configs.split(',')) {
-        let key = config.substring(0, config.indexOf('=')).trim();
-        let value = config.substring(config.indexOf('=') + 1).trim();
+    const object = {};
+    for (const config of configs.split(',')) {
+        const key = config.substring(0, config.indexOf('=')).trim();
+        const value = config.substring(config.indexOf('=') + 1).trim();
         object[key] = value;
     }
     return object;
@@ -212,14 +212,14 @@ export function parseLine(line) {
     if (!line.trim().startsWith('[') || line.search(']') === -1)
         return parseSpeech(line);
 
-    let leftBracket = line.search(/\[/);
-    let rightBracket = line.search(/\]/);
-    let tag = line.substring(leftBracket + 1, rightBracket).trim();
-    let nonTagPart = line.substring(rightBracket + 1).trim();
+    const leftBracket = line.search(/\[/);
+    const rightBracket = line.search(/\]/);
+    const tag = line.substring(leftBracket + 1, rightBracket).trim();
+    const nonTagPart = line.substring(rightBracket + 1).trim();
 
-    let splitWithQuote = splitWith(':');
-    let splitWithComma = splitWith(',');
-    let trimQuote = str => splitWithQuote(str)[0];
+    const splitWithQuote = splitWith(':');
+    const splitWithComma = splitWith(',');
+    const trimQuote = str => splitWithQuote(str)[0];
 
     switch (tag) {
         case 'Character': return new CharacterData(nonTagPart);
@@ -233,28 +233,28 @@ export function parseLine(line) {
         case 'Break': return new BreakData();
         case 'End': return new EndData();
         case 'Var': {
-            let [name, expr] = splitWithQuote(nonTagPart);
+            const [name, expr] = splitWithQuote(nonTagPart);
             return new VarData(name, expr);
         }
         case 'Enum': {
-            let [name, values] = splitWithQuote(nonTagPart);
+            const [name, values] = splitWithQuote(nonTagPart);
             return new EnumData(name, values.split(',').map(value => value.trim()));
         }
         case 'Input': {
-            let [valueVar, errorVar] = splitWithComma(nonTagPart);
+            const [valueVar, errorVar] = splitWithComma(nonTagPart);
             return new InputData(valueVar, errorVar);
         }
         case 'Image': {
-            let [imageType, imageFile] = splitWithQuote(nonTagPart);
+            const [imageType, imageFile] = splitWithQuote(nonTagPart);
             return new ImageData(imageType, imageFile);
         }
         case 'Transform': {
-            let [imageType, transformationConfigs] = splitWithQuote(nonTagPart);
-            let transformations = parseConfig(transformationConfigs);
+            const [imageType, transformationConfigs] = splitWithQuote(nonTagPart);
+            const transformations = parseConfig(transformationConfigs);
             return new TransformData(imageType, transformations);
         }
         case 'Delay': {
-            let seconds = Number(nonTagPart);
+            const seconds = Number(nonTagPart);
             if (!isNaN(seconds)) return new DelayData(seconds);
             break;
         }
@@ -274,7 +274,7 @@ export class ControlBlock {
         this.endPos = endPos;
     }
     next(casePos) {
-        for (let [i, pos] of this.casesPosList.entries())
+        for (const [i, pos] of this.casesPosList.entries())
             if (pos === casePos)
                 return i === this.casesPosList.length - 1 ? this.endPos : this.casesPosList[i + 1];
     }
@@ -286,15 +286,15 @@ export class Paragraph {
         this.dataList = lines.map(parseLine);
     }
     getPartAt(pos) {
-        let sub = this.dataList.slice(0, pos + 1).filter(data => data.type === 'part');
+        const sub = this.dataList.slice(0, pos + 1).filter(data => data.type === 'part');
         if (sub.length === 0) return '';
         return sub.at(-1).part;
     }
     getControlBlocks() {
-        let isControlTag = data => ['select', 'switch'].some(type => type === data.type);
-        let ans = [];
-        let stack = [];
-        for (let [index, data] of this.dataList.entries()) {
+        const isControlTag = data => ['select', 'switch'].some(type => type === data.type);
+        const ans = [];
+        const stack = [];
+        for (const [index, data] of this.dataList.entries()) {
             if (isControlTag(data)) stack.push(new ControlBlock(index, [], -1));
             else if (data.type === 'case') {
                 if (stack.length === 0)
@@ -307,7 +307,7 @@ export class Paragraph {
                 if (stack.length === 0)
                     throw `Error: Extra [End] found at line ${index}`;
                 else {
-                    let block = stack.pop();
+                    const block = stack.pop();
                     block.endPos = index;
                     ans.push(block);
                 }
@@ -332,8 +332,8 @@ export class Paragraph {
         return -1;
     }
     getCaseType(casePos) {
-        let block = this.findCaseControlBlock(casePos);
-        let data = this.dataList[block.startPos];
+        const block = this.findCaseControlBlock(casePos);
+        const data = this.dataList[block.startPos];
         return data.type;
     }
     findStartControlBlock(startPos) {
@@ -343,7 +343,7 @@ export class Paragraph {
         return this.getControlBlocks().find(block => block.casesPosList.some(pos => pos === casePos));
     }
     findAnchorPos(anchor) {
-        for (let [i, data] of this.dataList.entries())
+        for (const [i, data] of this.dataList.entries())
             if (data.type === 'anchor' && data.anchor === anchor)
                 return i;
         return -1;

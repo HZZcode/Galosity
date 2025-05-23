@@ -35,7 +35,7 @@ app.whenReady().then(() => {
     ipcMain.handle('directory', _ => __dirname);
     ipcMain.handle('readdir', (_, path) => fs.promises.readdir(path));
     ipcMain.handle('test', (_, data) => {
-        let newWindow = new BrowserWindow({
+        const newWindow = new BrowserWindow({
             width: 1200,
             height: 800,
             parent: win,
