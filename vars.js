@@ -26,10 +26,17 @@ function isIdentifier(str) {
     return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(str);
 }
 
-export class GalNum {
-    type = 'num';
+export class GalVar {
+    type;
+    constructor(type) {
+        this.type = type;
+    }
+}
+
+export class GalNum extends GalVar {
     value;
     constructor(value) {
+        super('num');
         if (isNaN(value)) throw 'Num cannot be NaN';
         this.value = value;
     }
@@ -46,10 +53,12 @@ export class GalNum {
     }
 }
 
-export class GalEnumType {
+export class GalEnumType extends GalVar {
     name;
     values; //list of string
     constructor(name, values) {
+        super('enum');
+
         this.name = name;
         this.values = values;
 
@@ -72,7 +81,16 @@ export class GalEnumType {
     }
 
     ofIndex(index) {
-        return new GalEnum(this, this.values[index % this.values.length]);
+        if (index >= this.values.length) throw `Enum index out of bound: ${index}`;
+        return new GalEnum(this, this.values[index]);
+    }
+
+    apply(value) {
+        if (!isNum(value)) throw `Cannot convert from ${value.getType()} to ${this.name}`;
+        const num = value.value;
+        const index = Math.round(num);
+        if (Math.abs(num - index) < 1e-5) return this.ofIndex(index);
+        throw `Cannot convert non-integer into enum ${this.name}`;
     }
 }
 
@@ -120,10 +138,39 @@ class BuiltinVar {
     }
 }
 
+class BuiltinFunc {
+    func;
+    constructor(func) {
+        this.func = func;
+    }
+    apply(value) {
+        return this.func(value);
+    }
+}
+
+const builtinNumFunc = func => value => {
+    if (isNum(value)) return new GalNum(func(value.value));
+    throw `Function cannot be applied on ${value.getType()}`;
+};
+
+function isNum(value) {
+    return value.type === 'num';
+}
+
+function isEnum(value) {
+    return value.type === 'enum';
+}
+
+function isBool(value) {
+    return value.type === 'enum' && value.enumType.name === 'bool';
+}
+
 export class GalVars {
     enumTypes = [BoolType];
     vars = {};
     builtins = {};
+
+    builtinFuncs = {};
 
     warn = '';
 
@@ -150,18 +197,34 @@ export class GalVars {
     registerBuiltin(name, func) {
         this.builtins[name] = new BuiltinVar(func);
     }
+    registerBuiltinFunc(name, func) {
+        this.builtinFuncs[name] = new BuiltinFunc(func);
+    }
 
     initBuiltins() {
         this.registerBuiltin('random', () => new GalNum(Math.random()));
         this.registerBuiltin('randBool', () => BoolType.ofBool(Math.random() < 0.5));
 
-        this.registerBuiltin('yearNow', () => new Date().getFullYear());
-        this.registerBuiltin('monthNow', () => new Date().getMonth() + 1);
-        this.registerBuiltin('dateNow', () => new Date().getDate());
-        this.registerBuiltin('hourNow', () => new Date().getHours());
-        this.registerBuiltin('minuteNow', () => new Date().getMinutes());
-        this.registerBuiltin('secondNow', () => new Date().getSeconds());
-        this.registerBuiltin('timeStamp', () => new Date().getTime());
+        this.registerBuiltin('yearNow', () => new GalNum(new Date().getFullYear()));
+        this.registerBuiltin('monthNow', () => new GalNum(new Date().getMonth() + 1));
+        this.registerBuiltin('dateNow', () => new GalNum(new Date().getDate()));
+        this.registerBuiltin('hourNow', () => new GalNum(new Date().getHours()));
+        this.registerBuiltin('minuteNow', () => new GalNum(new Date().getMinutes()));
+        this.registerBuiltin('secondNow', () => new GalNum(new Date().getSeconds()));
+        this.registerBuiltin('timeStamp', () => new GalNum(new Date().getTime()));
+
+        this.registerBuiltin('E', () => new GalNum(Math.E));
+        this.registerBuiltin('PI', () => new GalNum(Math.PI));
+
+        this.registerBuiltinFunc('sin', builtinNumFunc(Math.sin));
+        this.registerBuiltinFunc('cos', builtinNumFunc(Math.cos));
+        this.registerBuiltinFunc('tan', builtinNumFunc(Math.tan));
+        this.registerBuiltinFunc('ln', builtinNumFunc(Math.log));
+
+        this.registerBuiltinFunc('indexOf', value => {
+            if (isEnum(value)) return new GalNum(value.valueIndex);
+            throw `Cannot get index of ${value.getType()}`;
+        });
     }
 
     defEnumType(enumType) {
@@ -190,18 +253,6 @@ export class GalVars {
         return found[0];
     }
 
-    isNum(value) {
-        return value.type === 'num';
-    }
-
-    isEnum(value) {
-        return value.type === 'enum';
-    }
-
-    isBool(value) {
-        return value.type === 'enum' && value.enumType.name === 'bool';
-    }
-
     evaluate(expr) {
         const result = this.evaluateNode(grammar.parse(expr));
         if (result === undefined)
@@ -218,6 +269,8 @@ export class GalVars {
             }
             case 'enum': {
                 const enumType = this.getEnumType(node.enumType.value);
+                if (enumType === undefined)
+                    throw `No such enum: ${node.enumType.value}`;
                 return enumType.getValue(node.value.value);
             }
             case 'identifier': {
@@ -226,6 +279,14 @@ export class GalVars {
                 const enumValue = this.getEnumValue(node.value);
                 if (enumValue !== undefined) return enumValue;
                 throw `No such identifier or enum value: ${node.value}`;
+            }
+            case 'function': {
+                const value = this.evaluateNode(node.value);
+                const func = node.func.value;
+                if (func in this.builtinFuncs) return this.builtinFuncs[func].apply(value);
+                const enumType = this.getEnumType(func);
+                if (enumType !== undefined) return enumType.apply(value);
+                throw `No such function: ${func}`;
             }
             case 'factor':
                 return this.evaluateFactor(node);
@@ -245,22 +306,22 @@ export class GalVars {
         const noOp = () => { throw `Operator ${node.operator} cannot be applied on ${value.getType()}`; }
         switch (node.operator) {
             case '+':
-                if (!this.isNum(value)) noOp();
+                if (!isNum(value)) noOp();
                 return new GalNum(+value.value);
             case '-':
-                if (!this.isNum(value)) noOp();
+                if (!isNum(value)) noOp();
                 return new GalNum(-value.value);
             case '!':
-                if (!this.isBool(value)) noOp();
+                if (!isBool(value)) noOp();
                 return BoolType.ofBool(!BoolType.toBool(value));
         }
         noOp();
     }
 
     equal(x, y) {
-        if (this.isNum(x) && this.isNum(y))
+        if (isNum(x) && isNum(y))
             return Math.abs(x.value - y.value) <= 1e-5;
-        if (this.isEnum(x) && this.isEnum(y))
+        if (isEnum(x) && isEnum(y))
             if (x.enumType.name === y.enumType.name)
                 return x.valueIndex === y.valueIndex;
         this.warn = `Trying to compare ${x.getType()} and ${y.getType()}`;
@@ -271,43 +332,43 @@ export class GalVars {
         const noOp = () => { throw `Operator ${op} cannot be applied on ${x.getType()} and ${y.getType()}`; };
         switch (op) {
             case '+':
-                if (!this.isNum(x) || !this.isNum(y)) noOp();
+                if (!isNum(x) || !isNum(y)) noOp();
                 return new GalNum(x.value + y.value);
             case '-':
-                if (!this.isNum(x) || !this.isNum(y)) noOp();
+                if (!isNum(x) || !isNum(y)) noOp();
                 return new GalNum(x.value - y.value);
             case '*':
-                if (!this.isNum(x) || !this.isNum(y)) noOp();
+                if (!isNum(x) || !isNum(y)) noOp();
                 return new GalNum(x.value * y.value);
             case '/':
-                if (!this.isNum(x) || !this.isNum(y)) noOp();
+                if (!isNum(x) || !isNum(y)) noOp();
                 return new GalNum(x.value / y.value);
             case '//':
-                if (!this.isNum(x) || !this.isNum(y)) noOp();
+                if (!isNum(x) || !isNum(y)) noOp();
                 return new GalNum(Math.floor(x.value / y.value));
             case '%':
-                if (!this.isNum(x) || !this.isNum(y)) noOp();
+                if (!isNum(x) || !isNum(y)) noOp();
                 return new GalNum(x.value % y.value);
             case '^':
-                if (!this.isNum(x) || !this.isNum(y)) noOp();
+                if (!isNum(x) || !isNum(y)) noOp();
                 return new GalNum(Math.pow(x.value, y.value));
             case '&':
-                if (!this.isBool(x) || !this.isBool(y)) noOp();
+                if (!isBool(x) || !isBool(y)) noOp();
                 return BoolType.ofBool(BoolType.toBool(x) && BoolType.toBool(y));
             case '|':
-                if (!this.isBool(x) || !this.isBool(y)) noOp();
+                if (!isBool(x) || !isBool(y)) noOp();
                 return BoolType.ofBool(BoolType.toBool(x) || BoolType.toBool(y));
             case '<=':
-                if (!this.isNum(x) || !this.isNum(y)) noOp();
+                if (!isNum(x) || !isNum(y)) noOp();
                 return BoolType.ofBool(x.value <= y.value);
             case '>=':
-                if (!this.isNum(x) || !this.isNum(y)) noOp();
+                if (!isNum(x) || !isNum(y)) noOp();
                 return BoolType.ofBool(x.value >= y.value);
             case '<':
-                if (!this.isNum(x) || !this.isNum(y)) noOp();
+                if (!isNum(x) || !isNum(y)) noOp();
                 return BoolType.ofBool(x.value < y.value);
             case '>':
-                if (!this.isNum(x) || !this.isNum(y)) noOp();
+                if (!isNum(x) || !isNum(y)) noOp();
                 return BoolType.ofBool(x.value > y.value);
             case '==':
                 return BoolType.ofBool(this.equal(x, y));
@@ -354,8 +415,8 @@ export class GalVars {
     evaluateMatching(node) {
         const value = this.evaluateNode(node.value);
         const type = node.enumType;
-        if (type === 'num') return BoolType.ofBool(this.isNum(value));
-        return BoolType.ofBool(this.isEnum(value) && value.enumType.name === type);
+        if (type === 'num') return BoolType.ofBool(isNum(value));
+        return BoolType.ofBool(isEnum(value) && value.enumType.name === type);
     }
 
     assert(condition, message = 'Assertion failed') {

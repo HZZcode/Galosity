@@ -142,6 +142,11 @@ ZZ: There are a few built-in vars in Galosity: `random` returns a random number 
 Ichiku: Try: input `$​{random}`.
 ZZ: These vars might have different values every time you use it.
 ZZ: For instance, one call might return ${random} while the other returns ${random}.
+ZZ: There are also vars representing real-world date time like dateNow=${dateNow}, and math constants like E=${E} and PI=${PI}.
+
+[Part] Built-in Functions
+ZZ: This part is simple. sin(PI/6)=${sin(PI/6)}, tan(PI/4)=${tan(PI/4)}, ln(E^3)=${ln(E^3)}, etc.
+ZZ: There are also 2 special functions for converting between enum values and their indexes: indexOf(Female)=${indexOf(Female)}, sex(1)=${Sex(1)}.
 
 [Part] Switch-Case
 ZZ: [Switch]-[Case] blocks are used often with variables.

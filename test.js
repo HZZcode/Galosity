@@ -19,16 +19,18 @@ let errorHandled = f => arg => {
     error.clear();
     try {
         return f(arg);
-    } catch (err) {
-        error.error(err);
+    } catch (e) {
+        console.error(e);
+        error.error(e);
     }
 };
 let errorHandledAsWarning = f => arg => {
     error.clear();
     try {
         return f(arg);
-    } catch (err) {
-        error.warn('Warning: ' + err);
+    } catch (e) {
+        console.warn(e);
+        error.warn('Warning: ' + e);
     }
 }
 if (!handleError) errorHandled = errorHandledAsWarning = f => f;
@@ -105,6 +107,7 @@ class ButtonsManager {
         if (button.func !== null)
             element.addEventListener('click', button.func);
         this.parent.appendChild(element);
+        MathJax.typeset();
     }
     drawButtons(buttons) {
         const num = buttons.length;
@@ -165,7 +168,7 @@ class ResourceManager extends Files {
         return [...this.parent.querySelectorAll('.image')];
     }
     getElements() {
-        return this.getImageElements().concat([this.getElement('background')]);
+        return [...this.getImageElements(), this.getElement('background')];
     }
     getElement(pos) {
         return document.getElementById(`${pos}-image`);
@@ -303,6 +306,7 @@ class Manager {
                         if (!this.varsFrame.equal(value, matchValue))
                             this.currentPos = next;
                     } catch (e) {
+                        console.error(e);
                         error.error(e);
                     }
                 }
@@ -329,6 +333,7 @@ class Manager {
                         this.varsFrame.setVar(data.valueVar, value);
                         this.varsFrame.setVar(data.errorVar, vars.BoolType.ofBool(false));
                     } catch (e) {
+                        console.error(e);
                         error.error(e);
                         this.varsFrame.setVar(data.errorVar, vars.BoolType.ofBool(true));
                     }
@@ -337,8 +342,9 @@ class Manager {
             }
             case 'image': {
                 await this.resources.check();
+                const type = interpolate(data.imageType, this.varsFrame);
                 const file = interpolate(data.imageFile, this.varsFrame);
-                await this.resources.setImage(data.imageType, file);
+                await this.resources.setImage(type, file);
                 return false;
             }
             case 'transform': {
@@ -397,6 +403,7 @@ const initPromise = new Promise((resolve, reject) => {
             resolve();
         });
     } catch (error) {
+        console.error(e);
         reject(error);
     }
 });

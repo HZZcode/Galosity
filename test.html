@@ -13,6 +13,12 @@
             margin: 0;
         }
 
+        .info,
+        .container {
+            position: absolute;
+            z-index: 1;
+        }
+
         .container {
             background-color: rgba(255, 255, 255, 0.8);
             border-radius: 15px;
@@ -22,11 +28,9 @@
             justify-content: center;
             align-items: center;
             margin: auto;
-            position: absolute;
             text-align: center;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 1;
         }
 
         :focus-visible,
@@ -173,8 +177,8 @@
 
 <body>
     <div class="whole-screen image" id="background-image"></div>
-    <div id="current-line"></div>
-    <div>
+    <div class="info">
+        <div id="current-line"></div>
         <div>
             Jump to Line:
             <input type="number" id="line" class="debug-input" name="line" min="0">

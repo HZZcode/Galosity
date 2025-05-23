@@ -372,12 +372,12 @@ async function completeJump(_) {
 function getBuiltins() {
     const frame = new vars.GalVars();
     frame.initBuiltins();
-    return Object.keys(frame.builtins);
+    return [...Object.keys(frame.builtins), ...Object.keys(frame.builtinFuncs)];
 }
 async function completeSymbol(_) {
     const manager = new TextAreaManager();
     if (!needSymbol()) return;
-    const symbols = scanSymbols().concat(getBuiltins());
+    const symbols = [...scanSymbols(), ...getBuiltins()];
     symbolCompleter.setList(symbols);
     const symbolPart = manager.currentLineFrontContent().replaceAll('${', ' ').split(/\s/).at(-1);
     if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(symbolPart)) return;
@@ -397,10 +397,12 @@ function scanSymbols() {
     const paragraph = new parser.Paragraph(manager.lines);
     const dataList = paragraph.dataList;
     const varList = dataList.filter(data => data.type === 'var').map(data => data.name);
+    
     const enumList = paragraph.scanEnums();
     const enumTypes = enumList.map(data => data.name);
     const enumValues = enumList.map(data => data.values).flat();
-    return [... new Set(varList.concat(enumTypes).concat(enumValues))]
+    
+    return [... new Set([...varList, ...enumTypes, ...enumValues])]
         .filter(symbol => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(symbol));
 } //Scans: var name; enum type; enum value;
 function jumpTo(event) {
@@ -456,8 +458,9 @@ function scanControlBlocks() {
     const manager = new TextAreaManager();
     try {
         return new parser.Paragraph(manager.lines).getControlBlocks();
-    } catch (err) {
-        error.error(err);
+    } catch (e) {
+        console.error(e);
+        error.error(e);
     }
 }
 async function test(fileManager = file, content = textarea.value) {
@@ -466,7 +469,8 @@ async function test(fileManager = file, content = textarea.value) {
 }
 async function help(event) {
     event.preventDefault();
-    const content = await ipcRenderer.invoke('readFile', 'example.txt').catch(_ => {
+    const content = await ipcRenderer.invoke('readFile', 'example.txt').catch(e => {
+        console.error(e);
         error.error(`Cannot find example.txt`);
     });
     await test(await new SaveLoadManager().ofFile('example.txt'), content);

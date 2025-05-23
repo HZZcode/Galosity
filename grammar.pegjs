@@ -66,7 +66,10 @@ Factor
     / value:Primary { return value; }
 
 Primary
-    = "(" _ root:Root _ ")" { return root; }
+    = func:Identifier _ "(" _ root:Root _ ")" {
+        return { type: "function", func: func, value: root };
+    }
+    / "(" _ root:Root _ ")" { return root; }
     / value:Number { return value; }
     / value:Enum { return value; }
     / value:Identifier { return value; }
