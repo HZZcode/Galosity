@@ -31,6 +31,13 @@ export class GalVar {
     constructor(type) {
         this.type = type;
     }
+    getType() {
+        return 'GalVar';
+    }
+    toBool() {
+        if (isBool(this)) return !!this.valueIndex;
+        throw `Cannot convert ${this.getType()} into bool`;
+    }
 }
 
 export class GalNum extends GalVar {
@@ -48,17 +55,15 @@ export class GalNum extends GalVar {
     toString() {
         return this.value.toString()
             .replace(/(\.\d*?)0{5,}.*$/, '$1')
-            .replace(/(\.\d*?)9{5,}.*$/, '$1')
+            .replace(/(\.\d*?)9{5,}.*$/, '$1') //FIXME
             .replace(/\.$/, '');
     }
 }
 
-export class GalEnumType extends GalVar {
+export class GalEnumType {
     name;
     values; //list of string
     constructor(name, values) {
-        super('enum');
-
         this.name = name;
         this.values = values;
 
@@ -94,12 +99,12 @@ export class GalEnumType extends GalVar {
     }
 }
 
-export class GalEnum {
-    type = 'enum';
+export class GalEnum extends GalVar {
     enumType;
     valueIndex;
 
     constructor(enumType, value) {
+        super('enum');
         this.enumType = enumType;
         if (value instanceof Number) this.valueIndex = value;
         else {
@@ -125,7 +130,6 @@ export class GalEnum {
 }
 
 export const BoolType = new GalEnumType('bool', ['false', 'true']);
-BoolType.toBool = b => !!b.valueIndex;
 BoolType.ofBool = b => BoolType.getValue(b ? 'true' : 'false');
 
 class BuiltinVar {

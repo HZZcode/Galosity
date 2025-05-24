@@ -224,6 +224,7 @@ const symbolCompleter = new AutoComplete();
 const imageTypes = ['background', 'left', 'center', 'right'];
 const imageTypeCompleter = new AutoComplete();
 const transformTypeCompleter = new AutoComplete(new parser.TransformData().getAllArgs());
+const caseConfigCompleter = new AutoComplete(['show', 'enable']);
 const characterScanner = new TagScanner('[Character]');
 const anchorScanner = new TagScanner('[Anchor]');
 const imageTypeScanner = new TagScanner('[Image]');
@@ -292,6 +293,7 @@ async function autoComplete(event) {
         await completeTransformType(event);
         await completeFile(event);
         await completeImage(event);
+        await completeCaseConfig(event);
     }
 }
 async function completeFile(_) {
@@ -336,6 +338,16 @@ async function completeTransformType(_) {
         front.lastIndexOf(',')) + 1).replace('[Transform]', '').trim();
     const type = await transformTypeCompleter.completeInclude(typePart);
     if (type !== undefined) manager.insert(type, typePart.length);
+}
+async function completeCaseConfig(_) {
+    const manager = new TextAreaManager();
+    const front = manager.currentLineFrontContent();
+    if (!front.trim().startsWith('[Case]')
+        || front.replaceAll(/=.*?,/g, '').includes('=')) return;
+    const configPart = front.substring(Math.max(front.indexOf(':'),
+        front.lastIndexOf(',')) + 1).replace('[Case]', '').trim();
+    const config = await caseConfigCompleter.completeInclude(configPart);
+    if (config !== undefined) manager.insert(config, configPart.length);
 }
 async function completeCharaterName(_) {
     characters.setList(characterScanner.scanList());

@@ -67,9 +67,13 @@ export class SelectData extends GalData {
 }
 export class CaseData extends GalData {
     text;
-    constructor(text) {
+    show = 'true';   //Whether the player can see this choice
+    enable = 'true'; //Whether the player can choose this choice
+    constructor(text, config) {
         super('case');
         this.text = text;
+        if ('show' in config) this.show = config.show;
+        if ('enable' in config) this.enable = config.enable;
     }
 }
 export class BreakData extends GalData {
@@ -217,10 +221,6 @@ export function parseLine(line) {
     const tag = line.substring(leftBracket + 1, rightBracket).trim();
     const nonTagPart = line.substring(rightBracket + 1).trim();
 
-    const splitWithQuote = splitWith(':');
-    const splitWithComma = splitWith(',');
-    const trimQuote = str => splitWithQuote(str)[0];
-
     switch (tag) {
         case 'Character': return new CharacterData(nonTagPart);
         case 'Part': return new PartData(nonTagPart);
@@ -229,29 +229,31 @@ export function parseLine(line) {
         case 'Anchor': return new AnchorData(nonTagPart);
         case 'Select': return new SelectData(nonTagPart);
         case 'Switch': return new SwitchData(nonTagPart);
-        case 'Case': return new CaseData(trimQuote(nonTagPart).trim());
+        case 'Case': {
+            const [value, configs] = splitWith(':')(nonTagPart);
+            return new CaseData(value, parseConfig(configs));
+        }
         case 'Break': return new BreakData();
         case 'End': return new EndData();
         case 'Var': {
-            const [name, expr] = splitWithQuote(nonTagPart);
+            const [name, expr] = splitWith(':')(nonTagPart);
             return new VarData(name, expr);
         }
         case 'Enum': {
-            const [name, values] = splitWithQuote(nonTagPart);
+            const [name, values] = splitWith(':')(nonTagPart);
             return new EnumData(name, values.split(',').map(value => value.trim()));
         }
         case 'Input': {
-            const [valueVar, errorVar] = splitWithComma(nonTagPart);
+            const [valueVar, errorVar] = splitWith(',')(nonTagPart);
             return new InputData(valueVar, errorVar);
         }
         case 'Image': {
-            const [imageType, imageFile] = splitWithQuote(nonTagPart);
+            const [imageType, imageFile] = splitWith(':')(nonTagPart);
             return new ImageData(imageType, imageFile);
         }
         case 'Transform': {
-            const [imageType, transformationConfigs] = splitWithQuote(nonTagPart);
-            const transformations = parseConfig(transformationConfigs);
-            return new TransformData(imageType, transformations);
+            const [imageType, configs] = splitWith(':')(nonTagPart);
+            return new TransformData(imageType, parseConfig(configs));
         }
         case 'Delay': {
             const seconds = Number(nonTagPart);

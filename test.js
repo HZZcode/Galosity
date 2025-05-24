@@ -79,9 +79,11 @@ class InfoManager {
 class ButtonData {
     text;
     func;
-    constructor(text, func = null) {
+    enable;
+    constructor(text, func = null, enable = true) {
         this.text = text;
-        this.func = func;
+        this.func = errorHandled(func);
+        this.enable = enable;
     }
 }
 class ButtonsManager {
@@ -102,9 +104,10 @@ class ButtonsManager {
         const element = document.createElement('div');
         element.innerText = name;
         element.className = 'container button';
+        if (!button.enable) element.className += ' disabled';
         element.style.bottom = bottom;
         element.style.height = '7%';
-        if (button.func !== null)
+        if (button.func !== null && button.enable)
             element.addEventListener('click', button.func);
         this.parent.appendChild(element);
         // eslint-disable-next-line no-undef
@@ -289,12 +292,18 @@ class Manager {
             }
             case 'select': {
                 const block = this.paragraph.findStartControlBlock(this.currentPos);
-                const buttons = block.casesPosList.map(pos =>
-                    new ButtonData(interpolate(this.paragraph.dataList[pos].text, this.varsFrame),
-                        async () => await this.jump(new Frame(pos, this.varsFrame.copy()))))
+                const buttons = block.casesPosList.map(pos => {
+                    const data = this.paragraph.dataList[pos];
+                    const show = this.varsFrame.evaluate(data.show).toBool();
+                    if (!show) return null;
+                    const enable = this.varsFrame.evaluate(data.enable).toBool();
+                    const text = interpolate(data.text, this.varsFrame);
+                    const callback = async () => await this.jump(new Frame(pos, this.varsFrame.copy()));
+                    return new ButtonData(text, callback, enable);
+                }).filter(button => button !== null);
                 this.buttons.drawButtons(buttons);
                 return true;
-            } // TODO: Disable / don't show choice
+            }
             case 'case': {
                 if (this.paragraph.getCaseType(this.currentPos) === 'switch') {
                     const block = this.paragraph.findCaseControlBlock(this.currentPos);

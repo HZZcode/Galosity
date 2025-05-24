@@ -64,10 +64,13 @@ Ichiku: Try: first input a sentence, then input `[Select]` on a new line.
 Ichiku: Then input `[Case] 1:`, `case1`, `[Case] 2:`, `case2`, `[End]` on the following lines.
 ZZ: As you see, there will be 2 selection buttons which leads you to different branches.
 ZZ: In order not to pass through the following cases, input `[Break]` at the end of a branch.
+ZZ: Choices can also be hidden or disabled...
+Ichiku: For instance, try inputting `[Case] 3:show=false` and `[Case] 4:enable=false`.
 Ichiku: Have you learnt how to use control blocks now?
 [Select]
 [Case] Yes:
 [Jump] Variables
+[Case] Maybe:enable=false
 [Case] No:
 ZZ: Fine... Let's learn again.
 [Jump] Control Blocks
