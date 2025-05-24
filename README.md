@@ -1,3 +1,3 @@
 # Galosity
 
-Lite pure-text galgame script editor.
+Lite hypertext galgame script editor & engine.

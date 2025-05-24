@@ -107,6 +107,7 @@ class ButtonsManager {
         if (button.func !== null)
             element.addEventListener('click', button.func);
         this.parent.appendChild(element);
+        // eslint-disable-next-line no-undef
         MathJax.typeset();
     }
     drawButtons(buttons) {
@@ -402,9 +403,9 @@ const initPromise = new Promise((resolve, reject) => {
             manager.resources.filename = data.filename;
             resolve();
         });
-    } catch (error) {
+    } catch (e) {
         console.error(e);
-        reject(error);
+        reject(e);
     }
 });
 
