@@ -294,7 +294,7 @@ class Manager {
                         async () => await this.jump(new Frame(pos, this.varsFrame.copy()))))
                 this.buttons.drawButtons(buttons);
                 return true;
-            }
+            } // TODO: Disable / don't show choice
             case 'case': {
                 if (this.paragraph.getCaseType(this.currentPos) === 'switch') {
                     const block = this.paragraph.findCaseControlBlock(this.currentPos);

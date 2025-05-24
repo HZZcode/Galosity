@@ -225,6 +225,10 @@ export class GalVars {
             if (isEnum(value)) return new GalNum(value.valueIndex);
             throw `Cannot get index of ${value.getType()}`;
         });
+        this.registerBuiltinFunc('sizeOfType', value => {
+            if (isEnum(value)) return new GalNum(value.enumType.values.length);
+            throw `Cannot get size of ${value.getType()}`;
+        });
     }
 
     defEnumType(enumType) {
