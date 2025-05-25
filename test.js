@@ -3,6 +3,7 @@ const parser = require('./parser');
 const vars = require('./vars');
 const lodash = require('lodash');
 const { Files } = require('./files');
+const { logger } = require('./logger');
 
 const character = document.getElementById('character');
 const speech = document.getElementById('speech');
@@ -20,7 +21,7 @@ let errorHandled = f => arg => {
     try {
         return f(arg);
     } catch (e) {
-        console.error(e);
+        logger.error(e);
         error.error(e);
     }
 };
@@ -29,7 +30,7 @@ let errorHandledAsWarning = f => arg => {
     try {
         return f(arg);
     } catch (e) {
-        console.warn(e);
+        logger.warn(e);
         error.warn('Warning: ' + e);
     }
 }
@@ -260,7 +261,7 @@ class Manager {
         await ipcRenderer.invoke('readFile', path)
             .then(async content => await this.set(content.split(/\r?\n/)))
             .catch(e => {
-                console.error(e);
+                logger.error(e);
                 throw `Cannot open file ${path}`;
             });
     }
@@ -316,7 +317,7 @@ class Manager {
                         if (!this.varsFrame.equal(value, matchValue))
                             this.currentPos = next;
                     } catch (e) {
-                        console.error(e);
+                        logger.error(e);
                         error.error(e);
                     }
                 }
@@ -343,7 +344,7 @@ class Manager {
                         this.varsFrame.setVar(data.valueVar, value);
                         this.varsFrame.setVar(data.errorVar, vars.BoolType.ofBool(false));
                     } catch (e) {
-                        console.error(e);
+                        logger.error(e);
                         error.error(e);
                         this.varsFrame.setVar(data.errorVar, vars.BoolType.ofBool(true));
                     }
@@ -410,10 +411,11 @@ const initPromise = new Promise((resolve, reject) => {
             manager.init();
             await manager.set(data.content.split(/\r?\n/));
             manager.resources.filename = data.filename;
+            logger.isDebug = data.isDebug;
             resolve();
         });
     } catch (e) {
-        console.error(e);
+        logger.error(e);
         reject(e);
     }
 });

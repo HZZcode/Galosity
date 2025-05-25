@@ -17,6 +17,10 @@ function createWindow() {
     });
 
     win.loadFile('index.html');
+
+    win.webContents.on('did-finish-load', () => {
+        win.webContents.send('send-data', { isDebug: isDebug });
+    });
 }
 
 app.whenReady().then(() => {

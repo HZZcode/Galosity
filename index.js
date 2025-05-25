@@ -5,6 +5,7 @@ const parser = require('./parser');
 const vars = require('./vars');
 const { AutoComplete, FileComplete } = require('./completer');
 const { Files } = require('./files');
+const { logger } = require('./logger');
 
 const textarea = document.getElementById('input');
 class TextAreaManager {
@@ -133,7 +134,7 @@ class SaveLoadManager extends Files {
                 info.innerText += ' Saved!';
                 setTimeout(updateInfo, 1000);
             }).catch(e => {
-                console.error(e);
+                logger.error(e);
                 error.error(`Failed to Write to ${path}`);
             });
     }
@@ -146,7 +147,7 @@ class SaveLoadManager extends Files {
                 updateInfo();
                 return content;
             }).catch(e => {
-                console.error(e);
+                logger.error(e);
                 error.error(`Failed to Read from ${path}`);
             });
     }
@@ -471,19 +472,25 @@ function scanControlBlocks() {
     try {
         return new parser.Paragraph(manager.lines).getControlBlocks();
     } catch (e) {
-        console.error(e);
+        logger.error(e);
         error.error(e);
     }
 }
 async function test(fileManager = file, content = textarea.value) {
     await file.autoSave();
-    await ipcRenderer.invoke('test', { content: content, filename: fileManager.filename });
+    await ipcRenderer.invoke('test', {
+        content: content,
+        filename: fileManager.filename,
+        isDebug: logger.isDebug
+    });
 }
 async function help(event) {
     event.preventDefault();
     const content = await ipcRenderer.invoke('readFile', 'example.txt').catch(e => {
-        console.error(e);
+        logger.error(e);
         error.error(`Cannot find example.txt`);
     });
     await test(await new SaveLoadManager().ofFile('example.txt'), content);
 }
+
+ipcRenderer.on('send-data', (_, data) => logger.isDebug = data.isDebug);
