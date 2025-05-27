@@ -33,7 +33,7 @@ let errorHandledAsWarning = f => arg => {
         logger.warn(e);
         error.warn('Warning: ' + e);
     }
-}
+};
 if (!handleError) errorHandled = errorHandledAsWarning = f => f;
 
 class ErrorManager {
@@ -136,23 +136,47 @@ class ButtonsManager {
     }
 }
 
+class Interpolations {
+    funcs = {};
+    register(tagChar, func) {
+        if (tagChar in this.funcs) throw `Multiple registration of interpolation for ${tagChar}`;
+        this.funcs[tagChar] = func;
+    }
+    getTagRegex() {
+        return new RegExp(`[${Object.keys(this.funcs).join('')}](\\{([^{}]*?)\\})`);
+    }
+    process(text) {
+        while (true) {
+            const match = this.getTagRegex().exec(text);
+            if (match === null) break;
+            const func = this.funcs[match[0][0]];
+            if (func !== undefined) text = text.replace(match[0], func(match[2]));
+        }
+        return text;
+    }
+}
+
 function interpolate(text, varsFrame) {
     if (typeof text !== 'string') return text;
-    text = text.trim();
-    const regex = /(\$\{([^}]+)\})/g;
-    const matches = [];
-    let match;
-    while ((match = regex.exec(text)) !== null)
-        matches.push(match[1]);
-    for (const sub of matches) {
+    const interpolation = new Interpolations();
+    interpolation.register('$', sub => {
+        let result = sub;
         varsFrame.warn = '';
-        errorHandledAsWarning(() => {
-            const value = varsFrame.evaluate(sub.substring(2, sub.length - 1));
-            text = text.replace(sub, value.toString());
-        })();
+        errorHandledAsWarning(() => result = varsFrame.evaluate(sub))();
         if (varsFrame.warn !== '') error.warn('Warning' + varsFrame.warn);
-    }
-    return text;
+        return result;
+    });
+    interpolation.register('^', sub => `<sup>${sub}</sup>`);
+    interpolation.register('_', sub => `<sub>${sub}</sub>`);
+    interpolation.register('%', sub => {
+        const [text, href] = parser.splitWith(':')(sub);
+        return `<a href="${href}" target="_blank" rel="noopener noreferrer">${text === '' ? href : text}</a>`;
+    });
+    interpolation.register('~', sub => {
+        const [rb, rt] = parser.splitWith(':')(sub);
+        return `<ruby><rb>${rb}</rb><rt>${rt}</rt><rp>(${rt})</rp></ruby>`;
+    });
+    return interpolation.process(text);
 }
 
 class Frame {
@@ -284,6 +308,7 @@ class Manager {
             }
             case 'jump': {
                 if (data.crossFile) this.jumpFile(data.anchor);
+                if (data.href) ipcRenderer.invoke('openExternal', data.anchor);
                 else {
                     const pos = this.paragraph.findAnchorPos(data.anchor);
                     if (pos === -1) throw `Anchor not found: ${data.anchor}`;
@@ -438,7 +463,7 @@ async function main() {
         input.addEventListener('keyup', errorHandled(async event => {
             if (event.key === 'Enter') await func();
         }));
-    }
+    };
 
     bindInput(jump, lineInput, async () => {
         const index = lineInput.value;

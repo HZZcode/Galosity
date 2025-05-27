@@ -1,9 +1,21 @@
-import { app, BrowserWindow, dialog, ipcMain } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
+import { logger } from './logger.js';
 import fs from 'fs';
 import path from 'path';
 
-const isDebug = process.env.NODE_ENV === 'development';
+const isDebug = logger.isDebug = process.env.NODE_ENV === 'development';
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
+
+function handleLink(window) {
+    window.webContents.on('will-navigate', (event, url) => {
+        event.preventDefault();
+        shell.openExternal(url);
+    });
+    window.webContents.setWindowOpenHandler(({ url }) => {
+        shell.openExternal(url);
+        return { action: 'deny' };
+    });
+}
 
 function createWindow() {
     const win = new BrowserWindow({
@@ -21,6 +33,8 @@ function createWindow() {
     win.webContents.on('did-finish-load', () => {
         win.webContents.send('send-data', { isDebug: isDebug });
     });
+
+    handleLink(win);
 }
 
 app.whenReady().then(() => {
@@ -38,6 +52,7 @@ app.whenReady().then(() => {
     ipcMain.handle('resolve', (_, pathname) => path.resolve(pathname).replaceAll('\\', '/'));
     ipcMain.handle('directory', _ => __dirname);
     ipcMain.handle('readdir', (_, path) => fs.promises.readdir(path));
+    ipcMain.handle('openExternal', (_, url) => shell.openExternal(url));
     ipcMain.handle('test', (_, data) => {
         const newWindow = new BrowserWindow({
             width: 1200,
@@ -56,6 +71,7 @@ app.whenReady().then(() => {
         });
         newWindow.setMenu(null);
         if (isDebug) newWindow.webContents.openDevTools();
+        handleLink(newWindow);
     });
 });
 

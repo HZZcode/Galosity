@@ -268,7 +268,7 @@ function completeBraces(event) {
     else {
         const line = manager.currentLine();
         const pos = manager.currentColumn();
-        if (line[pos - 1] === '$') {
+        if (['$', '^', '_', '%', '~'].includes(line[pos - 1])) {
             manager.insert('{}');
             manager.move(-1);
             event.preventDefault();
@@ -401,20 +401,20 @@ function needSymbol() {
     const manager = new TextAreaManager();
     const isVar = /^\[Var\].*?:/.test(manager.currentLineFrontContent().trim());
     const isSwitch = manager.currentLineFrontContent().trim().startsWith('[Switch]');
-    const leftInterpolate = manager.currentLineFrontContent().replaceAll(/\$\{.*?\}/g, '').includes('${');
-    const rightInterpolate = manager.currentLineBackContent().replaceAll(/\$\{.*?\}/g, '').includes('}');
-    return isVar || isSwitch || (leftInterpolate && rightInterpolate);
+    const isInterpolate = parser.isInterpolate(manager.currentLineFrontContent(),
+        manager.currentLineBackContent());
+    return isVar || isSwitch || isInterpolate;
 }
 function scanSymbols() {
     const manager = new TextAreaManager();
     const paragraph = new parser.Paragraph(manager.lines);
     const dataList = paragraph.dataList;
     const varList = dataList.filter(data => data.type === 'var').map(data => data.name);
-    
+
     const enumList = paragraph.scanEnums();
     const enumTypes = enumList.map(data => data.name);
     const enumValues = enumList.map(data => data.values).flat();
-    
+
     return [... new Set([...varList, ...enumTypes, ...enumValues])]
         .filter(symbol => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(symbol));
 } //Scans: var name; enum type; enum value;
@@ -493,4 +493,7 @@ async function help(event) {
     await test(await new SaveLoadManager().ofFile('example.txt'), content);
 }
 
-ipcRenderer.on('send-data', (_, data) => logger.isDebug = data.isDebug);
+ipcRenderer.on('send-data', (_, data) => {
+    logger.isDebug = data.isDebug;
+    if (data.isDebug) file.read('gal.txt');
+});

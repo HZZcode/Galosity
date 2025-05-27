@@ -16,7 +16,7 @@
  */
 
 const lodash = require('lodash');
-const grammar = require('./grammar.cjs')
+const grammar = require('./grammar.cjs');
 
 function findDuplicates(array) {
     return array.filter((item, index) => array.indexOf(item) !== index);
@@ -69,7 +69,7 @@ export class GalEnumType {
 
         const duplicates = findDuplicates(values);
         if (duplicates.length !== 0)
-            throw `Found duplicate enum value: ${name}.${duplicates[0]}`
+            throw `Found duplicate enum value: ${name}.${duplicates[0]}`;
 
         if (!isIdentifier(name)) throw `Name of enum ${name} is invalid`;
         const nonIdentifiers = values.filter(value => !isIdentifier(value));
@@ -311,7 +311,7 @@ export class GalVars {
 
     evaluateFactor(node) {
         const value = this.evaluateNode(node.value);
-        const noOp = () => { throw `Operator ${node.operator} cannot be applied on ${value.getType()}`; }
+        const noOp = () => { throw `Operator ${node.operator} cannot be applied on ${value.getType()}`; };
         switch (node.operator) {
             case '+':
                 if (!isNum(value)) noOp();
