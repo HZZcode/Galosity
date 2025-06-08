@@ -146,7 +146,8 @@ class Interpolations {
         return new RegExp(`[${Object.keys(this.funcs).join('')}](\\{([^{}]*?)\\})`);
     }
     process(text) {
-        while (true) {
+        //Sure enough no one would use so many interpolations
+        for (let i = 0; i < 128; i++) {
             const match = this.getTagRegex().exec(text);
             if (match === null) break;
             const func = this.funcs[match[0][0]];
@@ -395,6 +396,10 @@ class Manager {
                 return false;
             }
             case 'pause': return true;
+            case 'eval': {
+                errorHandledAsWarning(() => eval(interpolate(data.expr, this.varsFrame)))();
+                return false;
+            }
             default: return false;
         }
     }

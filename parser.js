@@ -196,6 +196,13 @@ export class PauseData extends GalData {
         super('pause');
     }
 }
+export class EvalData extends GalData {
+    expr;
+    constructor(expr) {
+        super('eval');
+        this.expr = expr;
+    }
+}
 
 function parseSpeech(line) {
     const index = line.search(':');
@@ -280,6 +287,7 @@ export function parseLine(line) {
             break;
         }
         case 'Pause': return new PauseData();
+        case 'Eval': return new EvalData(nonTagPart);
     }
 
     return parseSpeech(line);

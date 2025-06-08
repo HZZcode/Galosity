@@ -16,6 +16,7 @@
  */
 
 const lodash = require('lodash');
+const logger = require('./logger.js');
 const grammar = require('./grammar.cjs');
 
 function findDuplicates(array) {
@@ -53,10 +54,16 @@ export class GalNum extends GalVar {
     }
 
     toString() {
-        return this.value.toString()
-            .replace(/(\.\d*?)0{5,}.*$/, '$1')
-            .replace(/(\.\d*?)9{5,}.*$/, '$1') //FIXME
-            .replace(/\.$/, '');
+        const str = this.value.toString();
+        if (!/[0-9]+\./.test(str)) return str;
+        let pow = 1;
+        for (let i = 0; i < 15; i++) {
+            const rounded = Math.round(this.value * pow) / pow;
+            if (Math.abs(this.value - rounded) < 1 / (1000 * pow))
+                return rounded.toString();
+            pow *= 10;
+        }
+        return str;
     }
 }
 
@@ -194,6 +201,7 @@ export class GalVars {
     copy() {
         const clone = new GalVars();
         clone.builtins = this.builtins;
+        clone.builtinFuncs = this.builtinFuncs;
         clone.vars = lodash.cloneDeep(this.vars);
         return clone;
     }
@@ -321,7 +329,7 @@ export class GalVars {
                 return new GalNum(-value.value);
             case '!':
                 if (!isBool(value)) noOp();
-                return BoolType.ofBool(!BoolType.toBool(value));
+                return BoolType.ofBool(!value.toBool());
         }
         noOp();
     }
@@ -362,10 +370,10 @@ export class GalVars {
                 return new GalNum(Math.pow(x.value, y.value));
             case '&':
                 if (!isBool(x) || !isBool(y)) noOp();
-                return BoolType.ofBool(BoolType.toBool(x) && BoolType.toBool(y));
+                return BoolType.ofBool(x.toBool() && y.toBool());
             case '|':
                 if (!isBool(x) || !isBool(y)) noOp();
-                return BoolType.ofBool(BoolType.toBool(x) || BoolType.toBool(y));
+                return BoolType.ofBool(x.toBool() || y.toBool());
             case '<=':
                 if (!isNum(x) || !isNum(y)) noOp();
                 return BoolType.ofBool(x.value <= y.value);
@@ -414,7 +422,7 @@ export class GalVars {
             const left = this.evaluateNode(node.value[2 * i]);
             const op = node.value[2 * i + 1];
             const right = this.evaluateNode(node.value[2 * i + 2]);
-            if (!BoolType.toBool(this.evaluateSingleBinary(op, left, right)))
+            if (!this.evaluateSingleBinary(op, left, right).toBool())
                 return BoolType.ofBool(false);
         }
         return BoolType.ofBool(true);

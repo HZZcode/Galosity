@@ -52,6 +52,7 @@ Ichiku: Try: input `[Anchor] anchor`...
 Ichiku: Then input `[Jump] a` and press Tab.
 ZZ: You can also jump to another script file by adding an '>'...
 Ichiku: For example: `[Jump] > another.txt`.
+ZZ: Or jumping to a website with `[Jump] % (site)`.
 ZZ: You might be familiar with these if you have written some low-level programming languages...
 Ichiku: Anyway. Let's [Jump] onto the next part.
 [Jump] Control Blocks
@@ -251,6 +252,14 @@ Ichiku: For instance, let me invite Minato here...
 [Pause]
 [Image] right: clear
 Ichiku: Isn't it very cool?
+
+[Part] evil evals
+ZZ: [Eval] enables you to evaluate javascript code in-place.
+ZZ: This can be used for debugging or doing something the engine doesn't support yet.
+Ichiku: Try: type `[Eval] alert('Hello eval!')`.
+[Eval] alert('Hello eval!')
+ZZ: Interpolation is also supported in evals.
+ZZ: You might need to check the source code at %{:https://github.com/HZZcode/Galosity} for more information.
 
 [Anchor] End of Tutorial
 [Part] The End

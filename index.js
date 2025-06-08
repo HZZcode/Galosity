@@ -216,7 +216,7 @@ const tags = new AutoComplete([
     '[Jump]', '[Anchor]',
     '[Select]', '[Case]', '[Break]', '[End]',
     '[Var]', '[Enum]', '[Switch]',
-    '[Input]', '[Delay]', '[Pause]',
+    '[Input]', '[Delay]', '[Pause]', '[Eval]',
     '[Image]', '[Transform]'
 ]);
 // [Note] I hope to use less words with same beginning letters for better Tab completing
