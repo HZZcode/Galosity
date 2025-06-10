@@ -255,6 +255,7 @@ class Manager {
     paragraph;
     currentPos = -1;
     history = []; //list of `Frame`s
+    callStack = []; //line count of [Call]s
     info = new InfoManager();
     texts = new TextManager();
     buttons = new ButtonsManager();
@@ -400,6 +401,32 @@ class Manager {
                 errorHandledAsWarning(() => eval(interpolate(data.expr, this.varsFrame)))();
                 return false;
             }
+            case 'func': {
+                this.currentPos = this.paragraph.findReturnPosAfter(this.currentPos);
+                return false;
+            }
+            case 'call': {
+                this.callStack.push(this.getFrame());
+                const pos = this.paragraph.findFuncPos(data.name);
+                const funcData = this.paragraph.dataList[pos];
+                if (funcData.args.length !== data.args.length)
+                    throw `Args doesn't match func ${funcData.name} at line ${this.currentPos}`;
+                for (const [i, expr] of data.args.entries())
+                    this.varsFrame.setVar(funcData.args[i], this.varsFrame.evaluate(expr));
+                this.currentPos = pos;
+                return false;
+            }
+            case 'return': {
+                const value = data.value === '' ? new vars.GalNum(0) : this.varsFrame.evaluate(data.value);
+                if (this.callStack.length === 0)
+                    throw `Call stack is empty`;
+                const frame = this.callStack.pop();
+                this.currentPos = frame.pos;
+                this.varsFrame = frame.varsFrame;
+                const varName = this.paragraph.dataList[frame.pos].returnVar;
+                if (varName !== null) this.varsFrame.setVar(varName, value);
+                return false;
+            }
             default: return false;
         }
     }
@@ -417,7 +444,7 @@ class Manager {
             this.info.setLine(this.currentPos);
             this.info.setPart(this.paragraph.getPartAt(this.currentPos));
         } while (!await this.process(this.paragraph.dataList[this.currentPos]));
-        this.history.push(new Frame(this.currentPos, this.varsFrame.copy()));
+        this.history.push(this.getFrame());
     }
     async jump(frame) {
         if (frame.pos === undefined) return;
@@ -426,10 +453,13 @@ class Manager {
         this.info.setLine(this.currentPos);
         this.info.setPart(this.paragraph.getPartAt(this.currentPos));
         do this.currentPos++; while (!await this.process(this.paragraph.dataList[this.currentPos]));
-        this.history.push(new Frame(this.currentPos, this.varsFrame.copy()));
+        this.history.push(this.getFrame());
     } // DO NOT call `jump` directly in `process`!!!
     async eval(line) {
         await this.process(parser.parseLine(line));
+    }
+    getFrame() {
+        return new Frame(this.currentPos, this.varsFrame.copy());
     }
 }
 

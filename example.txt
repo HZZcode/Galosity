@@ -261,6 +261,15 @@ Ichiku: Try: type `[Eval] alert('Hello eval!')`.
 ZZ: Interpolation is also supported in evals.
 ZZ: You might need to check the source code at %{:https://github.com/HZZcode/Galosity} for more information.
 
+[Part] Funcs
+ZZ: Sometimes we need to re-use a same part for many times. This is where functions make it easier.
+Ichiku: Try: type `[Func] square(n)`, `[Return] n*n`, and then call with `[Call] square(3):m`. You'll see that `m` is 9.
+[Func] square(n)
+[Return] n*n
+[Call] square(3):m
+square(3) is ${m}.
+ZZ: Functions can be complicated at some times. But don't worry, just use it whenever you need.
+
 [Anchor] End of Tutorial
 [Part] The End
 ZZ: Here is the end of this tutorial.

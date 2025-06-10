@@ -1,41 +1,16 @@
-[Anchor] a
-[Input] n, err
-
-[Switch] err
+[Func] fact(n)
+[Var] ans:1
+[Switch] n>0
 [Case] true:
-[Jump] a
+[Call] fact(n-1):sub
+[Var] ans:n*sub
 [End]
+[Return] ans
 
-[Switch] n is num
-[Case] false:
-[Jump] a
-[End]
+[Func] test(n)
+[Call] fact(n):m
+fact(${n})=${m}
+[Return]
 
-[Var] i: 2
-[Var] b: true
+[Call] test(10)
 
-[Anchor] s
-
-[Switch] i<n
-[Case] false:
-[Jump] e
-[End]
-
-[Switch] n%i==0
-[Case] true:
-[Var] b: false
-[Jump] e
-[End]
-
-[Var] i:i+1
-
-[Anchor] e
-
-[Switch] b
-[Case] false:
-${n} is not prime
-[Case] true:
-${n} is prime
-[End]
-
-[Jump] a

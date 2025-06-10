@@ -65,7 +65,7 @@ app.whenReady().then(() => {
                 enableRemoteModule: true,
             },
         });
-        newWindow.loadURL('file://' + __dirname + '/test.html');
+        newWindow.loadFile('test.html');
         newWindow.webContents.on('did-finish-load', () => {
             newWindow.webContents.send('send-data', data);
         });

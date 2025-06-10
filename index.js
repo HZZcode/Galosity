@@ -50,6 +50,9 @@ class TextAreaManager {
         this.edit(this.currentLineCount(), modified);
         textarea.selectionStart = textarea.selectionEnd = start + text.length - length;
     }
+    complete(text, part) {
+        this.insert(text, part.length);
+    }
     move(step) {
         textarea.selectionStart += step;
         textarea.selectionEnd += step;
@@ -62,7 +65,6 @@ class TextAreaManager {
         const endOfLine = this.lines.slice(0, line + 1).join('\n').length;
         textarea.selectionStart = textarea.selectionEnd = endOfLine;
         const tempElement = document.createElement('div');
-
         tempElement.style.position = 'absolute';
         tempElement.style.visibility = 'hidden';
         tempElement.style.whiteSpace = 'pre-wrap';
@@ -72,8 +74,8 @@ class TextAreaManager {
         document.body.appendChild(tempElement);
         const lineHeight = tempElement.offsetHeight / (line + 1);
         const scrollTop = line * lineHeight;
-        textarea.scrollTop = scrollTop;
         document.body.removeChild(tempElement);
+        textarea.scrollTop = scrollTop;
         textarea.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
     }
 }
@@ -217,7 +219,8 @@ const tags = new AutoComplete([
     '[Select]', '[Case]', '[Break]', '[End]',
     '[Var]', '[Enum]', '[Switch]',
     '[Input]', '[Delay]', '[Pause]', '[Eval]',
-    '[Image]', '[Transform]'
+    '[Image]', '[Transform]',
+    '[Func]', '[Return]', '[Call]'
 ]);
 // [Note] I hope to use less words with same beginning letters for better Tab completing
 const anchorCompleter = new AutoComplete();
@@ -226,6 +229,7 @@ const imageTypes = ['background', 'left', 'center', 'right'];
 const imageTypeCompleter = new AutoComplete();
 const transformTypeCompleter = new AutoComplete(new parser.TransformData().getAllArgs());
 const caseConfigCompleter = new AutoComplete(['show', 'enable']);
+const funcNameCompleter = new AutoComplete();
 const characterScanner = new TagScanner('[Character]');
 const anchorScanner = new TagScanner('[Anchor]');
 const imageTypeScanner = new TagScanner('[Image]');
@@ -256,6 +260,7 @@ async function processKeyDown(event) {
     else if (event.ctrlKey && key.toLowerCase() === 'h') await help(event);
     else if (key === 'F5') await test();
     else if (key === '{') completeBraces(event);
+    else if (key === '(') completeParentheses(event);
 }
 function completeBraces(event) {
     const manager = new TextAreaManager();
@@ -270,6 +275,23 @@ function completeBraces(event) {
         const pos = manager.currentColumn();
         if (['$', '^', '_', '%', '~'].includes(line[pos - 1])) {
             manager.insert('{}');
+            manager.move(-1);
+            event.preventDefault();
+        }
+    }
+}
+function completeParentheses(event) {
+    const manager = new TextAreaManager();
+    const start = manager.start;
+    const end = manager.end;
+    if (start !== end) {
+        manager.insert(')', 0, end);
+        manager.move(-1);
+    }
+    else {
+        const front = manager.currentLineFrontContent().trim();
+        if (['[Func]', '[Call]'].some(tag => front.startsWith(tag))) {
+            manager.insert('()');
             manager.move(-1);
             event.preventDefault();
         }
@@ -295,6 +317,7 @@ async function autoComplete(event) {
         await completeFile(event);
         await completeImage(event);
         await completeCaseConfig(event);
+        await completeFunctions(event);
     }
 }
 async function completeFile(_) {
@@ -303,7 +326,7 @@ async function completeFile(_) {
     if (!front.trim().startsWith('[Jump]') || front.search('>') === -1) return;
     const filePart = front.substring(front.search('>') + 1).trim();
     const file = await fileCompleter.completeInclude(filePart);
-    if (file !== undefined) manager.insert(file, filePart.length);
+    if (file !== undefined) manager.complete(file, filePart);
 }
 async function completeImage(_) {
     const manager = new TextAreaManager();
@@ -311,7 +334,7 @@ async function completeImage(_) {
     if (!front.trim().startsWith('[Image]') || front.search(':') === -1) return;
     const imagePart = front.substring(front.search(':') + 1).trim();
     const image = await imageCompleter.completeInclude(imagePart);
-    if (image !== undefined) manager.insert(image, imagePart.length);
+    if (image !== undefined) manager.complete(image, imagePart);
 }
 function scanImageTypes() {
     return imageTypeScanner.scanRawList()
@@ -328,7 +351,7 @@ async function completeImageType(_) {
         || front.search(':') !== -1) return;
     const typePart = front.substring(front.search(/\]/) + 1).trim();
     const type = await imageTypeCompleter.completeInclude(typePart);
-    if (type !== undefined) manager.insert(type, typePart.length);
+    if (type !== undefined) manager.complete(type, typePart);
 }
 async function completeTransformType(_) {
     const manager = new TextAreaManager();
@@ -338,7 +361,7 @@ async function completeTransformType(_) {
     const typePart = front.substring(Math.max(front.indexOf(':'),
         front.lastIndexOf(',')) + 1).replace('[Transform]', '').trim();
     const type = await transformTypeCompleter.completeInclude(typePart);
-    if (type !== undefined) manager.insert(type, typePart.length);
+    if (type !== undefined) manager.complete(type, typePart);
 }
 async function completeCaseConfig(_) {
     const manager = new TextAreaManager();
@@ -348,7 +371,7 @@ async function completeCaseConfig(_) {
     const configPart = front.substring(Math.max(front.indexOf(':'),
         front.lastIndexOf(',')) + 1).replace('[Case]', '').trim();
     const config = await caseConfigCompleter.completeInclude(configPart);
-    if (config !== undefined) manager.insert(config, configPart.length);
+    if (config !== undefined) manager.complete(config, configPart);
 }
 async function completeCharaterName(_) {
     characters.setList(characterScanner.scanList());
@@ -380,7 +403,7 @@ async function completeJump(_) {
     anchorCompleter.setList(anchors);
     const anchorPart = line.replace('[Jump]', '').trim();
     const anchor = await anchorCompleter.completeInclude(anchorPart);
-    if (anchor !== undefined) manager.edit(manager.currentLineCount(), '[Jump] ' + anchor);
+    if (anchor !== undefined) manager.complete(anchor, anchorPart);
 }
 function getBuiltins() {
     const frame = new vars.GalVars();
@@ -395,7 +418,7 @@ async function completeSymbol(_) {
     const symbolPart = manager.currentLineFrontContent().replaceAll('${', ' ').split(/\s/).at(-1);
     if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(symbolPart)) return;
     const symbol = await symbolCompleter.completeInclude(symbolPart);
-    if (symbol !== undefined) manager.insert(symbol, symbolPart.length);
+    if (symbol !== undefined) manager.complete(symbol, symbolPart);
 }
 function needSymbol() {
     const manager = new TextAreaManager();
@@ -418,6 +441,24 @@ function scanSymbols() {
     return [... new Set([...varList, ...enumTypes, ...enumValues])]
         .filter(symbol => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(symbol));
 } //Scans: var name; enum type; enum value;
+async function completeFunctions(_) {
+    const manager = new TextAreaManager();
+    const front = manager.currentLineFrontContent().trim();
+    if (front.startsWith('[Call]') && !front.includes('(')) {
+        funcNameCompleter.setList(Object.keys(scanFunctions()));
+        const funcPart = front.replace('[Call]', '').trim();
+        const funcName = await funcNameCompleter.completeInclude(funcPart);
+        if (funcName !== undefined) manager.complete(funcName, funcPart);
+    }
+}
+function scanFunctions() {
+    return Object.fromEntries(
+        new parser.Paragraph(new TextAreaManager().lines).dataList
+            .map((data, line) => [data, line])
+            .filter(entry => entry[0].type === 'func')
+            .map(entry => [entry[0].name, entry[1]])
+    );
+}
 function jumpTo(event) {
     if (!event.ctrlKey) return;
     const manager = new TextAreaManager();
@@ -451,6 +492,14 @@ function jumpTo(event) {
                 manager.jumpTo(block.startPos);
                 return;
             }
+        }
+    }
+    else if (front.trim().startsWith('[Call]')) {
+        const name = parser.parseLine(line).name;
+        const funcs = scanFunctions();
+        if (name in funcs) {
+            manager.jumpTo(funcs[name]);
+            return;
         }
     }
 }

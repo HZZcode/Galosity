@@ -1,30 +1,16 @@
-/**
- * About [Vars] System in Galosity
- * 
- * {Types}
- * - Num: numbers. can be calculated and compared.
- * - Enums: a value from several strings.
- * 
- * {Operators}
- * - `a.b`: get enum value (none)
- * - `+a`, `-a`, `!a`, `(a)`: positive, negative, not, paratheses (right -> left)
- * - `a^b`: power (right -> left)
- * - `a*b`, `a/b`, `a//b`, `a%b`: multiply, divide, floor divide, modula (left -> right)
- * - `a+b`, `a-b`: add, minus (left -> right)
- * - `a<b`, `a<=b`, `a>b`, `a>=b`, `a==b`, `a!=b`: comparings (none, same as python)
- * - `a&b`, `a|b`: and, or
- */
-
 const lodash = require('lodash');
-const logger = require('./logger.js');
 const grammar = require('./grammar.cjs');
 
 function findDuplicates(array) {
     return array.filter((item, index) => array.indexOf(item) !== index);
 }
 
-function isIdentifier(str) {
+export function isIdentifier(str) {
     return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(str);
+}
+
+function isDiscarded(str) {
+    return /^_+$/.test(str);
 }
 
 export class GalVar {
@@ -186,6 +172,7 @@ export class GalVars {
     warn = '';
 
     setVar(name, value) {
+        if (isDiscarded(name)) return;
         if (!isIdentifier(name)) throw `Invalid variable name: ${name}`;
         this.vars[name] = value;
     }
@@ -290,11 +277,13 @@ export class GalVars {
                 return enumType.getValue(node.value.value);
             }
             case 'identifier': {
-                if (node.value in this.builtins) return this.builtins[node.value].get();
-                if (node.value in this.vars) return this.vars[node.value];
-                const enumValue = this.getEnumValue(node.value);
+                const name = node.value;
+                if (isDiscarded(name)) throw `${name} is discarded`;
+                if (name in this.builtins) return this.builtins[name].get();
+                if (name in this.vars) return this.vars[name];
+                const enumValue = this.getEnumValue(name);
                 if (enumValue !== undefined) return enumValue;
-                throw `No such identifier or enum value: ${node.value}`;
+                throw `No such identifier or enum value: ${name}`;
             }
             case 'function': {
                 const value = this.evaluateNode(node.value);

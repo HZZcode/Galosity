@@ -1,3 +1,5 @@
+const vars = require('./vars');
+
 export class GalData {
     type;
     constructor(type) {
@@ -203,6 +205,33 @@ export class EvalData extends GalData {
         this.expr = expr;
     }
 }
+export class FuncData extends GalData {
+    name;
+    args;
+    constructor(name, args) {
+        super('func');
+        this.name = name;
+        this.args = args;
+    }
+}
+export class ReturnData extends GalData {
+    value;
+    constructor(value) {
+        super('return');
+        this.value = value;
+    }
+}
+export class CallData extends GalData {
+    name;
+    args;
+    returnVar;
+    constructor(name, args, returnVar = null) {
+        super('call');
+        this.name = name;
+        this.args = args;
+        this.returnVar = returnVar;
+    }
+}
 
 function parseSpeech(line) {
     const index = line.search(':');
@@ -218,6 +247,20 @@ function parseConfig(configs) {
     }
     return object;
 }
+
+function parseFunc(func) {
+    const left = func.search(/\(/), right = func.search(/\)/);
+    if (left === -1 || right === -1) {
+        const name = func.trim();
+        if (!vars.isIdentifier(name)) throw `Invalid func name: ${name}`;
+        return [name, []];
+    }
+    const name = func.substring(0, left).trim();
+    const argsPart = func.substring(left + 1, right);
+    const args = argsPart.trim() === '' ? [] : argsPart.split(',').map(arg => arg.trim());
+    if (!vars.isIdentifier(name)) throw `Invalid func name: ${name}`;
+    return [name, args];
+} //e.g. 'f(a,b,c)' => ['f',['a','b','c']]
 
 export const isInside = (before, after) => (left, right) =>
     new RegExp(before).test(left.replaceAll(new RegExp(`.${before}.*?${after}`, 'g')))
@@ -288,6 +331,19 @@ export function parseLine(line) {
         }
         case 'Pause': return new PauseData();
         case 'Eval': return new EvalData(nonTagPart);
+        case 'Func': {
+            const [name, args] = parseFunc(nonTagPart);
+            const invalids = args.filter(arg => !vars.isIdentifier(arg));
+            if (invalids.length !== 0) throw `Invalid func arg: ${invalids.join(',')}`;
+            return new FuncData(name, args);
+        }
+        case 'Return': return new ReturnData(nonTagPart);
+        case 'Call': {
+            const [funcCall, returnVar] = nonTagPart.includes(':')
+                ? splitWith(':')(nonTagPart) : [nonTagPart, null];
+            const [name, args] = parseFunc(funcCall);
+            return new CallData(name, args, returnVar);
+        }
     }
 
     return parseSpeech(line);
@@ -328,21 +384,18 @@ export class Paragraph {
             else if (data.type === 'case') {
                 if (stack.length === 0)
                     throw `Error: [Case] tag out of control block at line ${index}`;
-                else {
-                    stack[stack.length - 1].casesPosList.push(index);
-                }
+                stack[stack.length - 1].casesPosList.push(index);
             }
             else if (data.type === 'end') {
                 if (stack.length === 0)
                     throw `Error: Extra [End] found at line ${index}`;
-                else {
-                    const block = stack.pop();
-                    block.endPos = index;
-                    ans.push(block);
-                }
+                const block = stack.pop();
+                block.endPos = index;
+                ans.push(block);
             }
         }
-        if (stack.length !== 0) throw `Error: Control Block ([Select]-[End] or [Switch]-[End]) not closed`;
+        if (stack.length !== 0)
+            throw `Error: Control block ([Select]-[End] or [Switch]-[End]) not closed`;
         return ans;
     }
     scanEnumsAt(pos) {
@@ -376,5 +429,18 @@ export class Paragraph {
             if (data.type === 'anchor' && data.anchor === anchor)
                 return i;
         return -1;
+    }
+    findFuncPos(name) {
+        for (const [i, data] of this.dataList.entries())
+            if (data.type === 'func' && data.name === name)
+                return i;
+        return -1;
+    }
+    findReturnPosAfter(pos) {
+        for (const [i, data] of this.dataList.entries()) {
+            if (i <= pos) continue;
+            if (data.type === 'return') return i;
+        }
+        throw `No return found after line ${pos}`;
     }
 }
