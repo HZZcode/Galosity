@@ -1,5 +1,6 @@
 const lodash = require('lodash');
 const grammar = require('./grammar.cjs');
+const { splitWith } = require('./split.js');
 
 function findDuplicates(array) {
     return array.filter((item, index) => array.indexOf(item) !== index);
@@ -24,6 +25,10 @@ export class GalVar {
     toBool() {
         if (isBool(this)) return !!this.valueIndex;
         throw `Cannot convert ${this.getType()} into bool`;
+    }
+    toNum() {
+        if (isNum(this)) return this.value;
+        throw `Cannot convert ${this.getType()} into num`;
     }
 }
 
@@ -71,7 +76,12 @@ export class GalEnumType {
     }
 
     toString() {
-        return `Enum Type ${this.name} with values ${this.values}`;
+        return `${this.name}:${this.values.join('|')}`;
+    }
+
+    static fromString(str) {
+        const [name, values] = splitWith(':')(str);
+        return new GalEnumType(name, values.split('|'));
     }
 
     getValue(value) {
@@ -171,6 +181,30 @@ export class GalVars {
 
     warn = '';
 
+    toString() {
+        const varsPart = Object.entries(this.vars).map(entry => {
+            const [name, value] = entry;
+            return name + '=' + value.toString();
+        }).join(',');
+        const enumPart = this.enumTypes.map(type => type.toString()).join(',');
+        return enumPart + ';' + varsPart;
+    }
+
+    static fromString(str) {
+        try {
+            const [enumPart, varsPart] = splitWith(';')(str);
+            const vars = new GalVars();
+            vars.vars = Object.fromEntries(varsPart.split(',').map(entry => {
+                const [name, value] = splitWith('=')(entry);
+                return [name, vars.evaluate(value)];
+            }));
+            vars.enumTypes = enumPart.split(',').map(type => GalEnumType.fromString(type));
+            return vars;
+        } catch (e) {
+            throw 'Parse Error: ' + e;
+        }
+    }
+
     setVar(name, value) {
         if (isDiscarded(name)) return;
         if (!isIdentifier(name)) throw `Invalid variable name: ${name}`;
@@ -257,10 +291,14 @@ export class GalVars {
     }
 
     evaluate(expr) {
-        const result = this.evaluateNode(grammar.parse(expr));
-        if (result === undefined)
-            throw `Unexpected expression: ${expr}`;
-        return result;
+        try {
+            const result = this.evaluateNode(grammar.parse(expr));
+            if (result === undefined)
+                throw `Unexpected expression: ${expr}`;
+            return result;
+        } catch (e) {
+            throw `Cannot evaluate '${expr}': ` + e;
+        }
     }
 
     evaluateNode(node) {

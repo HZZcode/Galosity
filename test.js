@@ -1,5 +1,6 @@
 const { ipcRenderer } = require('electron');
 const parser = require('./parser');
+const { splitWith } = require('./split');
 const vars = require('./vars');
 const lodash = require('lodash');
 const { Files } = require('./files');
@@ -170,22 +171,62 @@ function interpolate(text, varsFrame) {
     interpolation.register('^', sub => `<sup>${sub}</sup>`);
     interpolation.register('_', sub => `<sub>${sub}</sub>`);
     interpolation.register('%', sub => {
-        const [text, href] = parser.splitWith(':')(sub);
+        const [text, href] = splitWith(':')(sub);
         return `<a href="${href}" target="_blank" rel="noopener noreferrer">${text === '' ? href : text}</a>`;
     });
     interpolation.register('~', sub => {
-        const [rb, rt] = parser.splitWith(':')(sub);
+        const [rb, rt] = splitWith(':')(sub);
         return `<ruby><rb>${rb}</rb><rt>${rt}</rt><rp>(${rt})</rp></ruby>`;
     });
     return interpolation.process(text);
 }
 
+class CustomData {
+    constructor(object) {
+        if (object === undefined) return;
+        for (const [key, value] of Object.entries(object))
+            if (!(key in this)) this[key] = value;
+    }
+
+    toString() {
+        return JSON.stringify(this);
+    }
+
+    static fromString(str) {
+        return new CustomData(JSON.parse(str));
+    }
+}
+
 class Frame {
     pos;
     varsFrame;
-    constructor(pos, varsFrame) {
+    resources; // this is in string format
+    customData;
+    constructor(pos, varsFrame, resources, customData) {
         this.pos = pos;
         this.varsFrame = varsFrame;
+        this.resources = resources;
+        this.customData = customData;
+    }
+
+    withPos(pos) {
+        this.pos = pos;
+        return this;
+    }
+
+    toString() {
+        return [this.pos, this.varsFrame, this.resources, this.customData]
+            .map(data => data.toString()).join('\n');
+    }
+
+    static fromString(str) {
+        const [pos, varsFrame, resources, customData] = str.split('\n');
+        return new Frame(
+            Number.parseInt(pos),
+            vars.GalVars.fromString(varsFrame),
+            ResourceManager.fromString(resources),
+            CustomData.fromString(customData)
+        );
     }
 }
 
@@ -212,11 +253,13 @@ class ResourceManager extends Files {
     defImagePos(pos, left, bottom) {
         const id = `${pos}-image`;
         const setPos = element => {
-            element.style.left = left;
-            element.style.bottom = bottom;
+            if (left !== '') element.style.left = left;
+            if (bottom !== '') element.style.bottom = bottom;
         };
-        if (this.getElements().some(element => element.id === id))
+        if (this.getElements().some(element => element.id === id)) {
             setPos(this.getElement(pos));
+            return;
+        }
         const element = document.createElement('div');
         element.className = 'image';
         element.id = id;
@@ -224,9 +267,12 @@ class ResourceManager extends Files {
         this.parent.appendChild(element);
     }
 
-    async setElementImage(element, file) {
+    setElementBackground(element, background) {
         if (element === undefined || element.style === undefined) return;
-        element.style.backgroundImage = file !== 'clear' ? `url("${await this.getSource(file)}")` : '';
+        element.style.backgroundImage = background;
+    }
+    async setElementImage(element, file) {
+        this.setElementBackground(element, file !== 'clear' ? `url("${await this.getSource(file)}")` : '');
     }
     async setImage(pos, file) {
         if (file.trim().startsWith('@')) {
@@ -234,7 +280,7 @@ class ResourceManager extends Files {
             let left = file.trim();
             let bottom = 0;
             if (file.includes(',')) {
-                [left, bottom] = parser.splitWith(',')(file);
+                [left, bottom] = splitWith(',')(file);
             }
             this.defImagePos(pos, left, bottom);
         }
@@ -248,6 +294,33 @@ class ResourceManager extends Files {
     transformImage(pos, transform) {
         this.transformElement(this.getElement(pos), transform);
     }
+
+    getPos(id) {
+        return id.endsWith('-image') ? id.slice(0, -6) : '';
+    }
+
+    toString() {
+        return this.getElements().map(element => [
+            this.getPos(element.id),
+            element.style.left,
+            element.style.bottom,
+            element.style.backgroundImage,
+            element.style.transform
+        ].join('|')).join(';');
+    }
+    static fromString(str) {
+        const manager = new ResourceManager();
+        manager.clear();
+        if (!str.includes(';')) return manager;
+        const elements = str.split(';');
+        for (const element of elements) {
+            const [pos, left, bottom, image, transform] = element.split('|');
+            manager.defImagePos(pos, left, bottom);
+            if (image !== '') manager.setElementBackground(manager.getElement(pos), image);
+            manager.transformImage(pos, transform);
+        }
+        return manager;
+    }
 }
 
 class Manager {
@@ -256,6 +329,7 @@ class Manager {
     currentPos = -1;
     history = []; //list of `Frame`s
     callStack = []; //line count of [Call]s
+    customData = new CustomData(); //might be used by [Eval] custom data
     info = new InfoManager();
     texts = new TextManager();
     buttons = new ButtonsManager();
@@ -326,7 +400,7 @@ class Manager {
                     if (!show) return null;
                     const enable = this.varsFrame.evaluate(data.enable).toBool();
                     const text = interpolate(data.text, this.varsFrame);
-                    const callback = async () => await this.jump(new Frame(pos, this.varsFrame.copy()));
+                    const callback = async () => await this.jump(this.getFrame().withPos(pos));
                     return new ButtonData(text, callback, enable);
                 }).filter(button => button !== null);
                 this.buttons.drawButtons(buttons);
@@ -387,18 +461,19 @@ class Manager {
             }
             case 'transform': {
                 const interpolated = lodash.cloneDeep(data);
-                for (const key in interpolated)
-                    interpolated[key] = interpolate(data[key], this.varsFrame);
+                for (const [key, value] of Object.entries(data))
+                    interpolated[key] = interpolate(value, this.varsFrame);
                 this.resources.transformImage(interpolated.imageType, interpolated);
                 return false;
             }
             case 'delay': {
-                setTimeout(() => this.next(), data.seconds * 1000);
+                setTimeout(() => this.next(), this.varsFrame.evaluate(data.seconds).toNum() * 1000);
                 return false;
             }
             case 'pause': return true;
             case 'eval': {
-                errorHandledAsWarning(() => eval(interpolate(data.expr, this.varsFrame)))();
+                const expr = interpolate(data.expr, this.varsFrame);
+                errorHandledAsWarning(async () => await eval(expr))();
                 return false;
             }
             case 'func': {
@@ -450,6 +525,9 @@ class Manager {
         if (frame.pos === undefined) return;
         this.currentPos = frame.pos;
         if (frame.varsFrame !== undefined) this.varsFrame = frame.varsFrame;
+        if (frame.resources !== undefined)
+            this.resources = ResourceManager.fromString(frame.resources);
+        if (frame.customData !== undefined) this.customData = frame.customData;
         this.info.setLine(this.currentPos);
         this.info.setPart(this.paragraph.getPartAt(this.currentPos));
         do this.currentPos++; while (!await this.process(this.paragraph.dataList[this.currentPos]));
@@ -459,7 +537,12 @@ class Manager {
         await this.process(parser.parseLine(line));
     }
     getFrame() {
-        return new Frame(this.currentPos, this.varsFrame.copy());
+        return new Frame(
+            this.currentPos,
+            this.varsFrame.copy(),
+            this.resources.toString(),
+            lodash.clone(this.customData)
+        );
     }
 }
 
@@ -510,6 +593,8 @@ async function main() {
         await manager.eval(code);
     });
 }
+// TODO: Tip before jumping
+// TODO: save & load
 
 // eslint-disable-next-line floatingPromise/no-floating-promise
 main();

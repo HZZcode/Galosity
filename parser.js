@@ -1,4 +1,5 @@
 const vars = require('./vars');
+const { splitWith } = require('./split.js');
 
 export class GalData {
     type;
@@ -176,18 +177,11 @@ export class TransformData extends GalData {
         }
     }
     toString() {
-        // return `translateX(calc(${this.translateX} - 50%)) `
-        return `translateX(${this.translateX}) `
-            + `translateY(${this.translateY}) `
-            + `scaleX(${this.scaleX}) `
-            + `scaleY(${this.scaleY}) `
-            + `skewX(${this.skewX}) `
-            + `skewY(${this.skewY}) `
-            + `rotate(${this.rotate})`;
+        return this.getArgs().map(arg => `${arg}(${this[arg]})`).map(s => s.replace(' ', '')).join(' ');
     }
 }
 export class DelayData extends GalData {
-    seconds = 0;
+    seconds = '0';
     constructor(seconds) {
         super('delay');
         this.seconds = seconds;
@@ -262,24 +256,6 @@ function parseFunc(func) {
     return [name, args];
 } //e.g. 'f(a,b,c)' => ['f',['a','b','c']]
 
-export const isInside = (before, after) => (left, right) =>
-    new RegExp(before).test(left.replaceAll(new RegExp(`.${before}.*?${after}`, 'g')))
-    && new RegExp(after).test(right.replaceAll(new RegExp(`.${before}.*?${after}`, 'g')));
-export const isHTML = isInside('<', '>');
-export const isInterpolate = isInside('\\$\\{', '\\}');
-export const indexOf = (str, char) => {
-    for (const [i, c] of [...str].entries()) {
-        const [left, right] = [str.substring(0, i), str.substring(i + 1)];
-        if (c === char && !isInterpolate(left, right) && !isHTML(left, right))
-            return i;
-    }
-    return -1;
-};
-export const splitWith = char => str => [
-    str.substring(0, indexOf(str, char)).trim(),
-    str.substring(indexOf(str, char) + 1).trim()
-];
-
 export function parseLine(line) {
     if (line.trim().startsWith('//')) return new EmptyData();
     if (!line.trim().startsWith('[') || line.search(']') === -1)
@@ -324,11 +300,7 @@ export function parseLine(line) {
             const [imageType, configs] = splitWith(':')(nonTagPart);
             return new TransformData(imageType, parseConfig(configs));
         }
-        case 'Delay': {
-            const seconds = Number(nonTagPart);
-            if (!isNaN(seconds)) return new DelayData(seconds);
-            break;
-        }
+        case 'Delay': return new DelayData(nonTagPart);
         case 'Pause': return new PauseData();
         case 'Eval': return new EvalData(nonTagPart);
         case 'Func': {

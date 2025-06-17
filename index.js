@@ -6,6 +6,7 @@ const vars = require('./vars');
 const { AutoComplete, FileComplete } = require('./completer');
 const { Files } = require('./files');
 const { logger } = require('./logger');
+const split = require('./split.js');
 
 const textarea = document.getElementById('input');
 class TextAreaManager {
@@ -424,7 +425,7 @@ function needSymbol() {
     const manager = new TextAreaManager();
     const isVar = /^\[Var\].*?:/.test(manager.currentLineFrontContent().trim());
     const isSwitch = manager.currentLineFrontContent().trim().startsWith('[Switch]');
-    const isInterpolate = parser.isInterpolate(manager.currentLineFrontContent(),
+    const isInterpolate = split.isInterpolate(manager.currentLineFrontContent(),
         manager.currentLineBackContent());
     return isVar || isSwitch || isInterpolate;
 }
