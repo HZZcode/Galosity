@@ -43,6 +43,12 @@ class TextAreaManager {
     currentLineBackContent() {
         return this.content.substring(this.start).split(/\r?\n/)[0];
     }
+    beforeLines() {
+        return this.lines.slice(0, this.currentLineCount());
+    }
+    beforeLinesLength() {
+        return this.beforeLines().join('\n').length + 1;
+    }
     insert(text, length = 0, pos = undefined) {
         const line = this.currentLine();
         if (pos === undefined) pos = this.currentColumn();
@@ -118,68 +124,41 @@ class ErrorManager {
         this.element.innerText = '';
     }
 }
-class SaveLoadManager extends Files {
+class FileManager extends Files {
     constructor() {
         super();
     }
     async ofFile(file) {
-        this.setFile(await ipcRenderer.invoke('resolve', file));
+        this.setFile(await this.resolve(file));
         return this;
     }
     async write(path) {
         if (path === null) return;
         const manager = new TextAreaManager();
         const content = manager.content;
-        await ipcRenderer.invoke('writeFile', path, content)
-            .then(async _ => {
-                this.setFile(await ipcRenderer.invoke('resolve', path));
-                updateInfo();
-                info.innerText += ' Saved!';
-                setTimeout(updateInfo, 1000);
-            }).catch(e => {
-                logger.error(e);
-                error.error(`Failed to Write to ${path}`);
-            });
+        try {
+            await this.writeFile(path, content);
+            this.setFile(await this.resolve(path));
+            updateInfo();
+            info.innerText += ' Saved!';
+            setTimeout(updateInfo, 1000);
+        } catch (e) {
+            logger.error(e);
+            error.error(`Failed to Write to ${path}`);
+        }
     }
     async read(path) {
         if (path === null) return;
-        await ipcRenderer.invoke('readFile', path)
-            .then(async content => {
-                textarea.value = content;
-                this.setFile(await ipcRenderer.invoke('resolve', path));
-                updateInfo();
-                return content;
-            }).catch(e => {
-                logger.error(e);
-                error.error(`Failed to Read from ${path}`);
-            });
-    }
-    async getSavePath() {
-        let path = null;
-        await ipcRenderer.invoke('showSaveDialog', {
-            defaultPath: 'gal.txt',
-            filters: [
-                { name: 'Text Files', extensions: ['txt'] },
-                { name: 'All Files', extensions: ['*'] }
-            ]
-        }).then(result => {
-            if (result.canceled) return;
-            path = result.filePath;
-        });
-        return path;
-    }
-    async getOpenPath() {
-        let path = null;
-        await ipcRenderer.invoke('showOpenDialog', {
-            filters: [
-                { name: 'Text Files', extensions: ['txt'] },
-                { name: 'All Files', extensions: ['*'] }
-            ]
-        }).then(result => {
-            if (result.canceled) return;
-            path = result.filePaths[0];
-        });
-        return path;
+        try {
+            const content = await this.readFile(path);
+            textarea.value = content;
+            this.setFile(await this.resolve(path));
+            updateInfo();
+            return content;
+        } catch (e) {
+            logger.error(e);
+            error.error(`Failed to Read from ${path}`);
+        };
     }
     async autoSave() {
         if (this.valid) await this.write(this.filename);
@@ -188,23 +167,23 @@ class SaveLoadManager extends Files {
         if (event !== undefined) event.preventDefault();
         let path = this.filename;
         if (!this.valid && textarea.value === '') return;
-        if (!this.valid) path = await this.getSavePath();
+        if (!this.valid) path = await this.requestSavePath();
         await this.write(path);
     }
     async saveAs(event) {
         event.preventDefault();
-        const path = await this.getSavePath();
+        const path = await this.requestSavePath();
         await this.write(path);
     }
     async open(event) {
         event.preventDefault();
         this.save();
-        const path = await this.getOpenPath();
+        const path = await this.requestOpenPath();
         await this.read(path);
     }
-    new(event) {
+    async new(event) {
         event.preventDefault();
-        this.save();
+        await this.save();
         textarea.value = '';
         this.setFile(null);
     }
@@ -234,7 +213,7 @@ const funcNameCompleter = new AutoComplete();
 const characterScanner = new TagScanner('[Character]');
 const anchorScanner = new TagScanner('[Anchor]');
 const imageTypeScanner = new TagScanner('[Image]');
-const file = new SaveLoadManager();
+const file = new FileManager();
 const fileCompleter = new FileComplete(_ => file.getPath(), 'txt');
 const imageCompleter = new FileComplete(_ => file.getSourcePath());
 textarea.addEventListener('keydown', processKeyDown);
@@ -257,7 +236,7 @@ async function processKeyDown(event) {
     else if (event.ctrlKey && event.shiftKey && key.toLowerCase() === 's') await file.saveAs(event);
     else if (event.ctrlKey && key.toLowerCase() === 's') await file.save(event);
     else if (event.ctrlKey && key.toLowerCase() === 'o') await file.open(event);
-    else if (event.ctrlKey && key.toLowerCase() === 'n') file.new(event);
+    else if (event.ctrlKey && key.toLowerCase() === 'n') await file.new(event);
     else if (event.ctrlKey && key.toLowerCase() === 'h') await help(event);
     else if (key === 'F5') await test();
     else if (key === '{') completeBraces(event);
@@ -265,8 +244,8 @@ async function processKeyDown(event) {
 }
 function completeBraces(event) {
     const manager = new TextAreaManager();
-    const start = manager.start;
-    const end = manager.end;
+    const start = manager.start - manager.beforeLinesLength();
+    const end = manager.end - manager.beforeLinesLength();
     if (start !== end) {
         manager.insert('}', 0, end);
         manager.move(-1);
@@ -283,8 +262,8 @@ function completeBraces(event) {
 }
 function completeParentheses(event) {
     const manager = new TextAreaManager();
-    const start = manager.start;
-    const end = manager.end;
+    const start = manager.start - manager.beforeLinesLength();
+    const end = manager.end - manager.beforeLinesLength();
     if (start !== end) {
         manager.insert(')', 0, end);
         manager.move(-1);
@@ -536,11 +515,11 @@ async function test(fileManager = file, content = textarea.value) {
 }
 async function help(event) {
     event.preventDefault();
-    const content = await ipcRenderer.invoke('readFile', 'example.txt').catch(e => {
+    const content = await file.readFile('example.txt').catch(e => {
         logger.error(e);
         error.error(`Cannot find example.txt`);
     });
-    await test(await new SaveLoadManager().ofFile('example.txt'), content);
+    await test(await new FileManager().ofFile('example.txt'), content);
 }
 
 ipcRenderer.on('send-data', (_, data) => {

@@ -50,6 +50,8 @@ app.whenReady().then(() => {
     ipcMain.handle('writeFile', (_, path, content) => fs.promises.writeFile(path, content, 'utf-8'));
     ipcMain.handle('readFile', (_, path) => fs.promises.readFile(path, 'utf-8'));
     ipcMain.handle('resolve', (_, pathname) => path.resolve(pathname).replaceAll('\\', '/'));
+    ipcMain.handle('hasFile', (_, path) => fs.promises.access(path, fs.constants.F_OK)
+        .then(() => true).catch(() => false));
     ipcMain.handle('directory', _ => __dirname);
     ipcMain.handle('readdir', (_, path) => fs.promises.readdir(path));
     ipcMain.handle('openExternal', (_, url) => shell.openExternal(url));

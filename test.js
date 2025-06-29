@@ -1,6 +1,6 @@
 const { ipcRenderer } = require('electron');
 const parser = require('./parser');
-const { splitWith } = require('./split');
+const { splitWith, isLatex } = require('./split');
 const vars = require('./vars');
 const lodash = require('lodash');
 const { Files } = require('./files');
@@ -54,7 +54,7 @@ class ErrorManager {
         this.errorElement.innerText = this.warnElement.innerText = '';
     }
 }
-const error = new ErrorManager();
+export const error = new ErrorManager();
 
 class TextManager {
     outputText(name, text, color = 'black') {
@@ -144,13 +144,20 @@ class Interpolations {
         this.funcs[tagChar] = func;
     }
     getTagRegex() {
-        return new RegExp(`[${Object.keys(this.funcs).join('')}](\\{([^{}]*?)\\})`);
+        return new RegExp(`[${Object.keys(this.funcs).join('')}](\\{([^{}]*?)\\})`, 'g');
     }
     process(text) {
         //Sure enough no one would use so many interpolations
+        let currentIndex = 0;
         for (let i = 0; i < 128; i++) {
-            const match = this.getTagRegex().exec(text);
+            const regex = this.getTagRegex();
+            regex.lastIndex = currentIndex;
+            const match = regex.exec(text);
             if (match === null) break;
+            if (isLatex(text, match.index)) {
+                currentIndex = match.index + match[0].length + 1;
+                continue;
+            }
             const func = this.funcs[match[0][0]];
             if (func !== undefined) text = text.replace(match[0], func(match[2]));
         }
@@ -197,7 +204,7 @@ class CustomData {
     }
 }
 
-class Frame {
+export class Frame {
     pos;
     varsFrame;
     resources; // this is in string format
@@ -224,9 +231,76 @@ class Frame {
         return new Frame(
             Number.parseInt(pos),
             vars.GalVars.fromString(varsFrame),
-            ResourceManager.fromString(resources),
+            resources,
             CustomData.fromString(customData)
         );
+    }
+}
+
+class SaveInfo {
+    time;
+    sourceFile;
+    note;
+    constructor(sourceFile, note = '') {
+        this.time = new Date();
+        this.sourceFile = sourceFile;
+        this.note = note.replaceAll('\n', '');
+    }
+    withTime(time) {
+        this.time = time;
+        return this;
+    }
+    toString() {
+        return [
+            this.time.getTime().toString(),
+            this.sourceFile,
+            this.note
+        ].join('|').replaceAll('\n', '');
+    }
+    static fromString(str) {
+        const [time, sourceFile, note] = splitWith('|')(str);
+        return new SaveInfo(sourceFile, note).withTime(new Date(Number.parseInt(time)));
+    }
+}
+
+class SaveLoadManager extends Files {
+    manager;
+    constructor(manager) {
+        super();
+        this.manager = manager;
+    }
+    getSourceFile() {
+        return this.manager.resources.filename;
+    }
+    async getSaveFilePath(slot) {
+        return await this.getSavePath() + `/save${slot}.gal`;
+    }
+    async isFilled(slot) {
+        return await this.hasFile(await this.getSaveFilePath(slot));
+    }
+    async save(slot, note = '') {
+        const str = new SaveInfo(note).toString() + '\n' + this.manager.getFrame().toString();
+        await this.writeFile(await this.getSaveFilePath(slot), str);
+    }
+    async getInfo(slot) {
+        if (!await this.isFilled(slot)) throw `No save data in slot ${slot}`;
+        const str = await this.readFile(await this.getSaveFilePath(slot));
+        return SaveInfo.fromString(splitWith('\n')(str)[0]);
+    }
+    async load(slot) {
+        if (!await this.isFilled(slot)) throw `No save data in slot ${slot}`;
+        try {
+            const str = await this.readFile(await this.getSaveFilePath(slot));
+            const file = (await this.getInfo()).sourceFile;
+            if (file !== this.getSourceFile())
+                await this.manager.set((await this.readFile(file)).split(/\r?\n/));
+            await this.manager.jump(Frame.fromString(splitWith('\n')(str)[1]));
+        }
+        catch (e) {
+            logger.error(e);
+            error.error(e);
+            throw `Cannot load from slot ${slot}: ${e}`;
+        }
     }
 }
 
@@ -334,6 +408,7 @@ class Manager {
     texts = new TextManager();
     buttons = new ButtonsManager();
     resources = new ResourceManager();
+    saveLoad = new SaveLoadManager(this);
     init() {
         this.varsFrame = new vars.GalVars();
         this.varsFrame.initBuiltins();
@@ -362,6 +437,7 @@ class Manager {
             .then(async content => await this.set(content.split(/\r?\n/)))
             .catch(e => {
                 logger.error(e);
+                error.error(e);
                 throw `Cannot open file ${path}`;
             });
     }
@@ -544,23 +620,30 @@ class Manager {
             lodash.clone(this.customData)
         );
     }
+    save() {
+        ;
+    }
+    load() {
+        ;
+    }
 }
 
 const manager = new Manager();
 
 const initPromise = new Promise((resolve, reject) => {
-    try {
-        ipcRenderer.on('send-data', async (_, data) => {
+    ipcRenderer.on('send-data', async (_, data) => {
+        try {
             manager.init();
             await manager.set(data.content.split(/\r?\n/));
             manager.resources.filename = data.filename;
             logger.isDebug = data.isDebug;
             resolve();
-        });
-    } catch (e) {
-        logger.error(e);
-        reject(e);
-    }
+        } catch (e) {
+            logger.error(e);
+            error.error(e);
+            reject(e);
+        }
+    });
 });
 
 function isNum(value) {
@@ -572,14 +655,19 @@ async function main() {
     window.addEventListener('keydown', errorHandled(async event => {
         if (event.target.tagName.toLowerCase() === 'input') return;
         const key = event.key;
-        if (key === 'Backspace') manager.previous();
+        if (key === 'Backspace') await manager.previous();
         else if (key === 'Enter') await manager.next();
+        else if (event.ctrlKey && key.toLowerCase() === 's') await manager.save();
+        else if (event.ctrlKey && key.toLowerCase() === 'l') await manager.load();
     }));
 
     const bindInput = (button, input, func) => {
         button.addEventListener('click', errorHandled(func));
         input.addEventListener('keyup', errorHandled(async event => {
-            if (event.key === 'Enter') await func();
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                await func();
+            }
         }));
     };
 
@@ -595,6 +683,9 @@ async function main() {
 }
 // TODO: Tip before jumping
 // TODO: save & load
+// TODO: simplify form for condition
+// TODO: opening file through cmd args
+// TODO: search & replace
 
 // eslint-disable-next-line floatingPromise/no-floating-promise
 main();

@@ -38,11 +38,13 @@
       "!LICENSE.txt",
       "!sum.txt",
       "!eslint.config.js",
-      "!src"
+      "!src",
+      "!save"
     ],
     "extraFiles": [
       "example.txt",
-      "src"
+      "src",
+      "save"
     ],
     "win": {
       "target": "nsis"
