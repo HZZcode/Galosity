@@ -684,7 +684,6 @@ async function main() {
 // TODO: Tip before jumping
 // TODO: save & load
 // TODO: simplify form for condition
-// TODO: opening file through cmd args
 // TODO: search & replace
 
 // eslint-disable-next-line floatingPromise/no-floating-promise

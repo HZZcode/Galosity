@@ -6,6 +6,12 @@ import path from 'path';
 const isDebug = logger.isDebug = process.env.NODE_ENV === 'development';
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
+function getArgvFileName() {
+    for (const file of process.argv.slice(1))
+        if (file !== '.' && fs.existsSync(file)) return file;
+    return null;
+}
+
 function handleLink(window) {
     window.webContents.on('will-navigate', (event, url) => {
         event.preventDefault();
@@ -31,7 +37,7 @@ function createWindow() {
     win.loadFile('index.html');
 
     win.webContents.on('did-finish-load', () => {
-        win.webContents.send('send-data', { isDebug: isDebug });
+        win.webContents.send('send-data', { isDebug: isDebug, file: getArgvFileName() });
     });
 
     handleLink(win);

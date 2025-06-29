@@ -524,5 +524,6 @@ async function help(event) {
 
 ipcRenderer.on('send-data', (_, data) => {
     logger.isDebug = data.isDebug;
-    if (data.isDebug) file.read('gal.txt');
+    if (data.file !== null) file.read(data.file);
+    else if (data.isDebug) file.read('gal.txt');
 });
