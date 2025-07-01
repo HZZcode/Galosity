@@ -621,10 +621,13 @@ class Manager {
         );
     }
     save() {
-        ;
+        // Here we need some GUI but I don't know how should it be yet
+        // After that we simply get a slot and some optional notes
+        // Then use `this.saveLoad.save(slot, note)`
     }
     load() {
-        ;
+        // Similar to `save()`. with `this.saveLoad.load(slot)`.
+        // I just hate designing GUI.
     }
 }
 
@@ -683,7 +686,6 @@ async function main() {
 }
 // TODO: Tip before jumping
 // TODO: save & load
-// TODO: simplify form for condition
 // TODO: search & replace
 
 // eslint-disable-next-line floatingPromise/no-floating-promise

@@ -241,6 +241,7 @@ async function processKeyDown(event) {
     else if (key === 'F5') await test();
     else if (key === '{') completeBraces(event);
     else if (key === '(') completeParentheses(event);
+    else if (event.ctrlKey && key.toLowerCase() === 'l') completeLatex(event);
 }
 function completeBraces(event) {
     const manager = new TextAreaManager();
@@ -275,6 +276,23 @@ function completeParentheses(event) {
             manager.move(-1);
             event.preventDefault();
         }
+    }
+}
+function completeLatex(event) {
+    event.preventDefault();
+    const manager = new TextAreaManager();
+    const start = manager.start - manager.beforeLinesLength();
+    const end = manager.end - manager.beforeLinesLength();
+    const before = event.shiftKey ? '$$' : '\\(';
+    const after = event.shiftKey ? '$$' : '\\)';
+    if (start !== end) {
+        manager.insert(after, 0, end);
+        manager.move(-2);
+        manager.insert(before, 0, start);
+    }
+    else {
+        manager.insert(before + after);
+        manager.move(-2);
     }
 }
 async function autoComplete(event) {
