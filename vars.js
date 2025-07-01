@@ -315,17 +315,21 @@ export class GalVars {
                 return enumType.getValue(node.value.value);
             }
             case 'identifier': {
-                const name = node.value;
-                if (isDiscarded(name)) throw `${name} is discarded`;
-                if (name in this.builtins) return this.builtins[name].get();
-                if (name in this.vars) return this.vars[name];
-                const enumValue = this.getEnumValue(name);
-                if (enumValue !== undefined) return enumValue;
-                throw `No such identifier or enum value: ${name}`;
+                return this.evaluateIdentifier(node);
             }
             case 'function': {
-                const value = this.evaluateNode(node.value);
                 const func = node.func.value;
+                if (func === 'hasVar') {
+                    if (node.value.type !== 'identifier')
+                        throw `Function 'hasVar' can only be applied on identifier`;
+                    try {
+                        this.evaluateIdentifier(node.value);
+                        return true;
+                    } catch (_) {
+                        return false;
+                    }
+                }
+                const value = this.evaluateNode(node.value);
                 if (func in this.builtinFuncs) return this.builtinFuncs[func].apply(value);
                 const enumType = this.getEnumType(func);
                 if (enumType !== undefined) return enumType.apply(value);
@@ -342,6 +346,16 @@ export class GalVars {
             case 'matching':
                 return this.evaluateMatching(node);
         }
+    }
+
+    evaluateIdentifier(node) {
+        const name = node.value;
+        if (isDiscarded(name)) throw `${name} is discarded`;
+        if (name in this.builtins) return this.builtins[name].get();
+        if (name in this.vars) return this.vars[name];
+        const enumValue = this.getEnumValue(name);
+        if (enumValue !== undefined) return enumValue;
+        throw `No such identifier or enum value: ${name}`;
     }
 
     evaluateFactor(node) {

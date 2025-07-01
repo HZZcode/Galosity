@@ -153,6 +153,7 @@ ZZ: There are also vars representing real-world date time like dateNow=${dateNow
 [Part] Built-in Functions
 ZZ: This part is simple. sin(PI/6)=${sin(PI/6)}, tan(PI/4)=${tan(PI/4)}, ln(E^3)=${ln(E^3)}, etc.
 ZZ: There are also 3 special functions for enums: indexOf(Female)=${indexOf(Female)}, sizeOfType(Female)=${sizeOfType(Female)}, sex(1)=${Sex(1)}.
+ZZ: You can also check whether a variable is defined with function `hasVar`.
 
 [Part] Switch-Case
 ZZ: [Switch]-[Case] blocks are used often with variables.
