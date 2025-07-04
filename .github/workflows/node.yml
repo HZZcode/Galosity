@@ -57,7 +57,7 @@ jobs:
           with open('font-awesome.zip', 'wb') as f:
             f.write(response.content)
 
-          with zipfile.ZipFile('font-awesome', 'r') as zip_ref:
+          with zipfile.ZipFile('font-awesome.zip', 'r') as zip_ref:
             zip_ref.extractall('.')
 
           for folder_name in os.listdir('.'):
