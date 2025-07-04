@@ -26,15 +26,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Set GH_TOKEN environment variable (Linux/Mac)
-        if: ${{ matrix.os != 'windows-latest' }}
-        run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Set GH_TOKEN environment variable (Windows)
-        if: ${{ matrix.os == 'windows-latest' }}
-        run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $env:GITHUB_ENV
-        shell: pwsh
+      - name: Set GH_TOKEN environment variable
+        run: |
+          import os
+          with open(os.environ['GITHUB_ENV'], 'a') as env_file:
+            env_file.write(f"GH_TOKEN={os.environ['GH_TOKEN']}\n")
+        shell: python
 
       - name: Install dependencies
         run: npm install
