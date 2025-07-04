@@ -713,8 +713,8 @@ async function main() {
         const key = event.key;
         if (key === 'Backspace') await manager.previous();
         else if (key === 'Enter') await manager.next();
-        else if (event.ctrlKey && key.toLowerCase() === 's') await manager.save();
-        else if (event.ctrlKey && key.toLowerCase() === 'l') await manager.load();
+        // else if (event.ctrlKey && key.toLowerCase() === 's') await manager.save();
+        // else if (event.ctrlKey && key.toLowerCase() === 'l') await manager.load();
     }));
 
     const bindInput = (button, input, func) => {

@@ -10,6 +10,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [20]
+        python-version: ['3.12']
 
     steps:
       - name: Checkout code
@@ -19,8 +20,13 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
+      
+      - name: Use Python ${{ matrix.python-version }} as shell
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
-      - name: Set GH_TOKEN environment variable
+      - name: Set GH_TOKEN environment variable (Linux/Mac)
         if: ${{ matrix.os != 'windows-latest' }}
         run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $GITHUB_ENV
         shell: bash
@@ -33,44 +39,20 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Copy MathJax (Linux/Mac)
-        if: always() && matrix.os != 'windows-latest'
-        run: cp -r ./node_modules/mathjax ./mathjax
-        shell: bash
-
-      - name: Copy MathJax (Windows)
-        if: always() && matrix.os == 'windows-latest'
-        run: |
-                robocopy .\node_modules\mathjax .\mathjax /E
-                if %errorlevel% equ 1 (
-                  exit /b 0
-                ) else (
-                  exit /b %errorlevel%
-                )
-        shell: cmd
+      - name: Copy MathJax
+        run: import shutil; shutil.copytree('./node_modules/mathjax', './mathjax', dirs_exist_ok=True)
+        shell: python
 
       - name: Build the application
         run: npm run build --if-present
 
-      - name: Check if build output exists (Linux/Mac)
-        if: always() && matrix.os != 'windows-latest'
-        run: ls -la build/
-        shell: bash
+      - name: Check if build output exists
+        run: import os; exit(1) if not os.path.exists('build') else print(os.listdir('build'))
+        shell: python
 
-      - name: Check if build output exists (Windows)
-        if: always() && matrix.os == 'windows-latest'
-        run: dir build\
-        shell: cmd
-
-      - name: Check if tex-mml-chtml.js exists (Linux/Mac)
-        if: always() && matrix.os != 'windows-latest'
-        run: if [ ! -f "./mathjax/es5/tex-mml-chtml.js" ]; then exit 1; fi
-        shell: bash
-
-      - name: Check if tex-mml-chtml.js exists (Windows)
-        if: always() && matrix.os == 'windows-latest'
-        run: if (Test-Path "./mathjax/es5/tex-mml-chtml.js") { exit 0 } else { exit 1 }
-        shell: pwsh
+      - name: Check if tex-mml-chtml.js exists
+        run: import os; exit(1) if not os.path.isfile('./mathjax/es5/tex-mml-chtml.js') else print("File exists")
+        shell: python
 
       - name: Upload artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v4
