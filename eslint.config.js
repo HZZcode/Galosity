@@ -7,7 +7,7 @@ import floatingPromise from "eslint-plugin-no-floating-promise";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
-  { ignores: ["grammar.cjs", "package-lock.json", "eslint.config.js"] },
+  { ignores: ["grammar.cjs", "package-lock.json", "eslint.config.js", "mathjax.js"] },
   {
     files: ["**/*.{js,mjs,cjs}"],
     plugins: { js, perfectionist, promise, floatingPromise },

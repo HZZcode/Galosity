@@ -33,6 +33,16 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Copy MathJax (Linux/Mac)
+        if: always() && matrix.os != 'windows-latest'
+        run: cp -r ./node_modules/mathjax ./mathjax
+        shell: bash
+
+      - name: Copy MathJax (Windows)
+        if: always() && matrix.os == 'windows-latest'
+        run: robocopy .\node_modules\mathjax .\mathjax /E
+        shell: cmd
+
       - name: Build the application
         run: npm run build --if-present
 
@@ -45,6 +55,16 @@ jobs:
         if: always() && matrix.os == 'windows-latest'
         run: dir build\
         shell: cmd
+
+      - name: Check if tex-mml-chtml.js exists (Linux/Mac)
+        if: always() && matrix.os != 'windows-latest'
+        run: if [ ! -f "./mathjax/es5/tex-mml-chtml.js" ]; then exit 1; fi
+        shell: bash
+
+      - name: Check if tex-mml-chtml.js exists (Windows)
+        if: always() && matrix.os == 'windows-latest'
+        run: if (Test-Path "./mathjax/es5/tex-mml-chtml.js") { exit 0 } else { exit 1 }
+        shell: pwsh
 
       - name: Upload artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v4
