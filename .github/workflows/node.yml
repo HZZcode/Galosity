@@ -40,7 +40,13 @@ jobs:
 
       - name: Copy MathJax (Windows)
         if: always() && matrix.os == 'windows-latest'
-        run: robocopy .\node_modules\mathjax .\mathjax /E
+        run: |
+                robocopy .\node_modules\mathjax .\mathjax /E
+                if %errorlevel% equ 1 (
+                  exit /b 0
+                ) else (
+                  exit /b %errorlevel%
+                )
         shell: cmd
 
       - name: Build the application
