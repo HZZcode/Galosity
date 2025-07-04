@@ -5,6 +5,7 @@ const vars = require('./vars');
 const lodash = require('lodash');
 const { Files } = require('./files');
 const { logger } = require('./logger');
+const { TimeoutManager } = require('./timeout')
 
 const character = document.getElementById('character');
 const speech = document.getElementById('speech');
@@ -409,10 +410,12 @@ class Manager {
     buttons = new ButtonsManager();
     resources = new ResourceManager();
     saveLoad = new SaveLoadManager(this);
+    timeout = new TimeoutManager();
     isMain;
     constructor(isMain = true) {
         this.isMain = isMain;
-        if (!isMain) this.info.setLine = this.info.setPart = () => 0;
+        if (!isMain) this.info.setLine = this.info.setPart
+            = this.timeout.set = this.timeout.clear = () => 0;
 
         this.varsFrame = new vars.GalVars();
         this.varsFrame.initBuiltins();
@@ -453,6 +456,7 @@ class Manager {
         if (this.currentPos >= this.paragraph.dataList.length) return true;
         if (data === undefined) return false;
         if (this.buttons !== null) this.buttons.clear();
+        this.timeout.clear();
         this.setEnums();
         switch (data.type) {
             case 'sentence': {
@@ -487,21 +491,23 @@ class Manager {
             case 'select': {
                 this.unsupportedForImported();
                 const block = this.paragraph.findStartControlBlock(this.currentPos);
-                const buttons = block.casesPosList.map(pos => {
+                const buttons = [];
+                for (const pos of block.casesPosList) {
                     const data = this.paragraph.dataList[pos];
                     const show = this.varsFrame.evaluate(data.show).toBool();
-                    if (!show) return null;
                     const enable = this.varsFrame.evaluate(data.enable).toBool();
                     const text = interpolate(data.text, this.varsFrame);
                     const callback = async () => await this.jump(this.getFrame().withPos(pos));
-                    return new ButtonData(text, callback, enable);
-                }).filter(button => button !== null);
+
+                    if (show) buttons.push(new ButtonData(text, callback, enable));
+                    if (data.timeout !== null)
+                        this.timeout.set(callback, this.varsFrame.evaluate(data.timeout).toNum() * 1000);
+                }
                 this.buttons.drawButtons(buttons);
                 return true;
             }
             case 'case': {
                 if (this.paragraph.getCaseType(this.currentPos) === 'switch') {
-                    this.unsupportedForImported();
                     const block = this.paragraph.findCaseControlBlock(this.currentPos);
                     const switchData = this.paragraph.dataList[block.startPos];
                     try {
@@ -565,7 +571,7 @@ class Manager {
             }
             case 'delay': {
                 this.unsupportedForImported();
-                setTimeout(() => this.next(), this.varsFrame.evaluate(data.seconds).toNum() * 1000);
+                this.timeout.set(() => this.next(), this.varsFrame.evaluate(data.seconds).toNum() * 1000);
                 return false;
             }
             case 'pause': return true;

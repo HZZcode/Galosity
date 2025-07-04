@@ -75,11 +75,14 @@ export class CaseData extends GalData {
     text;
     show = 'true';   //Whether the player can see this choice
     enable = 'true'; //Whether the player can select this choice
+    timeout = null; // After how many seconds will the choice be directly chosen.
+    // Note that `timeout` argument is a secret undocumented function.
+    // It applys even if the choice is neither shown nor enabled.
     constructor(text, config) {
         super('case');
         this.text = text;
-        if ('show' in config) this.show = config.show;
-        if ('enable' in config) this.enable = config.enable;
+        for (const key of ['show', 'enable', 'timeout'])
+            if (key in config) this[key] = config[key];
     }
 }
 export class BreakData extends GalData {
@@ -242,6 +245,7 @@ function parseSpeech(line) {
 function parseConfig(configs) {
     const object = {};
     for (const config of configs.split(',')) {
+        if (!config.includes('=')) continue;
         const key = config.substring(0, config.indexOf('=')).trim();
         const value = config.substring(config.indexOf('=') + 1).trim();
         object[key] = value;
