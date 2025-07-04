@@ -39,7 +39,8 @@
       "!sum.txt",
       "!eslint.config.js",
       "!src",
-      "!save"
+      "!save",
+      "!import-test.txt"
     ],
     "extraFiles": [
       "example.txt",

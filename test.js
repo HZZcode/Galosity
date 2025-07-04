@@ -58,7 +58,7 @@ export const error = new ErrorManager();
 
 class TextManager {
     outputText(name, text, color = 'black') {
-        character.innerText = name;
+        character.innerHTML = name;
         speech.innerHTML = text;
         speech.style.color = color;
         // eslint-disable-next-line no-undef
@@ -104,7 +104,7 @@ class ButtonsManager {
     drawButton(button, bottom) {
         const name = button.text;
         const element = document.createElement('div');
-        element.innerText = name;
+        element.innerHTML = name;
         element.className = 'container button';
         if (!button.enable) element.className += ' disabled';
         element.style.bottom = bottom;
@@ -126,7 +126,7 @@ class ButtonsManager {
         }
         //65% -> 35%, height = 7%, distance = 3%
     }
-    drawInput(func = null) {
+    drawInput(manager, func = null) {
         const element = document.createElement('input');
         element.className = 'container input';
         element.addEventListener('keyup', errorHandled(async event => {
@@ -185,7 +185,7 @@ function interpolate(text, varsFrame) {
         const [rb, rt] = splitWith(':')(sub);
         return `<ruby><rb>${rb}</rb><rt>${rt}</rt><rp>(${rt})</rp></ruby>`;
     });
-    return interpolation.process(text);
+    return interpolation.process(text).replaceAll(/\\n/g, '<br>');
 }
 
 class CustomData {
@@ -409,9 +409,18 @@ class Manager {
     buttons = new ButtonsManager();
     resources = new ResourceManager();
     saveLoad = new SaveLoadManager(this);
-    init() {
+    isMain;
+    constructor(isMain = true) {
+        this.isMain = isMain;
+        if (!isMain) this.info.setLine = this.info.setPart = () => 0;
+
         this.varsFrame = new vars.GalVars();
         this.varsFrame.initBuiltins();
+    }
+    unsupportedForImported() {
+        if (this.isMain) return;
+        throw `Operation not supported in imported files: `
+        + `at line ${this.currentPos}, data type is '${this.currentData().type}'`;
     }
     async set(lines) {
         this.paragraph = new parser.Paragraph(lines);
@@ -424,11 +433,10 @@ class Manager {
         return data !== undefined && data.type === 'select';
     }
     setEnums() {
-        this.varsFrame.clearEnumTypes();
         for (const data of this.paragraph.scanEnumsAt(this.currentPos)) {
             const name = data.name.trim();
             const values = data.values.map(value => value.trim());
-            this.varsFrame.defEnumType(new vars.GalEnumType(name, values));
+            this.varsFrame.defEnumTypeIfUnexist(new vars.GalEnumType(name, values));
         }
     }
     async jumpFile(path) {
@@ -444,10 +452,11 @@ class Manager {
     async process(data) {
         if (this.currentPos >= this.paragraph.dataList.length) return true;
         if (data === undefined) return false;
-        this.buttons.clear();
+        if (this.buttons !== null) this.buttons.clear();
         this.setEnums();
         switch (data.type) {
             case 'sentence': {
+                this.unsupportedForImported();
                 if (data.character.trim() === '' && data.sentence.trim() === '')
                     return false;
                 this.texts.outputText(interpolate(data.character, this.varsFrame),
@@ -455,12 +464,19 @@ class Manager {
                 return true;
             }
             case 'note': {
+                this.unsupportedForImported();
                 this.texts.outputNote(interpolate(data.note, this.varsFrame));
                 return true;
             }
             case 'jump': {
-                if (data.crossFile) this.jumpFile(data.anchor);
-                if (data.href) ipcRenderer.invoke('openExternal', data.anchor);
+                if (data.crossFile) {
+                    this.unsupportedForImported();
+                    this.jumpFile(data.anchor);
+                }
+                else if (data.href) {
+                    this.unsupportedForImported();
+                    ipcRenderer.invoke('openExternal', data.anchor);
+                }
                 else {
                     const pos = this.paragraph.findAnchorPos(data.anchor);
                     if (pos === -1) throw `Anchor not found: ${data.anchor}`;
@@ -469,6 +485,7 @@ class Manager {
                 return false;
             }
             case 'select': {
+                this.unsupportedForImported();
                 const block = this.paragraph.findStartControlBlock(this.currentPos);
                 const buttons = block.casesPosList.map(pos => {
                     const data = this.paragraph.dataList[pos];
@@ -484,6 +501,7 @@ class Manager {
             }
             case 'case': {
                 if (this.paragraph.getCaseType(this.currentPos) === 'switch') {
+                    this.unsupportedForImported();
                     const block = this.paragraph.findCaseControlBlock(this.currentPos);
                     const switchData = this.paragraph.dataList[block.startPos];
                     try {
@@ -515,7 +533,8 @@ class Manager {
                 return false;
             }
             case 'input': {
-                this.buttons.drawInput(expr => {
+                this.unsupportedForImported();
+                this.buttons.drawInput(this, expr => {
                     try {
                         const value = this.varsFrame.evaluate(expr);
                         this.varsFrame.setVar(data.valueVar, value);
@@ -529,6 +548,7 @@ class Manager {
                 return true;
             }
             case 'image': {
+                this.unsupportedForImported();
                 await this.resources.check();
                 const type = interpolate(data.imageType, this.varsFrame);
                 const file = interpolate(data.imageFile, this.varsFrame);
@@ -536,6 +556,7 @@ class Manager {
                 return false;
             }
             case 'transform': {
+                this.unsupportedForImported();
                 const interpolated = lodash.cloneDeep(data);
                 for (const [key, value] of Object.entries(data))
                     interpolated[key] = interpolate(value, this.varsFrame);
@@ -543,6 +564,7 @@ class Manager {
                 return false;
             }
             case 'delay': {
+                this.unsupportedForImported();
                 setTimeout(() => this.next(), this.varsFrame.evaluate(data.seconds).toNum() * 1000);
                 return false;
             }
@@ -578,6 +600,29 @@ class Manager {
                 if (varName !== null) this.varsFrame.setVar(varName, value);
                 return false;
             }
+            case 'import': {
+                // Execute this file in an no-side-effect mode
+                // And read the vars and enums with these names from the sub-manager
+                // If they weren't defined in this environment yet, define them; otherwise nothing is done
+                // It seems to be difficult to call funcs across files 
+                // So I guess we would implement this a bit later
+                const content = await this.resources.readFile(data.file);
+                const subManager = new Manager(false);
+                await subManager.set(content.split(/\r?\n/));
+                for (; subManager.currentPos < subManager.paragraph.dataList.length;
+                    subManager.currentPos++) {
+                    await subManager.process(subManager.currentData());
+                }
+                for (const name of data.names) {
+                    if (this.varsFrame.isDefinedSymbol(name)) continue;
+                    else if (subManager.varsFrame.isDefinedVar(name))
+                        this.varsFrame.setVar(name, subManager.varsFrame.vars[name]);
+                    else if (subManager.varsFrame.isDefinedEnum(name))
+                        this.varsFrame.defEnumType(subManager.varsFrame.getEnumType(name));
+                    else throw `No such symbol in '${data.file}': '${name}'`;
+                }
+                return false;
+            }
             default: return false;
         }
     }
@@ -587,6 +632,9 @@ class Manager {
         const frame = this.history.pop();
         await this.jump(frame);
     }
+    currentData() {
+        return this.paragraph.dataList[this.currentPos];
+    }
     async next() {
         if (this.isSelecting()) return;
         if (this.currentPos >= this.paragraph.dataList.length) return;
@@ -594,7 +642,7 @@ class Manager {
             this.currentPos++;
             this.info.setLine(this.currentPos);
             this.info.setPart(this.paragraph.getPartAt(this.currentPos));
-        } while (!await this.process(this.paragraph.dataList[this.currentPos]));
+        } while (!await this.process(this.currentData()));
         this.history.push(this.getFrame());
     }
     async jump(frame) {
@@ -636,7 +684,6 @@ const manager = new Manager();
 const initPromise = new Promise((resolve, reject) => {
     ipcRenderer.on('send-data', async (_, data) => {
         try {
-            manager.init();
             await manager.set(data.content.split(/\r?\n/));
             manager.resources.filename = data.filename;
             logger.isDebug = data.isDebug;
@@ -687,6 +734,7 @@ async function main() {
 // TODO: Tip before jumping
 // TODO: save & load
 // TODO: search & replace
+// TODO: import funcs
 
 // eslint-disable-next-line floatingPromise/no-floating-promise
 main();

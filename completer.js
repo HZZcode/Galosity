@@ -33,23 +33,24 @@ export class AutoComplete {
         }
         else {
             this.clear();
-            for (const l of await this.getList())
-                if (l.toLowerCase().startsWith(start.toLowerCase()))
-                    this.found.push(l);
+            this.found = await this.findWords(start);
         }
         return this.found[this.chosenFoundIndex];
     }
+    async findWords(start) {
+        return (await this.getList()).filter(word => word.toLowerCase().startsWith(start.toLowerCase()));
+    }
 }
 export class FileComplete extends AutoComplete {
-    pathFunc;
+    pathGetter;
     fileType;
-    constructor(pathFunc, fileType = null) {
+    constructor(pathGetter, fileType = null) {
         super([]);
-        this.pathFunc = pathFunc;
+        this.pathGetter = pathGetter;
         this.fileType = fileType;
     }
     async getList() {
-        const path = await ipcRenderer.invoke('resolve', await this.pathFunc());
+        const path = await ipcRenderer.invoke('resolve', await this.pathGetter());
         const dir = await ipcRenderer.invoke('readdir', path);
         if (this.fileType === null) return dir;
         return dir.filter(file => file.endsWith('.' + this.fileType));

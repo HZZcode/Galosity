@@ -270,6 +270,10 @@ export class GalVars {
         this.enumTypes.push(enumType);
     }
 
+    defEnumTypeIfUnexist(enumType) {
+        if (!this.isDefinedEnum(enumType.name)) this.defEnumType(enumType);
+    }
+
     getEnumType(name) {
         return this.enumTypes.find(type => type.name === name);
     }
@@ -288,6 +292,18 @@ export class GalVars {
         if (found.length > 1) throw `Found multiple enum value named ${name}`;
         if (found.length === 0) return undefined;
         return found[0];
+    }
+
+    isDefinedVar(name) {
+        return name in this.vars;
+    }
+
+    isDefinedEnum(name) {
+        return this.getEnumType(name) !== undefined;
+    }
+
+    isDefinedSymbol(name) {
+        return this.isDefinedVar(name) || this.isDefinedEnum(name);
     }
 
     evaluate(expr) {

@@ -17,6 +17,7 @@ Ichiku: Just put your formula between two $$s or \​( and \​).
 ZZ: For example: \(a^2+b^2=c^2\).
 ZZ: You can also type ^{superscript}, _{subscript}, %{hyperlink:https://en.wikipedia.org/wiki/Hyperlink}, and ~{notation:/noʊˈteɪʃn/} in Galosity.
 ZZ: They are put between ^​{, _​{, %​{ or ~​{ and }.
+ZZ: Line feed\nis represented as \​n.
 
 
 --Character & Speeches--
@@ -270,6 +271,16 @@ Ichiku: Try: type `[Func] square(n)`, `[Return] n*n`, and then call with `[Call]
 [Call] square(3):m
 square(3) is ${m}.
 ZZ: Functions can be complicated at some times. But don't worry, just use it whenever you need.
+
+[Part] Importing
+ZZ: For long scripts, it is recommended to split them into many small files. However, this causes a problem: if there is a var `a` defined in file 1, and later used in file 2, we'll be unable to test file 2 independently since there's an undefined var.
+ZZ: It is possible to solve this with `hasVar` function -- However, this makes the file messy.
+ZZ: Therefore Galosity added the `[Import]` function.
+ZZ: Just write all the needed vars and enums in one file, say `vars.txt`. Then, when symbols `a` and `b` are needed, add a line `[Import] vars.txt: a,b` before using them.
+Ichiku: Technically, this does the following thing: first it checks whether these symbols are already defined in this scope, and if so, nothing is done...
+ZZ: This avoids covering the variable when testing in order.
+Ichiku: Otherwise, it executes the file, and read all needed symbols from that scope.
+ZZ: Note that most functions with side effects -- for example sentences which displays text on the screen -- are disabled, so basically only the vars are changed.
 
 [Anchor] End of Tutorial
 [Part] The End

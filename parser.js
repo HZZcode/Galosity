@@ -67,16 +67,14 @@ export class AnchorData extends GalData {
     }
 }
 export class SelectData extends GalData {
-    question;
-    constructor(question) {
+    constructor() {
         super('select');
-        this.question = question;
     }
 }
 export class CaseData extends GalData {
     text;
     show = 'true';   //Whether the player can see this choice
-    enable = 'true'; //Whether the player can choose this choice
+    enable = 'true'; //Whether the player can select this choice
     constructor(text, config) {
         super('case');
         this.text = text;
@@ -226,6 +224,15 @@ export class CallData extends GalData {
         this.returnVar = returnVar;
     }
 }
+export class ImportData extends GalData {
+    file;
+    names;
+    constructor(file, names) {
+        super('import');
+        this.file = file;
+        this.names = names;
+    }
+}
 
 function parseSpeech(line) {
     const index = line.search(':');
@@ -272,7 +279,7 @@ export function parseLine(line) {
         case 'Note': return new NoteData(nonTagPart);
         case 'Jump': return new JumpData(nonTagPart);
         case 'Anchor': return new AnchorData(nonTagPart);
-        case 'Select': return new SelectData(nonTagPart);
+        case 'Select': return new SelectData();
         case 'Switch': return new SwitchData(nonTagPart);
         case 'Case': {
             const [value, configs] = splitWith(':')(nonTagPart);
@@ -315,6 +322,10 @@ export function parseLine(line) {
                 ? splitWith(':')(nonTagPart) : [nonTagPart, null];
             const [name, args] = parseFunc(funcCall);
             return new CallData(name, args, returnVar);
+        }
+        case 'Import': {
+            const [file, names] = splitWith(':')(nonTagPart);
+            return new ImportData(file, names.split(',').map(name => name.trim()));
         }
     }
 

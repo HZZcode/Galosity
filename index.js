@@ -125,6 +125,7 @@ class ErrorManager {
     }
 }
 class FileManager extends Files {
+    previousFiles = [];
     constructor() {
         super();
     }
@@ -147,9 +148,10 @@ class FileManager extends Files {
             error.error(`Failed to Write to ${path}`);
         }
     }
-    async read(path) {
+    async read(path, memorize = true) {
         if (path === null) return;
         try {
+            if (memorize) this.remember();
             const content = await this.readFile(path);
             textarea.value = content;
             this.setFile(await this.resolve(path));
@@ -159,6 +161,11 @@ class FileManager extends Files {
             logger.error(e);
             error.error(`Failed to Read from ${path}`);
         };
+    }
+    remember() {
+        const file = this.filename;
+        if (this.valid && this.previousFiles.at(-1) !== file)
+            this.previousFiles.push(file);
     }
     async autoSave() {
         if (this.valid) await this.write(this.filename);
@@ -175,11 +182,18 @@ class FileManager extends Files {
         const path = await this.requestSavePath();
         await this.write(path);
     }
+    async openFile(path, memorize = true) {
+        if (path === undefined) return;
+        this.save();
+        await this.read(path, memorize);
+    }
+    async back(event) {
+        event.preventDefault();
+        await this.openFile(this.previousFiles.pop(), false);
+    }
     async open(event) {
         event.preventDefault();
-        this.save();
-        const path = await this.requestOpenPath();
-        await this.read(path);
+        await this.openFile(await this.requestOpenPath());
     }
     async new(event) {
         event.preventDefault();
@@ -200,8 +214,10 @@ const tags = new AutoComplete([
     '[Var]', '[Enum]', '[Switch]',
     '[Input]', '[Delay]', '[Pause]', '[Eval]',
     '[Image]', '[Transform]',
-    '[Func]', '[Return]', '[Call]'
+    '[Func]', '[Return]', '[Call]',
+    '[Import]'
 ]);
+const colonTags = ['[Case]', '[Var]', '[Enum]', '[Image]', '[Transform]', '[Import]'];
 // [Note] I hope to use less words with same beginning letters for better Tab completing
 const anchorCompleter = new AutoComplete();
 const symbolCompleter = new AutoComplete();
@@ -237,6 +253,7 @@ async function processKeyDown(event) {
     else if (event.ctrlKey && key.toLowerCase() === 's') await file.save(event);
     else if (event.ctrlKey && key.toLowerCase() === 'o') await file.open(event);
     else if (event.ctrlKey && key.toLowerCase() === 'n') await file.new(event);
+    else if (event.ctrlKey && key.toLowerCase() === 'b') await file.back(event);
     else if (event.ctrlKey && key.toLowerCase() === 'h') await help(event);
     else if (key === 'F5') await test();
     else if (key === '{') completeBraces(event);
@@ -312,13 +329,15 @@ async function autoComplete(event) {
         await completeSymbol(event);
         await completeImageType(event);
         await completeTransformType(event);
-        await completeFile(event);
+        await completeJumpFile(event);
         await completeImage(event);
         await completeCaseConfig(event);
         await completeFunctions(event);
+        await completeImportFile(event);
+        await completeImportSymbol(event);
     }
 }
-async function completeFile(_) {
+async function completeJumpFile(_) {
     const manager = new TextAreaManager();
     const front = manager.currentLineFrontContent();
     if (!front.trim().startsWith('[Jump]') || front.search('>') === -1) return;
@@ -388,7 +407,7 @@ async function completeTag(_) {
     const tag = await tags.complete('[' + line.replaceAll('[', '')
         .replaceAll(']', ''), line.search(']') === -1);
     if (tag !== undefined) manager.edit(manager.currentLineCount(), tag);
-    if (['[Case]', '[Var]', '[Enum]', '[Image]', '[Transform]'].some(t => t === tag)) {
+    if (colonTags.some(t => t === tag)) {
         manager.edit(manager.currentLineCount(), tag + ':');
         manager.move(-1);
     }
@@ -426,9 +445,9 @@ function needSymbol() {
         manager.currentLineBackContent());
     return isVar || isSwitch || isInterpolate;
 }
-function scanSymbols() {
-    const manager = new TextAreaManager();
-    const paragraph = new parser.Paragraph(manager.lines);
+function scanSymbols(lines = null) {
+    if (lines === null) lines = new TextAreaManager().lines;
+    const paragraph = new parser.Paragraph(lines);
     const dataList = paragraph.dataList;
     const varList = dataList.filter(data => data.type === 'var').map(data => data.name);
 
@@ -436,9 +455,12 @@ function scanSymbols() {
     const enumTypes = enumList.map(data => data.name);
     const enumValues = enumList.map(data => data.values).flat();
 
-    return [... new Set([...varList, ...enumTypes, ...enumValues])]
+    const importedSymbols = dataList.filter(data => data.type === 'import')
+        .map(data => data.names).flat();
+
+    return [... new Set([...varList, ...enumTypes, ...enumValues, ...importedSymbols])]
         .filter(symbol => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(symbol));
-} //Scans: var name; enum type; enum value;
+} //Scans: var name; enum type; enum value; imported symbols
 async function completeFunctions(_) {
     const manager = new TextAreaManager();
     const front = manager.currentLineFrontContent().trim();
@@ -457,7 +479,25 @@ function scanFunctions() {
             .map(entry => [entry[0].name, entry[1]])
     );
 }
-function jumpTo(event) {
+async function completeImportFile(_) {
+    const manager = new TextAreaManager();
+    const front = manager.currentLineFrontContent();
+    if (!front.trim().startsWith('[Import]') || front.search(':') !== -1) return;
+    const filePart = front.replace('[Import]', '').trim();
+    const file = await fileCompleter.completeInclude(filePart);
+    if (file !== undefined) manager.complete(file, filePart);
+}
+async function completeImportSymbol(_) {
+    const manager = new TextAreaManager();
+    const front = manager.currentLineFrontContent();
+    if (!front.trim().startsWith('[Import]') || front.search(':') === -1) return;
+    const data = parser.parseLine(front);
+    const completer = new AutoComplete(scanSymbols((await file.readFile(data.file)).split(/\r?\n/)));
+    const symbolPart = data.names.at(-1);
+    const symbol = await completer.completeInclude(symbolPart);
+    if (symbol !== undefined) manager.complete(symbol, symbolPart);
+}
+async function jumpTo(event) {
     if (!event.ctrlKey) return;
     const manager = new TextAreaManager();
     const front = manager.currentLineFrontContent();
@@ -468,9 +508,14 @@ function jumpTo(event) {
         if (pos !== -1) manager.jumpTo(pos);
     }
     else if (front.trim().startsWith('[Jump]')) {
-        const anchor = line.replace('[Jump]', '').trim();
-        const pos = anchorScanner.scanLine(anchor);
-        if (pos !== -1) manager.jumpTo(pos);
+        const data = parser.parseLine(line);
+        const anchor = data.anchor;
+        if (data.crossFile) await file.openFile(anchor);
+        else if (data.href) ipcRenderer.invoke('openExternal', anchor);
+        else {
+            const pos = anchorScanner.scanLine(anchor);
+            if (pos !== -1) manager.jumpTo(pos);
+        }
     }
     else if (line.trim().startsWith('[End]')) {
         const index = manager.currentLineCount();
@@ -499,6 +544,10 @@ function jumpTo(event) {
             manager.jumpTo(funcs[name]);
             return;
         }
+    }
+    else if (front.trim().startsWith('[Import]')) {
+        const path = parser.parseLine(line).file;
+        await file.openFile(path);
     }
 }
 function comment(_) {
