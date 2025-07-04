@@ -40,6 +40,12 @@ function createWindow() {
         win.webContents.send('send-data', { isDebug: isDebug, file: getArgvFileName() });
     });
 
+    win.on('close', event => {
+        event.preventDefault();
+        win.webContents.send('before-close');
+        ipcMain.once('before-close-complete', () => win.destroy());
+    });
+
     handleLink(win);
 }
 
@@ -81,6 +87,8 @@ app.whenReady().then(() => {
         if (isDebug) newWindow.webContents.openDevTools();
         handleLink(newWindow);
     });
+    // eslint-disable-next-line no-console
+    ipcMain.handle('log', (_, str) => console.log(str));
 });
 
 app.on('window-all-closed', () => {

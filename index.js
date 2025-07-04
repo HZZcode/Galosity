@@ -1,6 +1,6 @@
 'use strict';
 
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, } = require('electron');
 const parser = require('./parser');
 const vars = require('./vars');
 const { AutoComplete, FileComplete } = require('./completer');
@@ -237,7 +237,7 @@ textarea.addEventListener('mouseup', jumpTo);
 updateInfo();
 textarea.addEventListener('input', updateInfo);
 textarea.addEventListener('selectionchange', updateInfo);
-setInterval(_ => file.autoSave(), 60000);
+setInterval(async _ => await file.autoSave(), 60000);
 function updateInfo(_) {
     error.clear();
     const manager = new TextAreaManager();
@@ -593,4 +593,9 @@ ipcRenderer.on('send-data', (_, data) => {
     logger.isDebug = data.isDebug;
     if (data.file !== null) file.read(data.file);
     else if (data.isDebug) file.read('gal.txt');
+});
+
+ipcRenderer.on('before-close', async () => {
+    await file.save();
+    ipcRenderer.send('before-close-complete');
 });
