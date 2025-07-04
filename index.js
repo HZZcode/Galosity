@@ -69,6 +69,7 @@ class TextAreaManager {
         this.sync();
     }
     jumpTo(line) {
+        textarea.focus(); // does so fixes bugs. don't know why but just works.
         const endOfLine = this.lines.slice(0, line + 1).join('\n').length;
         textarea.selectionStart = textarea.selectionEnd = endOfLine;
         const tempElement = document.createElement('div');
@@ -100,9 +101,10 @@ class TagScanner {
     }
     scanLines(name) {
         const manager = new TextAreaManager();
-        return manager.lines.filter(line => line.startsWith(this.tag)
-            && line.substring(this.tag.length).trim() === name.trim())
-            .map((_, index) => index);
+        return manager.lines.map((line, index) => [line, index])
+            .filter(entry => entry[0].startsWith(this.tag)
+                && entry[0].substring(this.tag.length).trim() === name.trim())
+            .map(entry => entry[1]);
     }
     scanLine(name) {
         const lines = this.scanLines(name);
@@ -203,8 +205,6 @@ class FileManager extends Files {
     }
 }
 const info = document.getElementById('info');
-const helpButton = document.getElementById('help');
-helpButton.addEventListener('click', help);
 const error = new ErrorManager();
 const characters = new AutoComplete();
 const tags = new AutoComplete([
@@ -233,32 +233,50 @@ const file = new FileManager();
 const fileCompleter = new FileComplete(_ => file.getPath(), 'txt');
 const imageCompleter = new FileComplete(_ => file.getSourcePath());
 textarea.addEventListener('keydown', processKeyDown);
-textarea.addEventListener('mouseup', jumpTo);
+textarea.addEventListener('mouseup', jump);
 updateInfo();
 textarea.addEventListener('input', updateInfo);
 textarea.addEventListener('selectionchange', updateInfo);
 setInterval(async _ => await file.autoSave(), 60000);
+(() => {
+    const bindFunction = (id, func) => document.getElementById(id).addEventListener('click', func);
+
+    bindFunction('new', file.new.bind(file));
+    bindFunction('open', file.open.bind(file));
+    bindFunction('save', file.save.bind(file));
+    bindFunction('save-as', file.saveAs.bind(file));
+    bindFunction('help', help);
+
+    bindFunction('tab', autoComplete);
+    bindFunction('comment', comment);
+    bindFunction('jump', jumpTo);
+    bindFunction('back', file.back.bind(file));
+    bindFunction('test', test);
+})();
+async function processKeyDown(event) {
+    const key = event.key;
+
+    if (event.ctrlKey && key.toLowerCase() === 'n') await file.new(event);
+    else if (event.ctrlKey && key.toLowerCase() === 'o') await file.open(event);
+    else if (event.ctrlKey && event.shiftKey && key.toLowerCase() === 's') await file.saveAs(event);
+    else if (event.ctrlKey && key.toLowerCase() === 's') await file.save(event);
+    else if (event.ctrlKey && key.toLowerCase() === 'h') await help(event);
+
+    else if (key === 'Tab') await autoComplete(event);
+    else if (event.ctrlKey && key === '/') comment(event);
+    else if (event.ctrlKey && key.toLowerCase() === 'b') await file.back(event);
+    else if (key === 'F5') await test();
+
+    else if (key === '{') completeBraces(event);
+    else if (key === '(') completeParentheses(event);
+    else if (event.ctrlKey && key.toLowerCase() === 'l') completeLatex(event);
+}
 function updateInfo(_) {
     error.clear();
     const manager = new TextAreaManager();
     const filename = file.valid ? file.filename : 'Unnamed';
     info.innerText = `${filename}: Line ${manager.currentLineCount()}, Column ${manager.currentColumn()}`;
     scanControlBlocks();
-}
-async function processKeyDown(event) {
-    const key = event.key;
-    if (key === 'Tab') await autoComplete(event);
-    else if (event.ctrlKey && key === '/') comment(event);
-    else if (event.ctrlKey && event.shiftKey && key.toLowerCase() === 's') await file.saveAs(event);
-    else if (event.ctrlKey && key.toLowerCase() === 's') await file.save(event);
-    else if (event.ctrlKey && key.toLowerCase() === 'o') await file.open(event);
-    else if (event.ctrlKey && key.toLowerCase() === 'n') await file.new(event);
-    else if (event.ctrlKey && key.toLowerCase() === 'b') await file.back(event);
-    else if (event.ctrlKey && key.toLowerCase() === 'h') await help(event);
-    else if (key === 'F5') await test();
-    else if (key === '{') completeBraces(event);
-    else if (key === '(') completeParentheses(event);
-    else if (event.ctrlKey && key.toLowerCase() === 'l') completeLatex(event);
 }
 function completeBraces(event) {
     const manager = new TextAreaManager();
@@ -497,8 +515,11 @@ async function completeImportSymbol(_) {
     const symbol = await completer.completeInclude(symbolPart);
     if (symbol !== undefined) manager.complete(symbol, symbolPart);
 }
-async function jumpTo(event) {
+async function jump(event) {
     if (!event.ctrlKey) return;
+    await jumpTo(event);
+}
+async function jumpTo(_) {
     const manager = new TextAreaManager();
     const front = manager.currentLineFrontContent();
     const line = manager.currentLine();

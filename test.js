@@ -708,6 +708,9 @@ function isNum(value) {
 
 async function main() {
     await initPromise;
+    
+    const bindFunction = (id, func) => document.getElementById(id).addEventListener('click', func);
+
     window.addEventListener('keydown', errorHandled(async event => {
         if (event.target.tagName.toLowerCase() === 'input') return;
         const key = event.key;
@@ -716,6 +719,9 @@ async function main() {
         // else if (event.ctrlKey && key.toLowerCase() === 's') await manager.save();
         // else if (event.ctrlKey && key.toLowerCase() === 'l') await manager.load();
     }));
+
+    bindFunction('previous', manager.previous.bind(manager));
+    bindFunction('next', manager.next.bind(manager));
 
     const bindInput = (button, input, func) => {
         button.addEventListener('click', errorHandled(func));

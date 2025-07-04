@@ -178,7 +178,37 @@
         #images #right-image {
             left: 80%;
         }
+
+        #functions {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: calc(2 * 33px - 3px);
+            height: calc(1 * 33px - 3px);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(1, 1fr);
+            gap: 3px;
+        }
+
+        .function {
+            position: relative;
+            width: 30px;
+            height: 30px;
+            line-height: 20px;
+            text-align: center;
+            border-radius: 50%;
+            border-style: none;
+            cursor: pointer;
+            color: white;
+            background-color: blue;
+        }
+
+        .function:hover {
+            background-color: darkblue;
+        }
     </style>
+    <link rel="stylesheet" href="font-awesome/css/all.min.css">
     <script id="MathJax-script" async src="mathjax/es5/tex-mml-chtml.js"></script>
     <title>Galosity Test</title>
 </head>
@@ -205,6 +235,10 @@
     <div class="container" id="main">
         <div id="character"></div>
         <div id="speech"></div>
+        <div id="functions">
+            <button class="function" id="previous"><i class="fa-solid fa-backward"></i></button>
+            <button class="function" id="next"><i class="fa-solid fa-play"></i></button>
+        </div>
     </div>
     <div id="images" class="whole-screen">
         <div class="image" id="left-image"></div>

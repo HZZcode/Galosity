@@ -12,6 +12,7 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
+            position: relative;
         }
 
         .container {
@@ -20,6 +21,12 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             text-align: center;
+        }
+
+        #header {
+            display: flex;
+            margin-top: 10px;
+            justify-content: space-between;
         }
 
         h1 {
@@ -41,7 +48,8 @@
             font-size: large;
         }
 
-        #info, #error {
+        #info,
+        #error {
             margin-left: 10%;
             width: 80%;
             font-family: Consolas, sans-serif;
@@ -52,23 +60,55 @@
             color: red;
         }
 
-        #help {
-            margin-left: 10px;
-            padding: 1px 5px;
-            border: none;
+        #functions {
+            margin-top: 5px;
+            margin-right: 7%;
+            width: calc(5 * 33px - 3px);
+            height: calc(2 * 33px - 3px);
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 3px;
+        }
+
+        .function {
+            position: relative;
+            width: 30px;
+            height: 30px;
+            line-height: 20px;
+            text-align: center;
             border-radius: 50%;
-            background-color: #007BFF;
-            color: white;
-            font-family: Consolas, sans-serif;
+            border-style: none;
             cursor: pointer;
-            margin-bottom: 10px;
+            color: white;
+            background-color: blue;
+        }
+
+        .function:hover {
+            background-color: darkblue;
         }
     </style>
+    <link rel="stylesheet" href="font-awesome/css/all.min.css">
     <title>Galosity</title>
 </head>
 
 <body>
-    <h1>Galosity<button id="help">?</button></h1>
+    <div id="header">
+        <h1>Galosity</h1>
+        <div id="functions">
+            <button class="function" id="new"><i class="fa-solid fa-file-circle-plus"></i></button>
+            <button class="function" id="open"><i class="fa-solid fa-file-import"></i></button>
+            <button class="function" id="save"><i class="fa-solid fa-floppy-disk"></i></button>
+            <button class="function" id="save-as"><i class="fa-solid fa-file-export"></i></button>
+            <button class="function" id="help"><i class="fa-solid fa-question"></i></button>
+
+            <button class="function" id="tab"><i class="fa-solid fa-angles-right"></i></button>
+            <button class="function" id="comment"><i class="fa-solid fa-text-slash"></i></button>
+            <button class="function" id="jump"><i class="fa-solid fa-turn-down"></i></button>
+            <button class="function" id="back"><i class="fa-solid fa-turn-up"></i></button>
+            <button class="function" id="test"><i class="fa-solid fa-terminal"></i></button>
+        </div>
+    </div>
     <textarea id="input" spellcheck="false"></textarea>
     <div id="info"></div>
     <div id="error"></div>
