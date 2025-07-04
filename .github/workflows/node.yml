@@ -61,8 +61,9 @@ jobs:
             zip_ref.extractall('.')
 
           for folder_name in os.listdir('.'):
-            os.rename(folder_name, 'fontawesome')
-            break
+            if folder_name.startswith('fontawesome-free-'):
+              os.rename(folder_name, 'font-awesome')
+              break
         shell: python
 
       - name: Build the application
