@@ -5,7 +5,7 @@ const vars = require('./vars');
 const lodash = require('lodash');
 const { Files } = require('./files');
 const { logger } = require('./logger');
-const { TimeoutManager } = require('./timeout')
+const { TimeoutManager } = require('./timeout');
 
 const character = document.getElementById('character');
 const speech = document.getElementById('speech');
