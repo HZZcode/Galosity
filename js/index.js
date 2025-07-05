@@ -1,12 +1,12 @@
 'use strict';
 
 const { ipcRenderer } = require('electron');
-const parser = require('./parser');
-const vars = require('./vars');
-const { AutoComplete, FileComplete } = require('./completer');
-const { Files } = require('./files');
-const { logger } = require('./logger');
-const split = require('./split.js');
+import { TransformData, parseLine, Paragraph } from './parser.js';
+import { GalVars } from './vars.js';
+import { AutoComplete, FileComplete } from './completer.js';
+import { Files } from './files.js';
+import { logger } from './logger.js';
+import { isInterpolate } from './split.js';
 
 const textarea = document.getElementById('input');
 class TextAreaManager {
@@ -223,7 +223,7 @@ const anchorCompleter = new AutoComplete();
 const symbolCompleter = new AutoComplete();
 const imageTypes = ['background', 'left', 'center', 'right'];
 const imageTypeCompleter = new AutoComplete();
-const transformTypeCompleter = new AutoComplete(new parser.TransformData().getAllArgs());
+const transformTypeCompleter = new AutoComplete(new TransformData().getAllArgs());
 const caseConfigCompleter = new AutoComplete(['show', 'enable']);
 const funcNameCompleter = new AutoComplete();
 const characterScanner = new TagScanner('[Character]');
@@ -373,7 +373,7 @@ async function completeImage(_) {
 }
 function scanImageTypes() {
     return imageTypeScanner.scanRawList()
-        .map(parser.parseLine)
+        .map(parseLine)
         .filter(data => data.imageFile.trim().startsWith('@'))
         .map(data => data.imageType)
         .concat(imageTypes);
@@ -441,7 +441,7 @@ async function completeJump(_) {
     if (anchor !== undefined) manager.complete(anchor, anchorPart);
 }
 function getBuiltins() {
-    const frame = new vars.GalVars();
+    const frame = new GalVars();
     frame.initBuiltins();
     return [...Object.keys(frame.builtins), ...Object.keys(frame.builtinFuncs)];
 }
@@ -459,13 +459,13 @@ function needSymbol() {
     const manager = new TextAreaManager();
     const isVar = /^\[Var\].*?:/.test(manager.currentLineFrontContent().trim());
     const isSwitch = manager.currentLineFrontContent().trim().startsWith('[Switch]');
-    const isInterpolate = split.isInterpolate(manager.currentLineFrontContent(),
+    const isInterpolation = isInterpolate(manager.currentLineFrontContent(),
         manager.currentLineBackContent());
-    return isVar || isSwitch || isInterpolate;
+    return isVar || isSwitch || isInterpolation;
 }
 function scanSymbols(lines = null) {
     if (lines === null) lines = new TextAreaManager().lines;
-    const paragraph = new parser.Paragraph(lines);
+    const paragraph = new Paragraph(lines);
     const dataList = paragraph.dataList;
     const varList = dataList.filter(data => data.type === 'var').map(data => data.name);
 
@@ -491,7 +491,7 @@ async function completeFunctions(_) {
 }
 function scanFunctions() {
     return Object.fromEntries(
-        new parser.Paragraph(new TextAreaManager().lines).dataList
+        new Paragraph(new TextAreaManager().lines).dataList
             .map((data, line) => [data, line])
             .filter(entry => entry[0].type === 'func')
             .map(entry => [entry[0].name, entry[1]])
@@ -509,7 +509,7 @@ async function completeImportSymbol(_) {
     const manager = new TextAreaManager();
     const front = manager.currentLineFrontContent();
     if (!front.trim().startsWith('[Import]') || front.search(':') === -1) return;
-    const data = parser.parseLine(front);
+    const data = parseLine(front);
     const completer = new AutoComplete(scanSymbols((await file.readFile(data.file)).split(/\r?\n/)));
     const symbolPart = data.names.at(-1);
     const symbol = await completer.completeInclude(symbolPart);
@@ -529,7 +529,7 @@ async function jumpTo(_) {
         if (pos !== -1) manager.jumpTo(pos);
     }
     else if (front.trim().startsWith('[Jump]')) {
-        const data = parser.parseLine(line);
+        const data = parseLine(line);
         const anchor = data.anchor;
         if (data.crossFile) await file.openFile(anchor);
         else if (data.href) ipcRenderer.invoke('openExternal', anchor);
@@ -559,7 +559,7 @@ async function jumpTo(_) {
         }
     }
     else if (front.trim().startsWith('[Call]')) {
-        const name = parser.parseLine(line).name;
+        const name = parseLine(line).name;
         const funcs = scanFunctions();
         if (name in funcs) {
             manager.jumpTo(funcs[name]);
@@ -567,7 +567,7 @@ async function jumpTo(_) {
         }
     }
     else if (front.trim().startsWith('[Import]')) {
-        const path = parser.parseLine(line).file;
+        const path = parseLine(line).file;
         await file.openFile(path);
     }
 }
@@ -587,7 +587,7 @@ function comment(_) {
 function scanControlBlocks() {
     const manager = new TextAreaManager();
     try {
-        return new parser.Paragraph(manager.lines).getControlBlocks();
+        return new Paragraph(manager.lines).getControlBlocks();
     } catch (e) {
         logger.error(e);
         error.error(e);

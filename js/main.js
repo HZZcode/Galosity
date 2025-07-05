@@ -1,7 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import { logger } from './logger.js';
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const isDebug = logger.isDebug = process.env.NODE_ENV === 'development';
 const __dirname = path.dirname(new URL(import.meta.url).pathname);

@@ -1,5 +1,5 @@
-const vars = require('./vars');
-const { splitWith } = require('./split.js');
+import * as vars from './vars.js';
+import { splitWith } from './split.js';
 
 export class GalData {
     type;

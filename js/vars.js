@@ -1,6 +1,6 @@
 const lodash = require('lodash');
-const grammar = require('./grammar.cjs');
-const { splitWith } = require('./split.js');
+import * as grammar from './grammar.js';
+import { splitWith } from './split.js';
 
 function findDuplicates(array) {
     return array.filter((item, index) => array.indexOf(item) !== index);

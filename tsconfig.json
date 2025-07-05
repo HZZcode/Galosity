@@ -8,6 +8,6 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["./*", "js/index.js", "js/keybind.js", "js/logger.js", "js/main.js", "js/parser.js", "js/split.js", "js/test.js", "js/timeout.js", "js/vars.js", "js/completer.js", "js/files.js", "js/grammar.cjs"],
+  "include": ["./*", "js/index.js", "js/keybind.js", "js/logger.js", "js/main.js", "js/parser.js", "js/split.js", "js/test.js", "js/timeout.js", "js/vars.js", "js/completer.js", "js/files.js", "js/grammar.js"],
   "exclude": ["node_modules"]
 }

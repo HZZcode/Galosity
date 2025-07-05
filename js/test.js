@@ -1,12 +1,12 @@
 const { ipcRenderer } = require('electron');
-const parser = require('./parser');
-const { splitWith, isLatex } = require('./split');
-const vars = require('./vars');
 const lodash = require('lodash');
-const { Files } = require('./files');
-const { logger } = require('./logger');
-const { TimeoutManager } = require('./timeout');
-const { KeybindManager } = require('./keybind');
+import * as parser from './parser.js';
+import { splitWith, isLatex } from './split.js';
+import * as vars from './vars.js';
+import { Files } from './files.js';
+import { logger } from './logger.js';
+import { TimeoutManager } from './timeout.js';
+import { KeybindManager } from './keybind.js';
 
 const character = document.getElementById('character');
 const speech = document.getElementById('speech');
