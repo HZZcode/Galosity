@@ -6,6 +6,7 @@ const lodash = require('lodash');
 const { Files } = require('./files');
 const { logger } = require('./logger');
 const { TimeoutManager } = require('./timeout');
+const { KeybindManager } = require('./keybind');
 
 const character = document.getElementById('character');
 const speech = document.getElementById('speech');
@@ -411,6 +412,7 @@ class Manager {
     resources = new ResourceManager();
     saveLoad = new SaveLoadManager(this);
     timeout = new TimeoutManager();
+    keybind = new KeybindManager();
     isMain;
     constructor(isMain = true) {
         this.isMain = isMain;
@@ -457,6 +459,7 @@ class Manager {
         if (data === undefined) return false;
         if (this.buttons !== null) this.buttons.clear();
         this.timeout.clear();
+        this.keybind.clear();
         this.setEnums();
         switch (data.type) {
             case 'sentence': {
@@ -502,6 +505,8 @@ class Manager {
                     if (show) buttons.push(new ButtonData(text, callback, enable));
                     if (data.timeout !== null)
                         this.timeout.set(callback, this.varsFrame.evaluate(data.timeout).toNum() * 1000);
+                    if (data.key !== null)
+                        this.keybind.bind(interpolate(data.key, this.varsFrame), callback);
                 }
                 this.buttons.drawButtons(buttons);
                 return true;
@@ -717,6 +722,7 @@ async function main() {
         const key = event.key;
         if (key === 'Backspace') await manager.previous();
         else if (key === 'Enter') await manager.next();
+        manager.keybind.check(event);
         // else if (event.ctrlKey && key.toLowerCase() === 's') await manager.save();
         // else if (event.ctrlKey && key.toLowerCase() === 'l') await manager.load();
     }));

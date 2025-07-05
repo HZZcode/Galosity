@@ -73,16 +73,24 @@ export class SelectData extends GalData {
 }
 export class CaseData extends GalData {
     text;
-    show = 'true';   //Whether the player can see this choice
-    enable = 'true'; //Whether the player can select this choice
-    timeout = null; // After how many seconds will the choice be directly chosen.
-    // Note that `timeout` argument is a secret undocumented function.
-    // It applys even if the choice is neither shown nor enabled.
+    show = 'true';   // Whether the player can see this choice
+    enable = 'true'; // Whether the player can select this choice
+    key = null;      // This case can be chosen with a key
+    timeout = null;  // After how many seconds will the choice be directly chosen.
+    // Note that arguments `timeout` and `key` are secretly undocumented.
+    // They apply even if the choice is neither shown nor enabled.
+
+    getArgs() {
+        return Object.keys(this).filter(key => key !== 'text');
+    }
+    getPublicArgs() {
+        return this.getArgs.filter(key => !['key', 'timeout'].includes(key));
+    }
     constructor(text, config) {
         super('case');
         this.text = text;
-        for (const key of ['show', 'enable', 'timeout'])
-            if (key in config) this[key] = config[key];
+        for (const key of this.getArgs())
+            if (key in config) this[key] = config[key].trim();
     }
 }
 export class BreakData extends GalData {
@@ -148,20 +156,13 @@ export class TransformData extends GalData {
     skewY = 0;
     rotate = 0;
     getArgs() {
-        const args = [];
-        for (const key in this)
-            if (key !== 'type' && key !== 'imageType')
-                args.push(key);
-        return args;
+        return Object.keys(this).filter(key => !['type', 'imageType'].includes(key));
     }
     getAllArgs() {
-        const args = [];
-        for (const key of this.getArgs()) {
-            args.push(key);
-            if (['X', 'Y'].includes(key.at(-1)))
-                args.push(key.substring(0, key.length - 1));
-        }
-        return [...new Set(args)].sort();
+        return [...new Set(
+            this.getArgs().flatMap(key => ['X', 'Y'].includes(key.at(-1))
+                ? [key] : [key, key.slice(0, -1)])
+        )].sort();
     }
     constructor(imageType, transformations) {
         super('transform');
