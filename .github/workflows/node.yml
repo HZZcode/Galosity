@@ -65,6 +65,9 @@ jobs:
               os.rename(folder_name, 'font-awesome')
               break
         shell: python
+      
+      - name: Compile Typescript files
+        run: npm run tsc
 
       - name: Build the application
         run: npm run build --if-present

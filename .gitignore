@@ -6,3 +6,9 @@ save
 import-test.txt
 mathjax
 font-awesome
+
+# Hopefully one day we can ignore the entire `./js` directory
+js/keybind.js
+js/split.js
+js/timeout.js
+js/vars.js
