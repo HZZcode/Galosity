@@ -15,7 +15,9 @@ export default defineConfig([
       "mathjax/*",
       "font-awesome/*",
 
+      "./js/files.js",
       "./js/keybind.js",
+      "./js/logger.js",
       "./js/split.js",
       "./js/timeout.js",
       "./js/vars.js"

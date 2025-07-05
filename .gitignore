@@ -8,7 +8,9 @@ mathjax
 font-awesome
 
 # Hopefully one day we can ignore the entire `./js` directory
+js/files.js
 js/keybind.js
+js/logger.js
 js/split.js
 js/timeout.js
 js/vars.js
