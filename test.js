@@ -476,17 +476,18 @@ class Manager {
                 return true;
             }
             case 'jump': {
+                const anchor = interpolate(data.anchor, this.varsFrame);
                 if (data.crossFile) {
                     this.unsupportedForImported();
-                    this.jumpFile(data.anchor);
+                    this.jumpFile(anchor);
                 }
                 else if (data.href) {
                     this.unsupportedForImported();
-                    ipcRenderer.invoke('openExternal', data.anchor);
+                    ipcRenderer.invoke('openExternal', anchor);
                 }
                 else {
-                    const pos = this.paragraph.findAnchorPos(data.anchor);
-                    if (pos === -1) throw `Anchor not found: ${data.anchor}`;
+                    const pos = this.paragraph.findAnchorPos(anchor);
+                    if (pos === -1) throw `Anchor not found: ${anchor}`;
                     this.currentPos = pos - 1;
                 }
                 return false;
