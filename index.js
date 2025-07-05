@@ -1,6 +1,6 @@
 'use strict';
 
-const { ipcRenderer, } = require('electron');
+const { ipcRenderer } = require('electron');
 const parser = require('./parser');
 const vars = require('./vars');
 const { AutoComplete, FileComplete } = require('./completer');

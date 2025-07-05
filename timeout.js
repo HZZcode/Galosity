@@ -1,15 +1,26 @@
-export class TimeoutManager {
-    ids = [];
+class TimeoutSchedule {
+    id;
+    lifespan; // how many times of `clear` is required to really clear it
+    constructor(id, lifespan) {
+        this.id = id;
+        this.lifespan = lifespan;
+    }
+}
 
-    set(callback, delay) {
+export class TimeoutManager {
+    schedules = [];
+
+    set(callback, delay, lifespan = 1) {
         const id = setTimeout(callback, delay);
-        this.ids.push(id);
+        this.schedules.push(new TimeoutSchedule(id, lifespan));
         return id;
     }
 
     clear() {
-        for (const id of this.ids)
-            clearTimeout(id);
-        this.ids = [];
+        this.schedules.forEach(schedule => {
+            schedule.lifespan--;
+            if (schedule.lifespan <= 0) clearTimeout(schedule.id);
+        });
+        this.schedules = this.schedules.filter(schedule => schedule.lifespan > 0);
     }
 }

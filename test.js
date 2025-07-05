@@ -571,7 +571,8 @@ class Manager {
             }
             case 'delay': {
                 this.unsupportedForImported();
-                this.timeout.set(() => this.next(), this.varsFrame.evaluate(data.seconds).toNum() * 1000);
+                this.timeout.set(this.next.bind(this),
+                    this.varsFrame.evaluate(data.seconds).toNum() * 1000, 2);
                 return false;
             }
             case 'pause': return true;
@@ -632,11 +633,11 @@ class Manager {
             default: return false;
         }
     }
+    push(frame) {
+        this.history.push(frame);
+    }
     async previous() {
-        if (this.history.length <= 1) return;
-        this.history.pop();
-        const frame = this.history.pop();
-        await this.jump(frame);
+        await this.jump(this.history.pop(), false);
     }
     currentData() {
         return this.paragraph.dataList[this.currentPos];
@@ -644,15 +645,16 @@ class Manager {
     async next() {
         if (this.isSelecting()) return;
         if (this.currentPos >= this.paragraph.dataList.length) return;
+        this.push(this.getFrame());
         do {
             this.currentPos++;
             this.info.setLine(this.currentPos);
             this.info.setPart(this.paragraph.getPartAt(this.currentPos));
         } while (!await this.process(this.currentData()));
-        this.history.push(this.getFrame());
     }
-    async jump(frame) {
-        if (frame.pos === undefined) return;
+    async jump(frame, memorize = true) {
+        if (frame === undefined || frame.pos === undefined) return;
+        if (memorize) this.push(this.getFrame());
         this.currentPos = frame.pos;
         if (frame.varsFrame !== undefined) this.varsFrame = frame.varsFrame;
         if (frame.resources !== undefined)
@@ -660,8 +662,7 @@ class Manager {
         if (frame.customData !== undefined) this.customData = frame.customData;
         this.info.setLine(this.currentPos);
         this.info.setPart(this.paragraph.getPartAt(this.currentPos));
-        do this.currentPos++; while (!await this.process(this.paragraph.dataList[this.currentPos]));
-        this.history.push(this.getFrame());
+        while (!await this.process(this.paragraph.dataList[this.currentPos])) this.currentPos++;
     } // DO NOT call `jump` directly in `process`!!!
     async eval(line) {
         await this.process(parser.parseLine(line));
@@ -708,7 +709,7 @@ function isNum(value) {
 
 async function main() {
     await initPromise;
-    
+
     const bindFunction = (id, func) => document.getElementById(id).addEventListener('click', func);
 
     window.addEventListener('keydown', errorHandled(async event => {
