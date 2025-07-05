@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["./*", "js/index.js", "js/keybind.js", "js/logger.js", "js/main.js", "js/parser.js", "js/split.js", "js/test.js", "js/timeout.js", "js/vars.js", "js/completer.js", "js/files.js", "js/grammar.cjs"],
+  "exclude": ["node_modules"]
+}

@@ -1,20 +1,23 @@
 {
   "name": "galosity",
   "version": "1.0.0",
-  "main": "main.js",
+  "main": "./js/main.js",
   "type": "module",
   "scripts": {
     "start": "cross-env NODE_ENV=development electron .",
     "build": "cross-env NODE_ENV=production electron-builder",
-    "grammar": "npx pegjs -o grammar.cjs grammar.pegjs"
+    "grammar": "npx pegjs -o ./js/grammar.cjs ./js/grammar.pegjs",
+    "tsc": "tsc"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "ZZ_404",
+  "license": "MIT",
   "description": "Lite Pure-Text Galgame Editor",
   "devDependencies": {
     "@eslint/js": "^9.27.0",
     "@eslint/json": "^0.12.0",
+    "@types/electron": "^1.4.38",
+    "@types/node": "^24.0.10",
     "cross-env": "^7.0.3",
     "electron": "^35.2.1",
     "electron-builder": "^26.0.12",
@@ -22,7 +25,9 @@
     "eslint-plugin-no-floating-promise": "^2.0.0",
     "eslint-plugin-perfectionist": "^4.13.0",
     "eslint-plugin-promise": "^7.2.1",
-    "globals": "^16.1.0"
+    "globals": "^16.1.0",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.8.3"
   },
   "build": {
     "appId": "galosity.zz_404",
