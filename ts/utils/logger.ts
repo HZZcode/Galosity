@@ -7,13 +7,13 @@ class Logger {
         return new Error().stack!.split('\n').slice(3).join('\n');
     }
 
-    log(message: string) {
+    log(message: any) {
         if (this.isDebug) console.log(message);
     }
-    warn(message: string) {
+    warn(message: any) {
         if (this.isDebug) console.warn(message + '\n' + this.getStack());
     }
-    error(message: string) {
+    error(message: any) {
         if (this.isDebug) console.error(message + '\n' + this.getStack());
     }
 }

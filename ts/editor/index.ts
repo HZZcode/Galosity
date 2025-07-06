@@ -1,17 +1,18 @@
-import { GalIpcRenderer } from "./types";
+import { GalIpcRenderer } from "../types";
 const electron = require('electron');
 const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
 import {
     TransformData, parseLine, Paragraph, ImageData, VarData,
     ImportData, GalData, FuncData, JumpData, CallData
-} from './parser.js';
-import { GalVars } from './vars.js';
+} from '../parser/parser.js';
+import { GalVars } from '../vars/vars.js';
 import { AutoComplete, FileComplete } from './completer.js';
-import { Files } from './files.js';
-import { logger } from './logger.js';
-import { isInterpolate } from './split.js';
-import { bindFunction } from "./bind-function.js";
+import { Files } from '../utils/files.js';
+import { logger } from '../utils/logger.js';
+import { isInterpolate } from '../utils/split.js';
+import { bindFunction } from "../utils/bind-function.js";
+import { ErrorManager } from "../utils/error-manager.js";
 
 const textarea = document.getElementById('input') as HTMLTextAreaElement;
 class TextAreaManager {
@@ -116,21 +117,6 @@ class TagScanner {
         return lines.length === 0 ? -1 : lines[0];
     }
 }
-class ErrorManager {
-    element;
-    constructor() {
-        this.element = document.getElementById('error') as HTMLDivElement;
-    }
-    error(msg: string) {
-        this.element.innerText = msg;
-    }
-    assert(condition: boolean, msg: string) {
-        if (!condition) this.error(msg);
-    }
-    clear() {
-        this.element.innerText = '';
-    }
-}
 class FileManager extends Files {
     previousFiles: string[] = [];
     constructor() {
@@ -151,7 +137,7 @@ class FileManager extends Files {
             info.innerText += ' Saved!';
             setTimeout(updateInfo, 1000);
         } catch (e) {
-            logger.error(e as string);
+            logger.error(e);
             error.error(`Failed to Write to ${path}`);
         }
     }
@@ -165,7 +151,7 @@ class FileManager extends Files {
             updateInfo();
             return content;
         } catch (e) {
-            logger.error(e as string);
+            logger.error(e);
             error.error(`Failed to Read from ${path}`);
         };
     }
@@ -211,7 +197,7 @@ class FileManager extends Files {
     }
 }
 const info = document.getElementById('info') as HTMLDivElement;
-const error = new ErrorManager();
+const error = new ErrorManager(document.getElementById('error') as HTMLDivElement);
 const characters = new AutoComplete();
 const tags = new AutoComplete([
     '[Character]', '[Part]', '[Note]',
@@ -593,8 +579,8 @@ function scanControlBlocks() {
     try {
         return new Paragraph(manager.lines).getControlBlocks();
     } catch (e) {
-        logger.error(e as string);
-        error.error(e as string);
+        logger.error(e);
+        error.error(e);
     }
 }
 async function test(fileManager = file, content = textarea.value) {
@@ -607,11 +593,12 @@ async function test(fileManager = file, content = textarea.value) {
 }
 async function help(event: Event) {
     event.preventDefault();
-    const content = await file.readFile('example.txt').catch(e => {
-        logger.error(e);
-        error.error(`Cannot find example.txt`);
-    });
-    await test(await new FileManager().ofFile('example.txt'), content);
+    await file.readFile('example.txt')
+        .then(async content => await test(await new FileManager().ofFile('example.txt'), content))
+        .catch(e => {
+            logger.error(e);
+            error.error(`Cannot find example.txt`);
+        });
 }
 
 ipcRenderer.on('send-data', async (_, data) => {

@@ -1,16 +1,22 @@
-import { GalIpcRenderer } from "./types";
+import { GalIpcRenderer } from "../types";
 const electron = require('electron');
 const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
 const lodash = require('lodash');
-import * as parser from './parser.js';
-import { splitWith, isLatex } from './split.js';
-import * as vars from './vars.js';
-import { Files } from './files.js';
-import { logger } from './logger.js';
-import { TimeoutManager } from './timeout.js';
-import { KeybindManager } from './keybind.js';
-import { bindFunction } from "./bind-function.js";
+import * as parser from '../parser/parser.js';
+import { splitWith } from '../utils/split.js';
+import * as vars from '../vars/vars.js';
+import * as types from '../vars/types.js';
+import { Files } from '../utils/files.js';
+import { logger } from '../utils/logger.js';
+import { TimeoutManager } from '../utils/timeout.js';
+import { KeybindManager } from '../utils/keybind.js';
+import { bindFunction } from "../utils/bind-function.js";
+import { InfoManager, TextManager } from "./texts.js";
+import { ButtonsManager, ButtonData } from "./buttons.js";
+import { errorHandledAsWarning, errorHandled, error } from "./error-handler.js";
+import { interpolate } from "./interpolation.js";
+import { CustomData } from "./custom-data.js";
 
 const character = document.getElementById('character') as HTMLDivElement;
 const speech = document.getElementById('speech') as HTMLDivElement;
@@ -20,195 +26,6 @@ const lineInput = document.getElementById('line') as HTMLInputElement;
 const currentLine = document.getElementById('current-line') as HTMLDivElement;
 const evalButton = document.getElementById('eval') as HTMLButtonElement;
 const codeInput = document.getElementById('code') as HTMLInputElement;
-
-const handleError = true;
-
-let errorHandled = <T extends any[], U>(f: (..._: T) => U) => (...args: T) => {
-    error.clear();
-    try {
-        return f(...args);
-    } catch (e) {
-        logger.error(e as string);
-        error.error(e as string);
-    }
-};
-let errorHandledAsWarning = <T extends any[], U>(f: (..._: T) => U) => (...args: T) => {
-    error.clear();
-    try {
-        return f(...args);
-    } catch (e) {
-        logger.warn(e as string);
-        error.warn('Warning: ' + e);
-    }
-};
-if (!handleError) errorHandled = errorHandledAsWarning = f => f;
-
-class ErrorManager {
-    errorElement;
-    warnElement;
-    constructor() {
-        this.errorElement = document.getElementById('error') as HTMLDivElement;
-        this.warnElement = document.getElementById('warning') as HTMLDivElement;
-    }
-    error(msg: string) {
-        this.errorElement.innerText = msg;
-    }
-    warn(msg: string) {
-        this.warnElement.innerText = msg;
-    }
-    clear() {
-        this.errorElement.innerText = this.warnElement.innerText = '';
-    }
-}
-export const error = new ErrorManager();
-
-class TextManager {
-    outputText(name: string, text: string, color = 'black') {
-        character.innerHTML = name;
-        speech.innerHTML = text;
-        speech.style.color = color;
-        MathJax.typeset();
-    }
-    outputNote(note: string) {
-        this.outputText('[Note]', note, 'gray');
-    }
-}
-
-class InfoManager {
-    setPart(name: string) {
-        part.innerText = name;
-    }
-    setLine(line: number) {
-        currentLine.innerText = `At line ${line}`;
-    }
-}
-
-class ButtonData {
-    text;
-    func;
-    enable;
-    constructor(text: string, func: () => Promise<void>, enable = true) {
-        this.text = text;
-        this.func = errorHandled(func);
-        this.enable = enable;
-    }
-}
-class ButtonsManager {
-    parent = document.getElementById('buttons') as HTMLDivElement;
-    inputFunc?: (_: string) => void;
-    clear() {
-        const inputs = this.getInput();
-        if (inputs.length !== 0 && this.inputFunc !== undefined)
-            this.inputFunc(inputs[0].value);
-        this.inputFunc = undefined;
-        this.parent.innerHTML = '';
-    }
-    getInput() {
-        return this.parent.getElementsByTagName('input');
-    }
-    drawButton(button: ButtonData, bottom: string) {
-        const name = button.text;
-        const element = document.createElement('div');
-        element.innerHTML = name;
-        element.className = 'container button';
-        if (!button.enable) element.className += ' disabled';
-        element.style.bottom = bottom;
-        element.style.height = '7%';
-        if (button.func !== null && button.enable)
-            element.addEventListener('click', button.func);
-        this.parent.appendChild(element);
-        MathJax.typeset();
-    }
-    drawButtons(buttons: ButtonData[]) {
-        const num = buttons.length;
-        const midHeight = 50;
-        const totalHeight = num * 10 - 3;
-        const minHeight = midHeight + totalHeight / 2;
-        for (const [i, button] of buttons.entries()) {
-            const height = minHeight - i * 10;
-            this.drawButton(button, height + '%');
-        }
-        //65% -> 35%, height = 7%, distance = 3%
-    }
-    drawInput(manager: Manager, func: (_: string) => void) {
-        const element = document.createElement('input');
-        element.className = 'container input';
-        element.addEventListener('keyup', errorHandled(async event => {
-            if (event.key === 'Enter') await manager.next();
-        }));
-        this.inputFunc = func;
-        this.parent.appendChild(element);
-    }
-}
-
-class Interpolations {
-    funcs: { [tag: string]: (_: string) => string } = {};
-    register(tagChar: string, func: (_: string) => string) {
-        if (tagChar in this.funcs) throw `Multiple registration of interpolation for ${tagChar}`;
-        this.funcs[tagChar] = func;
-    }
-    getTagRegex() {
-        return new RegExp(`[${Object.keys(this.funcs).join('')}](\\{([^{}]*?)\\})`, 'g');
-    }
-    process(text: string) {
-        //Sure enough no one would use so many interpolations
-        let currentIndex = 0;
-        for (let i = 0; i < 128; i++) {
-            const regex = this.getTagRegex();
-            regex.lastIndex = currentIndex;
-            const match = regex.exec(text);
-            if (match === null) break;
-            if (isLatex(text, match.index)) {
-                currentIndex = match.index + match[0].length + 1;
-                continue;
-            }
-            const func = this.funcs[match[0][0]];
-            if (func !== undefined) text = text.replace(match[0], func(match[2]));
-        }
-        return text;
-    }
-}
-
-function interpolate(text: string, varsFrame: vars.GalVars) {
-    if (typeof text !== 'string') return text;
-    const interpolation = new Interpolations();
-    interpolation.register('$', sub => {
-        let result = sub;
-        varsFrame.warn = '';
-        errorHandledAsWarning(() => result = varsFrame.evaluate(sub).toString())();
-        if (varsFrame.warn !== '') error.warn('Warning' + varsFrame.warn);
-        return result;
-    });
-    interpolation.register('^', sub => `<sup>${sub}</sup>`);
-    interpolation.register('_', sub => `<sub>${sub}</sub>`);
-    interpolation.register('%', sub => {
-        const [text, href] = splitWith(':')(sub);
-        return `<a href="${href}" target="_blank" rel="noopener noreferrer">${text === '' ? href : text}</a>`;
-    });
-    interpolation.register('~', sub => {
-        const [rb, rt] = splitWith(':')(sub);
-        return `<ruby><rb>${rb}</rb><rt>${rt}</rt><rp>(${rt})</rp></ruby>`;
-    });
-    return interpolation.process(text).replaceAll(/\\n/g, '<br>');
-}
-
-class CustomData {
-    [key: string]: any;
-
-    constructor(object: object = {}) {
-        if (object === undefined) return;
-        for (const [key, value] of Object.entries(object))
-            if (!(key in this)) this[key] = value;
-    }
-
-    toString() {
-        return JSON.stringify(this);
-    }
-
-    static fromString(str: string) {
-        return new CustomData(JSON.parse(str));
-    }
-}
 
 export class Frame {
     pos;
@@ -305,8 +122,8 @@ class SaveLoadManager extends Files {
             await this.manager.jump(Frame.fromString(splitWith('\n')(str)[1]));
         }
         catch (e) {
-            logger.error(e as string);
-            error.error(e as string);
+            logger.error(e);
+            error.error(e);
             throw `Cannot load from slot ${slot}: ${e}`;
         }
     }
@@ -405,15 +222,15 @@ class ResourceManager extends Files {
     }
 }
 
-class Manager {
+export class Manager {
     varsFrame;
     paragraph = new parser.Paragraph([]);
     currentPos = -1;
     history: Frame[] = [];
     callStack: Frame[] = []; //frames of [Call]s
     customData = new CustomData(); //might be used by [Eval] custom data
-    info = new InfoManager();
-    texts = new TextManager();
+    info = new InfoManager(part, currentLine);
+    texts = new TextManager(character, speech);
     buttons = new ButtonsManager();
     resources = new ResourceManager();
     saveLoad = new SaveLoadManager(this);
@@ -447,7 +264,7 @@ class Manager {
         for (const data of this.paragraph.scanEnumsAt(this.currentPos)) {
             const name = data.name.trim();
             const values = data.values.map(value => value.trim());
-            this.varsFrame.defEnumTypeIfUnexist(new vars.GalEnumType(name, values));
+            this.varsFrame.defEnumTypeIfUnexist(new types.GalEnumType(name, values));
         }
     }
     async jumpFile(path: string) {
@@ -529,8 +346,8 @@ class Manager {
                     if (!this.varsFrame.equal(value, matchValue))
                         this.currentPos = next;
                 } catch (e) {
-                    logger.error(e as string);
-                    error.error(e as string);
+                    logger.error(e);
+                    error.error(e);
                 }
             }
             return false;
@@ -551,15 +368,15 @@ class Manager {
         }
         else if (data instanceof parser.InputData) {
             this.unsupportedForImported();
-            this.buttons.drawInput(this, expr => {
+            this.buttons.drawInput(this.next.bind(this), expr => {
                 try {
                     const value = this.varsFrame.evaluate(expr);
                     this.varsFrame.setVar(data.valueVar, value);
-                    this.varsFrame.setVar(data.errorVar, vars.BoolType.ofBool(false));
+                    this.varsFrame.setVar(data.errorVar, types.BoolType.ofBool(false));
                 } catch (e) {
-                    logger.error(e as string);
-                    error.error(e as string);
-                    this.varsFrame.setVar(data.errorVar, vars.BoolType.ofBool(true));
+                    logger.error(e);
+                    error.error(e);
+                    this.varsFrame.setVar(data.errorVar, types.BoolType.ofBool(true));
                 }
             });
             return true;
@@ -608,7 +425,7 @@ class Manager {
             return false;
         }
         else if (data instanceof parser.ReturnData) {
-            const value = data.value === '' ? new vars.GalNum(0) : this.varsFrame.evaluate(data.value);
+            const value = data.value === '' ? new types.GalNum(0) : this.varsFrame.evaluate(data.value);
             if (this.callStack.length === 0)
                 throw `Call stack is empty`;
             const frame = this.callStack.pop()!;
@@ -711,8 +528,8 @@ const initPromise = new Promise<void>((resolve, reject) => {
             logger.isDebug = data.isDebug;
             resolve();
         } catch (e) {
-            logger.error(e as string);
-            error.error(e as string);
+            logger.error(e);
+            error.error(e);
             reject(e);
         }
     });

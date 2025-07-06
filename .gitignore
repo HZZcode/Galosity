@@ -8,5 +8,5 @@ mathjax
 font-awesome
 
 js
-!js/grammar.js
-!js/grammar.pegjs
+!js/vars/grammar.js
+!js/vars/grammar.pegjs

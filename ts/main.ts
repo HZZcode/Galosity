@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, OpenDialogOptions, SaveDialogOptions, shell } from 'electron';
-import { logger } from './logger.js';
+import { logger } from './utils/logger.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -66,7 +66,7 @@ app.whenReady().then(() => {
     ipcMain.handle('resolve', (_, pathname: string) => path.resolve(pathname).replaceAll('\\', '/'));
     ipcMain.handle('hasFile', (_, path: string) => fs.promises.access(path, fs.constants.F_OK)
         .then(() => true).catch(() => false));
-    ipcMain.handle('directory', _ => __dirname);
+    ipcMain.handle('directory', _ => path.dirname(__dirname));
     ipcMain.handle('readdir', (_, path: string) => fs.promises.readdir(path));
     ipcMain.handle('openExternal', (_, url: string) => shell.openExternal(url));
     ipcMain.handle('test', (_, data: { content: string, filename: string, isDebug: boolean }) => {

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "cross-env NODE_ENV=development electron .",
     "build": "cross-env NODE_ENV=production electron-builder",
-    "grammar": "npx pegjs -o ./js/grammar.js ./js/grammar.pegjs",
+    "grammar": "npx pegjs -o ./js/vars/grammar.js ./js/vars/grammar.pegjs",
     "tsc": "tsc"
   },
   "keywords": [],
