@@ -308,7 +308,7 @@ class SaveLoadManager extends Files {
 
 class ResourceManager extends Files {
     parent = document.getElementById('images');
-    constructor(filename = null) {
+    constructor(filename = undefined) {
         super(filename);
     }
     getImageElements() {
@@ -504,16 +504,16 @@ class Manager {
                     const callback = async () => await this.jump(this.getFrame().withPos(pos));
 
                     if (show) buttons.push(new ButtonData(text, callback, enable));
-                    if (data.timeout !== null)
+                    if (data.timeout !== undefined)
                         this.timeout.set(callback, this.varsFrame.evaluate(data.timeout).toNum() * 1000);
-                    if (data.key !== null)
+                    if (data.key !== undefined)
                         this.keybind.bind(interpolate(data.key, this.varsFrame), callback);
                 }
                 this.buttons.drawButtons(buttons);
                 return true;
             }
             case 'case': {
-                if (this.paragraph.getCaseType(this.currentPos) === 'switch') {
+                if (this.paragraph.isSwitchCase(this.currentPos)) {
                     const block = this.paragraph.findCaseControlBlock(this.currentPos);
                     const switchData = this.paragraph.dataList[block.startPos];
                     try {
@@ -610,7 +610,7 @@ class Manager {
                 this.currentPos = frame.pos;
                 this.varsFrame = frame.varsFrame;
                 const varName = this.paragraph.dataList[frame.pos].returnVar;
-                if (varName !== null) this.varsFrame.setVar(varName, value);
+                if (varName !== undefined) this.varsFrame.setVar(varName, value);
                 return false;
             }
             case 'import': {

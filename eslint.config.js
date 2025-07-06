@@ -18,6 +18,7 @@ export default defineConfig([
       "./js/files.js",
       "./js/keybind.js",
       "./js/logger.js",
+      "./js/parser.js",
       "./js/split.js",
       "./js/timeout.js",
       "./js/vars.js"
