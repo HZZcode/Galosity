@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, OpenDialogOptions, SaveDialogOptions, shell } from 'electron';
 import { logger } from './logger.js';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -12,7 +12,7 @@ function getArgvFileName() {
     return null;
 }
 
-function handleLink(window) {
+function handleLink(window: BrowserWindow) {
     window.webContents.on('will-navigate', (event, url) => {
         event.preventDefault();
         shell.openExternal(url);
@@ -30,6 +30,7 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
+            // @ts-expect-error
             enableRemoteModule: true,
         },
     });
@@ -55,19 +56,19 @@ app.whenReady().then(() => {
     const win = BrowserWindow.getAllWindows()[0];
     if (isDebug) win.webContents.openDevTools();
 
-    ipcMain.handle('showSaveDialog', (event, options) =>
-        dialog.showSaveDialog(BrowserWindow.fromWebContents(event.sender), options));
-    ipcMain.handle('showOpenDialog', (event, options) =>
-        dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender), options));
-    ipcMain.handle('writeFile', (_, path, content) => fs.promises.writeFile(path, content, 'utf-8'));
-    ipcMain.handle('readFile', (_, path) => fs.promises.readFile(path, 'utf-8'));
-    ipcMain.handle('resolve', (_, pathname) => path.resolve(pathname).replaceAll('\\', '/'));
-    ipcMain.handle('hasFile', (_, path) => fs.promises.access(path, fs.constants.F_OK)
+    ipcMain.handle('showSaveDialog', (event, options: SaveDialogOptions) =>
+        dialog.showSaveDialog(BrowserWindow.fromWebContents(event.sender)!, options));
+    ipcMain.handle('showOpenDialog', (event, options: OpenDialogOptions) =>
+        dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender)!, options));
+    ipcMain.handle('writeFile', (_, path: string, content: string) => fs.promises.writeFile(path, content, 'utf-8'));
+    ipcMain.handle('readFile', (_, path: string) => fs.promises.readFile(path, 'utf-8'));
+    ipcMain.handle('resolve', (_, pathname: string) => path.resolve(pathname).replaceAll('\\', '/'));
+    ipcMain.handle('hasFile', (_, path: string) => fs.promises.access(path, fs.constants.F_OK)
         .then(() => true).catch(() => false));
     ipcMain.handle('directory', _ => __dirname);
-    ipcMain.handle('readdir', (_, path) => fs.promises.readdir(path));
-    ipcMain.handle('openExternal', (_, url) => shell.openExternal(url));
-    ipcMain.handle('test', (_, data) => {
+    ipcMain.handle('readdir', (_, path: string) => fs.promises.readdir(path));
+    ipcMain.handle('openExternal', (_, url: string) => shell.openExternal(url));
+    ipcMain.handle('test', (_, data: { content: string, filename: string, isDebug: boolean }) => {
         const newWindow = new BrowserWindow({
             width: 1200,
             height: 800,
@@ -76,6 +77,7 @@ app.whenReady().then(() => {
             webPreferences: {
                 nodeIntegration: true,
                 contextIsolation: false,
+                // @ts-expect-error
                 enableRemoteModule: true,
             },
         });

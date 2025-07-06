@@ -1,3 +1,5 @@
+import { SaveDialogReturnValue, OpenDialogReturnValue } from "electron";
+
 const { ipcRenderer } = require('electron');
 
 export class Files {

@@ -1,32 +1,32 @@
-'use strict';
-
-const { ipcRenderer } = require('electron');
+import { GalIpcRenderer } from "./types";
+const electron = require('electron');
+const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
 export class AutoComplete {
     list;
     chosenFoundIndex = 0;
-    found = [];
-    constructor(list = []) {
+    found: string[] = [];
+    constructor(list: string[] = []) {
         this.list = list;
     }
-    setList(list) {
+    setList(list: string[]) {
         this.list = list;
     }
     // eslint-disable-next-line require-await
-    async getList() {
+    getList(): string[] | Promise<string[]> {
         return this.list;
     }
     clear() {
         this.chosenFoundIndex = 0;
         this.found = [];
     }
-    async includes(word) {
+    async includes(word: string) {
         return (await this.getList()).includes(word);
     }
-    async completeInclude(start) {
+    async completeInclude(start: string) {
         return await this.complete(start, !await this.includes(start));
     }
-    async complete(start, isFirstComplete = true) {
+    async complete(start: string, isFirstComplete = true) {
         if (!isFirstComplete) {
             this.chosenFoundIndex++;
             this.chosenFoundIndex %= this.found.length;
@@ -37,14 +37,15 @@ export class AutoComplete {
         }
         return this.found[this.chosenFoundIndex];
     }
-    async findWords(start) {
+    async findWords(start: string) {
         return (await this.getList()).filter(word => word.toLowerCase().startsWith(start.toLowerCase()));
     }
 }
+
 export class FileComplete extends AutoComplete {
     pathGetter;
     fileType;
-    constructor(pathGetter, fileType = null) {
+    constructor(pathGetter: () => string | Promise<string>, fileType?: string) {
         super([]);
         this.pathGetter = pathGetter;
         this.fileType = fileType;
@@ -52,7 +53,7 @@ export class FileComplete extends AutoComplete {
     async getList() {
         const path = await ipcRenderer.invoke('resolve', await this.pathGetter());
         const dir = await ipcRenderer.invoke('readdir', path);
-        if (this.fileType === null) return dir;
+        if (this.fileType === undefined) return dir;
         return dir.filter(file => file.endsWith('.' + this.fileType));
     }
 }
