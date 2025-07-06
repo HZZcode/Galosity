@@ -43,7 +43,7 @@ export class Files {
                 { name: 'Text Files', extensions: ['txt'] },
                 { name: 'All Files', extensions: ['*'] }
             ]
-        }).then((result: SaveDialogReturnValue) => 
+        }).then((result: SaveDialogReturnValue) =>
             result.canceled ? undefined : result.filePath);
     }
     async requestOpenPath(): Promise<string | undefined> {
@@ -52,8 +52,7 @@ export class Files {
                 { name: 'Text Files', extensions: ['txt'] },
                 { name: 'All Files', extensions: ['*'] }
             ]
-        }).then((result: OpenDialogReturnValue) => 
-            result.canceled ? undefined : result.filePath);
+        }).then((result: OpenDialogReturnValue) => result.canceled ? undefined : result.filePaths[0]);
     }
 
     async writeFile(path: string, content: string) {
