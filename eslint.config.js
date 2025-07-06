@@ -1,51 +1,39 @@
 import js from "@eslint/js";
 import globals from "globals";
 import json from "@eslint/json";
+import tseslint from "typescript-eslint";
 import perfectionist from "eslint-plugin-perfectionist";
 import promise from "eslint-plugin-promise";
 import floatingPromise from "eslint-plugin-no-floating-promise";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
+  tseslint.configs.recommended,
   {
     ignores: [
-      "./js/grammar.js",
+      "./js/*",
       "package-lock.json",
       "eslint.config.js",
       "mathjax/*",
-      "font-awesome/*",
-
-      "./js/completer.js",
-      "./js/files.js",
-      "./js/index.js",
-      "./js/keybind.js",
-      "./js/logger.js",
-      "./js/main.js",
-      "./js/parser.js",
-      "./js/split.js",
-      "./js/timeout.js",
-      "./js/vars.js"
+      "font-awesome/*"
     ]
   },
   {
-    files: ["**/*.{js,mjs,cjs}"],
+    files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
     plugins: { js, perfectionist, promise, floatingPromise },
     extends: ["js/recommended"],
     rules: {
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      
       "require-await": "warn",
       "no-unused-vars": "off",
-      "@/no-unused-vars": [
-        "warn",
-        {
-          "vars": "all", "varsIgnorePattern": "^_",
-          "args": "after-used", "argsIgnorePattern": "^_",
-          "caughtErrors": "all", "caughtErrorsIgnorePattern": "^_"
-        }
-      ],
+      "@/no-unused-vars": "off",
       "floatingPromise/no-floating-promise": "error",
       "prefer-const": "warn",
       "eqeqeq": "error",
-      "no-undef": "error",
+      "no-undef": "off",
       "no-redeclare": "error",
       "max-len": ["error", { "code": 110 }],
       "no-empty": "error",
@@ -53,10 +41,10 @@ export default defineConfig([
       "no-unused-expressions": ["error", { "allowShortCircuit": false, "allowTernary": false }],
       "no-prototype-builtins": "error",
       "no-console": "warn",
-      "semi": ["warn", "always"]
+      "semi": ["warn", "always"],
     }
   },
-  { files: ["**/*.js"], languageOptions: { sourceType: "module" } },
-  { files: ["**/*.{js,mjs,cjs}"], languageOptions: { globals: { ...globals.browser, ...globals.node } } },
+  { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], languageOptions: { sourceType: "module" } },
+  { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], languageOptions: { globals: globals.node } },
   { files: ["**/*.json"], plugins: { json }, language: "json/json", extends: ["json/recommended"] },
 ]);

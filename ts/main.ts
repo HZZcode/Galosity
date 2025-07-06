@@ -30,7 +30,7 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
-            // @ts-expect-error
+            // @ts-expect-error This just works!
             enableRemoteModule: true,
         },
     });
@@ -60,7 +60,8 @@ app.whenReady().then(() => {
         dialog.showSaveDialog(BrowserWindow.fromWebContents(event.sender)!, options));
     ipcMain.handle('showOpenDialog', (event, options: OpenDialogOptions) =>
         dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender)!, options));
-    ipcMain.handle('writeFile', (_, path: string, content: string) => fs.promises.writeFile(path, content, 'utf-8'));
+    ipcMain.handle('writeFile', (_, path: string, content: string) => 
+        fs.promises.writeFile(path, content, 'utf-8'));
     ipcMain.handle('readFile', (_, path: string) => fs.promises.readFile(path, 'utf-8'));
     ipcMain.handle('resolve', (_, pathname: string) => path.resolve(pathname).replaceAll('\\', '/'));
     ipcMain.handle('hasFile', (_, path: string) => fs.promises.access(path, fs.constants.F_OK)
@@ -77,13 +78,13 @@ app.whenReady().then(() => {
             webPreferences: {
                 nodeIntegration: true,
                 contextIsolation: false,
-                // @ts-expect-error
+                // @ts-expect-error This just works!
                 enableRemoteModule: true,
             },
         });
         newWindow.loadFile('test.html');
         newWindow.webContents.on('did-finish-load', () => {
-            newWindow.webContents.send('send-data', data);
+            newWindow.webContents.send('test-data', data);
         });
         newWindow.setMenu(null);
         if (isDebug) newWindow.webContents.openDevTools();

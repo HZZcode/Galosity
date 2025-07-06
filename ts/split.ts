@@ -20,7 +20,7 @@ export const indexOf = (str: string, char: string) => {
     }
     return -1;
 };
-export const splitWith = (char: string) => (str: string) => [
+export const splitWith = (char: string) => (str: string): [string, string] => [
     str.substring(0, indexOf(str, char)).trim(),
     str.substring(indexOf(str, char) + 1).trim()
 ];

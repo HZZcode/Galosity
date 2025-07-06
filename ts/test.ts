@@ -1,4 +1,7 @@
-const { ipcRenderer } = require('electron');
+import { GalIpcRenderer } from "./types";
+const electron = require('electron');
+const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
+
 const lodash = require('lodash');
 import * as parser from './parser.js';
 import { splitWith, isLatex } from './split.js';
@@ -7,33 +10,34 @@ import { Files } from './files.js';
 import { logger } from './logger.js';
 import { TimeoutManager } from './timeout.js';
 import { KeybindManager } from './keybind.js';
+import { bindFunction } from "./bind-function.js";
 
-const character = document.getElementById('character');
-const speech = document.getElementById('speech');
-const part = document.getElementById('part');
-const jump = document.getElementById('jump');
-const lineInput = document.getElementById('line');
-const currentLine = document.getElementById('current-line');
-const evalButton = document.getElementById('eval');
-const codeInput = document.getElementById('code');
+const character = document.getElementById('character') as HTMLDivElement;
+const speech = document.getElementById('speech') as HTMLDivElement;
+const part = document.getElementById('part') as HTMLDivElement;
+const jump = document.getElementById('jump') as HTMLButtonElement;
+const lineInput = document.getElementById('line') as HTMLInputElement;
+const currentLine = document.getElementById('current-line') as HTMLDivElement;
+const evalButton = document.getElementById('eval') as HTMLButtonElement;
+const codeInput = document.getElementById('code') as HTMLInputElement;
 
 const handleError = true;
 
-let errorHandled = f => arg => {
+let errorHandled = <T extends any[], U>(f: (..._: T) => U) => (...args: T) => {
     error.clear();
     try {
-        return f(arg);
+        return f(...args);
     } catch (e) {
-        logger.error(e);
-        error.error(e);
+        logger.error(e as string);
+        error.error(e as string);
     }
 };
-let errorHandledAsWarning = f => arg => {
+let errorHandledAsWarning = <T extends any[], U>(f: (..._: T) => U) => (...args: T) => {
     error.clear();
     try {
-        return f(arg);
+        return f(...args);
     } catch (e) {
-        logger.warn(e);
+        logger.warn(e as string);
         error.warn('Warning: ' + e);
     }
 };
@@ -43,13 +47,13 @@ class ErrorManager {
     errorElement;
     warnElement;
     constructor() {
-        this.errorElement = document.getElementById('error');
-        this.warnElement = document.getElementById('warning');
+        this.errorElement = document.getElementById('error') as HTMLDivElement;
+        this.warnElement = document.getElementById('warning') as HTMLDivElement;
     }
-    error(msg) {
+    error(msg: string) {
         this.errorElement.innerText = msg;
     }
-    warn(msg) {
+    warn(msg: string) {
         this.warnElement.innerText = msg;
     }
     clear() {
@@ -59,23 +63,22 @@ class ErrorManager {
 export const error = new ErrorManager();
 
 class TextManager {
-    outputText(name, text, color = 'black') {
+    outputText(name: string, text: string, color = 'black') {
         character.innerHTML = name;
         speech.innerHTML = text;
         speech.style.color = color;
-        // eslint-disable-next-line no-undef
         MathJax.typeset();
     }
-    outputNote(note) {
+    outputNote(note: string) {
         this.outputText('[Note]', note, 'gray');
     }
 }
 
 class InfoManager {
-    setPart(name) {
+    setPart(name: string) {
         part.innerText = name;
     }
-    setLine(line) {
+    setLine(line: number) {
         currentLine.innerText = `At line ${line}`;
     }
 }
@@ -84,26 +87,26 @@ class ButtonData {
     text;
     func;
     enable;
-    constructor(text, func = null, enable = true) {
+    constructor(text: string, func: () => Promise<void>, enable = true) {
         this.text = text;
         this.func = errorHandled(func);
         this.enable = enable;
     }
 }
 class ButtonsManager {
-    parent = document.getElementById('buttons');
-    inputFunc = null;
+    parent = document.getElementById('buttons') as HTMLDivElement;
+    inputFunc?: (_: string) => void;
     clear() {
         const inputs = this.getInput();
-        if (inputs.length !== 0 && this.inputFunc !== null)
+        if (inputs.length !== 0 && this.inputFunc !== undefined)
             this.inputFunc(inputs[0].value);
-        this.inputFunc = null;
+        this.inputFunc = undefined;
         this.parent.innerHTML = '';
     }
     getInput() {
         return this.parent.getElementsByTagName('input');
     }
-    drawButton(button, bottom) {
+    drawButton(button: ButtonData, bottom: string) {
         const name = button.text;
         const element = document.createElement('div');
         element.innerHTML = name;
@@ -114,10 +117,9 @@ class ButtonsManager {
         if (button.func !== null && button.enable)
             element.addEventListener('click', button.func);
         this.parent.appendChild(element);
-        // eslint-disable-next-line no-undef
         MathJax.typeset();
     }
-    drawButtons(buttons) {
+    drawButtons(buttons: ButtonData[]) {
         const num = buttons.length;
         const midHeight = 50;
         const totalHeight = num * 10 - 3;
@@ -128,7 +130,7 @@ class ButtonsManager {
         }
         //65% -> 35%, height = 7%, distance = 3%
     }
-    drawInput(manager, func = null) {
+    drawInput(manager: Manager, func: (_: string) => void) {
         const element = document.createElement('input');
         element.className = 'container input';
         element.addEventListener('keyup', errorHandled(async event => {
@@ -140,15 +142,15 @@ class ButtonsManager {
 }
 
 class Interpolations {
-    funcs = {};
-    register(tagChar, func) {
+    funcs: { [tag: string]: (_: string) => string } = {};
+    register(tagChar: string, func: (_: string) => string) {
         if (tagChar in this.funcs) throw `Multiple registration of interpolation for ${tagChar}`;
         this.funcs[tagChar] = func;
     }
     getTagRegex() {
         return new RegExp(`[${Object.keys(this.funcs).join('')}](\\{([^{}]*?)\\})`, 'g');
     }
-    process(text) {
+    process(text: string) {
         //Sure enough no one would use so many interpolations
         let currentIndex = 0;
         for (let i = 0; i < 128; i++) {
@@ -167,13 +169,13 @@ class Interpolations {
     }
 }
 
-function interpolate(text, varsFrame) {
+function interpolate(text: string, varsFrame: vars.GalVars) {
     if (typeof text !== 'string') return text;
     const interpolation = new Interpolations();
     interpolation.register('$', sub => {
         let result = sub;
         varsFrame.warn = '';
-        errorHandledAsWarning(() => result = varsFrame.evaluate(sub))();
+        errorHandledAsWarning(() => result = varsFrame.evaluate(sub).toString())();
         if (varsFrame.warn !== '') error.warn('Warning' + varsFrame.warn);
         return result;
     });
@@ -191,7 +193,9 @@ function interpolate(text, varsFrame) {
 }
 
 class CustomData {
-    constructor(object) {
+    [key: string]: any;
+
+    constructor(object: object = {}) {
         if (object === undefined) return;
         for (const [key, value] of Object.entries(object))
             if (!(key in this)) this[key] = value;
@@ -201,7 +205,7 @@ class CustomData {
         return JSON.stringify(this);
     }
 
-    static fromString(str) {
+    static fromString(str: string) {
         return new CustomData(JSON.parse(str));
     }
 }
@@ -211,14 +215,14 @@ export class Frame {
     varsFrame;
     resources; // this is in string format
     customData;
-    constructor(pos, varsFrame, resources, customData) {
+    constructor(pos: number, varsFrame: vars.GalVars, resources: string, customData: CustomData) {
         this.pos = pos;
         this.varsFrame = varsFrame;
         this.resources = resources;
         this.customData = customData;
     }
 
-    withPos(pos) {
+    withPos(pos: number) {
         this.pos = pos;
         return this;
     }
@@ -228,7 +232,7 @@ export class Frame {
             .map(data => data.toString()).join('\n');
     }
 
-    static fromString(str) {
+    static fromString(str: string) {
         const [pos, varsFrame, resources, customData] = str.split('\n');
         return new Frame(
             Number.parseInt(pos),
@@ -243,12 +247,12 @@ class SaveInfo {
     time;
     sourceFile;
     note;
-    constructor(sourceFile, note = '') {
+    constructor(sourceFile: string, note = '') {
         this.time = new Date();
         this.sourceFile = sourceFile;
         this.note = note.replaceAll('\n', '');
     }
-    withTime(time) {
+    withTime(time: Date) {
         this.time = time;
         return this;
     }
@@ -259,66 +263,68 @@ class SaveInfo {
             this.note
         ].join('|').replaceAll('\n', '');
     }
-    static fromString(str) {
-        const [time, sourceFile, note] = splitWith('|')(str);
+    static fromString(str: string) {
+        const [time, sourceFile, note] = str.split('|');
         return new SaveInfo(sourceFile, note).withTime(new Date(Number.parseInt(time)));
     }
 }
 
+type SlotType = number;
+
 class SaveLoadManager extends Files {
     manager;
-    constructor(manager) {
+    constructor(manager: Manager) {
         super();
         this.manager = manager;
     }
     getSourceFile() {
         return this.manager.resources.filename;
     }
-    async getSaveFilePath(slot) {
+    async getSaveFilePath(slot: SlotType) {
         return await this.getSavePath() + `/save${slot}.gal`;
     }
-    async isFilled(slot) {
+    async isFilled(slot: SlotType) {
         return await this.hasFile(await this.getSaveFilePath(slot));
     }
-    async save(slot, note = '') {
+    async save(slot: SlotType, note = '') {
         const str = new SaveInfo(note).toString() + '\n' + this.manager.getFrame().toString();
         await this.writeFile(await this.getSaveFilePath(slot), str);
     }
-    async getInfo(slot) {
+    async getInfo(slot: SlotType) {
         if (!await this.isFilled(slot)) throw `No save data in slot ${slot}`;
         const str = await this.readFile(await this.getSaveFilePath(slot));
         return SaveInfo.fromString(splitWith('\n')(str)[0]);
     }
-    async load(slot) {
+    async load(slot: SlotType) {
         if (!await this.isFilled(slot)) throw `No save data in slot ${slot}`;
         try {
             const str = await this.readFile(await this.getSaveFilePath(slot));
-            const file = (await this.getInfo()).sourceFile;
+            const file = (await this.getInfo(slot)).sourceFile;
             if (file !== this.getSourceFile())
                 await this.manager.set((await this.readFile(file)).split(/\r?\n/));
             await this.manager.jump(Frame.fromString(splitWith('\n')(str)[1]));
         }
         catch (e) {
-            logger.error(e);
-            error.error(e);
+            logger.error(e as string);
+            error.error(e as string);
             throw `Cannot load from slot ${slot}: ${e}`;
         }
     }
 }
 
 class ResourceManager extends Files {
-    parent = document.getElementById('images');
+    parent = document.getElementById('images') as HTMLDivElement;
     constructor(filename = undefined) {
         super(filename);
     }
     getImageElements() {
-        return [...this.parent.querySelectorAll('.image')];
+        return [...this.parent.querySelectorAll('.image')] as HTMLDivElement[];
     }
     getElements() {
-        return [...this.getImageElements(), this.getElement('background')];
+        return [...this.getImageElements(), this.getElement('background')] as HTMLDivElement[];
     }
-    getElement(pos) {
-        return document.getElementById(`${pos}-image`);
+    getElement(pos: string) {
+        return document.getElementById(`${pos}-image`) as HTMLDivElement;
     }
 
     async clear() {
@@ -326,9 +332,9 @@ class ResourceManager extends Files {
         await this.setImage('background', 'clear');
     }
 
-    defImagePos(pos, left, bottom) {
+    defImagePos(pos: string, left: string, bottom: string) {
         const id = `${pos}-image`;
-        const setPos = element => {
+        const setPos = (element: HTMLDivElement) => {
             if (left !== '') element.style.left = left;
             if (bottom !== '') element.style.bottom = bottom;
         };
@@ -343,18 +349,18 @@ class ResourceManager extends Files {
         this.parent.appendChild(element);
     }
 
-    setElementBackground(element, background) {
+    setElementBackground(element: HTMLDivElement, background: string) {
         if (element === undefined || element.style === undefined) return;
         element.style.backgroundImage = background;
     }
-    async setElementImage(element, file) {
+    async setElementImage(element: HTMLDivElement, file: string) {
         this.setElementBackground(element, file !== 'clear' ? `url("${await this.getSource(file)}")` : '');
     }
-    async setImage(pos, file) {
+    async setImage(pos: string, file: string) {
         if (file.trim().startsWith('@')) {
             file = file.replace('@', '');
             let left = file.trim();
-            let bottom = 0;
+            let bottom = '0';
             if (file.includes(',')) {
                 [left, bottom] = splitWith(',')(file);
             }
@@ -363,15 +369,15 @@ class ResourceManager extends Files {
         else await this.setElementImage(this.getElement(pos), file);
     }
 
-    transformElement(element, transform) {
+    transformElement(element: HTMLDivElement, transform: string) {
         if (element === undefined || element.style === undefined) return;
         element.style.transform = transform.toString();
     }
-    transformImage(pos, transform) {
+    transformImage(pos: string, transform: string) {
         this.transformElement(this.getElement(pos), transform);
     }
 
-    getPos(id) {
+    getPos(id: string) {
         return id.endsWith('-image') ? id.slice(0, -6) : '';
     }
 
@@ -384,7 +390,7 @@ class ResourceManager extends Files {
             element.style.transform
         ].join('|')).join(';');
     }
-    static fromString(str) {
+    static fromString(str: string) {
         const manager = new ResourceManager();
         manager.clear();
         if (!str.includes(';')) return manager;
@@ -401,10 +407,10 @@ class ResourceManager extends Files {
 
 class Manager {
     varsFrame;
-    paragraph;
+    paragraph = new parser.Paragraph([]);
     currentPos = -1;
-    history = []; //list of `Frame`s
-    callStack = []; //line count of [Call]s
+    history: Frame[] = [];
+    callStack: Frame[] = []; //frames of [Call]s
     customData = new CustomData(); //might be used by [Eval] custom data
     info = new InfoManager();
     texts = new TextManager();
@@ -417,7 +423,7 @@ class Manager {
     constructor(isMain = true) {
         this.isMain = isMain;
         if (!isMain) this.info.setLine = this.info.setPart
-            = this.timeout.set = this.timeout.clear = () => 0;
+            = this.timeout.set = this.timeout.clear = (): any => 0;
 
         this.varsFrame = new vars.GalVars();
         this.varsFrame.initBuiltins();
@@ -427,7 +433,7 @@ class Manager {
         throw `Operation not supported in imported files: `
         + `at line ${this.currentPos}, data type is '${this.currentData().type}'`;
     }
-    async set(lines) {
+    async set(lines: string[]) {
         this.paragraph = new parser.Paragraph(lines);
         this.currentPos = -1;
         await this.resources.clear();
@@ -444,7 +450,7 @@ class Manager {
             this.varsFrame.defEnumTypeIfUnexist(new vars.GalEnumType(name, values));
         }
     }
-    async jumpFile(path) {
+    async jumpFile(path: string) {
         path = await this.resources.getRelative(path);
         await ipcRenderer.invoke('readFile', path)
             .then(async content => await this.set(content.split(/\r?\n/)))
@@ -454,192 +460,190 @@ class Manager {
                 throw `Cannot open file ${path}`;
             });
     }
-    async process(data) {
+    async process(data: parser.GalData) {
         if (this.currentPos >= this.paragraph.dataList.length) return true;
         if (data === undefined) return false;
         if (this.buttons !== null) this.buttons.clear();
         this.timeout.clear();
         this.keybind.clear();
         this.setEnums();
-        switch (data.type) {
-            case 'sentence': {
-                this.unsupportedForImported();
-                if (data.character.trim() === '' && data.sentence.trim() === '')
-                    return false;
-                this.texts.outputText(interpolate(data.character, this.varsFrame),
-                    interpolate(data.sentence, this.varsFrame));
-                return true;
-            }
-            case 'note': {
-                this.unsupportedForImported();
-                this.texts.outputNote(interpolate(data.note, this.varsFrame));
-                return true;
-            }
-            case 'jump': {
-                const anchor = interpolate(data.anchor, this.varsFrame);
-                if (data.crossFile) {
-                    this.unsupportedForImported();
-                    this.jumpFile(anchor);
-                }
-                else if (data.href) {
-                    this.unsupportedForImported();
-                    ipcRenderer.invoke('openExternal', anchor);
-                }
-                else {
-                    const pos = this.paragraph.findAnchorPos(anchor);
-                    if (pos === -1) throw `Anchor not found: ${anchor}`;
-                    this.currentPos = pos - 1;
-                }
+        if (data instanceof parser.SpeechData) {
+            this.unsupportedForImported();
+            if (data.character.trim() === '' && data.sentence.trim() === '')
                 return false;
-            }
-            case 'select': {
-                this.unsupportedForImported();
-                const block = this.paragraph.findStartControlBlock(this.currentPos);
-                const buttons = [];
-                for (const pos of block.casesPosList) {
-                    const data = this.paragraph.dataList[pos];
-                    const show = this.varsFrame.evaluate(data.show).toBool();
-                    const enable = this.varsFrame.evaluate(data.enable).toBool();
-                    const text = interpolate(data.text, this.varsFrame);
-                    const callback = async () => await this.jump(this.getFrame().withPos(pos));
-
-                    if (show) buttons.push(new ButtonData(text, callback, enable));
-                    if (data.timeout !== undefined)
-                        this.timeout.set(callback, this.varsFrame.evaluate(data.timeout).toNum() * 1000);
-                    if (data.key !== undefined)
-                        this.keybind.bind(interpolate(data.key, this.varsFrame), callback);
-                }
-                this.buttons.drawButtons(buttons);
-                return true;
-            }
-            case 'case': {
-                if (this.paragraph.isSwitchCase(this.currentPos)) {
-                    const block = this.paragraph.findCaseControlBlock(this.currentPos);
-                    const switchData = this.paragraph.dataList[block.startPos];
-                    try {
-                        const value = this.varsFrame.evaluate(switchData.expr);
-                        const matchValue = this.varsFrame.evaluate(data.text);
-                        const next = block.next(this.currentPos);
-                        if (next === undefined) throw `Case error at line ${this.currentPos}`;
-                        if (!this.varsFrame.equal(value, matchValue))
-                            this.currentPos = next;
-                    } catch (e) {
-                        logger.error(e);
-                        error.error(e);
-                    }
-                }
-                return false;
-            }
-            case 'break': {
-                const casePos = this.paragraph.getCasePosAt(this.currentPos);
-                const block = this.paragraph.findCaseControlBlock(casePos);
-                if (block === undefined) throw `[Break] at line ${this.currentPos} is not in control block`;
-                const endPos = block.endPos;
-                this.currentPos = endPos;
-                return false;
-            }
-            case 'var': {
-                this.varsFrame.warn = '';
-                errorHandled(() => this.varsFrame.setVar(data.name, this.varsFrame.evaluate(data.expr)))();
-                if (this.varsFrame.warn !== '') error.warn('Warning: ' + this.varsFrame.warn);
-                return false;
-            }
-            case 'input': {
-                this.unsupportedForImported();
-                this.buttons.drawInput(this, expr => {
-                    try {
-                        const value = this.varsFrame.evaluate(expr);
-                        this.varsFrame.setVar(data.valueVar, value);
-                        this.varsFrame.setVar(data.errorVar, vars.BoolType.ofBool(false));
-                    } catch (e) {
-                        logger.error(e);
-                        error.error(e);
-                        this.varsFrame.setVar(data.errorVar, vars.BoolType.ofBool(true));
-                    }
-                });
-                return true;
-            }
-            case 'image': {
-                this.unsupportedForImported();
-                await this.resources.check();
-                const type = interpolate(data.imageType, this.varsFrame);
-                const file = interpolate(data.imageFile, this.varsFrame);
-                await this.resources.setImage(type, file);
-                return false;
-            }
-            case 'transform': {
-                this.unsupportedForImported();
-                const interpolated = lodash.cloneDeep(data);
-                for (const [key, value] of Object.entries(data))
-                    interpolated[key] = interpolate(value, this.varsFrame);
-                this.resources.transformImage(interpolated.imageType, interpolated);
-                return false;
-            }
-            case 'delay': {
-                this.unsupportedForImported();
-                this.timeout.set(this.next.bind(this),
-                    this.varsFrame.evaluate(data.seconds).toNum() * 1000, 2);
-                return false;
-            }
-            case 'pause': return true;
-            case 'eval': {
-                const expr = interpolate(data.expr, this.varsFrame);
-                errorHandledAsWarning(async () => await eval(expr))();
-                return false;
-            }
-            case 'func': {
-                this.currentPos = this.paragraph.findReturnPosAfter(this.currentPos);
-                return false;
-            }
-            case 'call': {
-                this.callStack.push(this.getFrame());
-                const pos = this.paragraph.findFuncPos(data.name);
-                const funcData = this.paragraph.dataList[pos];
-                if (funcData.args.length !== data.args.length)
-                    throw `Args doesn't match func ${funcData.name} at line ${this.currentPos}`;
-                for (const [i, expr] of data.args.entries())
-                    this.varsFrame.setVar(funcData.args[i], this.varsFrame.evaluate(expr));
-                this.currentPos = pos;
-                return false;
-            }
-            case 'return': {
-                const value = data.value === '' ? new vars.GalNum(0) : this.varsFrame.evaluate(data.value);
-                if (this.callStack.length === 0)
-                    throw `Call stack is empty`;
-                const frame = this.callStack.pop();
-                this.currentPos = frame.pos;
-                this.varsFrame = frame.varsFrame;
-                const varName = this.paragraph.dataList[frame.pos].returnVar;
-                if (varName !== undefined) this.varsFrame.setVar(varName, value);
-                return false;
-            }
-            case 'import': {
-                // Execute this file in an no-side-effect mode
-                // And read the vars and enums with these names from the sub-manager
-                // If they weren't defined in this environment yet, define them; otherwise nothing is done
-                // It seems to be difficult to call funcs across files 
-                // So I guess we would implement this a bit later
-                const content = await this.resources.readFile(data.file);
-                const subManager = new Manager(false);
-                await subManager.set(content.split(/\r?\n/));
-                for (; subManager.currentPos < subManager.paragraph.dataList.length;
-                    subManager.currentPos++) {
-                    await subManager.process(subManager.currentData());
-                }
-                for (const name of data.names) {
-                    if (this.varsFrame.isDefinedSymbol(name)) continue;
-                    else if (subManager.varsFrame.isDefinedVar(name))
-                        this.varsFrame.setVar(name, subManager.varsFrame.vars[name]);
-                    else if (subManager.varsFrame.isDefinedEnum(name))
-                        this.varsFrame.defEnumType(subManager.varsFrame.getEnumType(name));
-                    else throw `No such symbol in '${data.file}': '${name}'`;
-                }
-                return false;
-            }
-            default: return false;
+            this.texts.outputText(interpolate(data.character, this.varsFrame),
+                interpolate(data.sentence, this.varsFrame));
+            return true;
         }
+        else if (data instanceof parser.NoteData) {
+            this.unsupportedForImported();
+            this.texts.outputNote(interpolate(data.note, this.varsFrame));
+            return true;
+        }
+        else if (data instanceof parser.JumpData) {
+            const anchor = interpolate(data.anchor, this.varsFrame);
+            if (data.crossFile) {
+                this.unsupportedForImported();
+                this.jumpFile(anchor);
+            }
+            else if (data.href) {
+                this.unsupportedForImported();
+                ipcRenderer.invoke('openExternal', anchor);
+            }
+            else {
+                const pos = this.paragraph.findAnchorPos(anchor);
+                if (pos === -1) throw `Anchor not found: ${anchor}`;
+                this.currentPos = pos - 1;
+            }
+            return false;
+        }
+        else if (data instanceof parser.SelectData) {
+            this.unsupportedForImported();
+            const block = this.paragraph.findStartControlBlock(this.currentPos);
+            const buttons = [];
+            for (const pos of block!.casesPosList) {
+                const data = this.paragraph.dataList[pos] as parser.CaseData;
+                const show = this.varsFrame.evaluate(data.show).toBool();
+                const enable = this.varsFrame.evaluate(data.enable).toBool();
+                const text = interpolate(data.text, this.varsFrame);
+                const callback = async () => await this.jump(this.getFrame().withPos(pos));
+
+                if (show) buttons.push(new ButtonData(text, callback, enable));
+                if (data.timeout !== undefined)
+                    this.timeout.set(callback, this.varsFrame.evaluate(data.timeout).toNum() * 1000);
+                if (data.key !== undefined)
+                    this.keybind.bind(interpolate(data.key, this.varsFrame), callback);
+            }
+            this.buttons.drawButtons(buttons);
+            return true;
+        }
+        else if (data instanceof parser.CaseData) {
+            if (this.paragraph.isSwitchCase(this.currentPos)) {
+                const block = this.paragraph.findCaseControlBlock(this.currentPos);
+                const switchData = this.paragraph.dataList[block.startPos] as parser.SwitchData;
+                try {
+                    const value = this.varsFrame.evaluate(switchData.expr);
+                    const matchValue = this.varsFrame.evaluate(data.text);
+                    const next = block.next(this.currentPos);
+                    if (next === undefined) throw `Case error at line ${this.currentPos}`;
+                    if (!this.varsFrame.equal(value, matchValue))
+                        this.currentPos = next;
+                } catch (e) {
+                    logger.error(e as string);
+                    error.error(e as string);
+                }
+            }
+            return false;
+        }
+        else if (data instanceof parser.BreakData) {
+            const casePos = this.paragraph.getCasePosAt(this.currentPos);
+            const block = this.paragraph.findCaseControlBlock(casePos);
+            if (block === undefined) throw `[Break] at line ${this.currentPos} is not in control block`;
+            const endPos = block.endPos;
+            this.currentPos = endPos;
+            return false;
+        }
+        else if (data instanceof parser.VarData) {
+            this.varsFrame.warn = '';
+            errorHandled(() => this.varsFrame.setVar(data.name, this.varsFrame.evaluate(data.expr)))();
+            if (this.varsFrame.warn !== '') error.warn('Warning: ' + this.varsFrame.warn);
+            return false;
+        }
+        else if (data instanceof parser.InputData) {
+            this.unsupportedForImported();
+            this.buttons.drawInput(this, expr => {
+                try {
+                    const value = this.varsFrame.evaluate(expr);
+                    this.varsFrame.setVar(data.valueVar, value);
+                    this.varsFrame.setVar(data.errorVar, vars.BoolType.ofBool(false));
+                } catch (e) {
+                    logger.error(e as string);
+                    error.error(e as string);
+                    this.varsFrame.setVar(data.errorVar, vars.BoolType.ofBool(true));
+                }
+            });
+            return true;
+        }
+        else if (data instanceof parser.ImageData) {
+            this.unsupportedForImported();
+            await this.resources.check();
+            const type = interpolate(data.imageType, this.varsFrame);
+            const file = interpolate(data.imageFile, this.varsFrame);
+            await this.resources.setImage(type, file);
+            return false;
+        }
+        else if (data instanceof parser.TransformData) {
+            this.unsupportedForImported();
+            const interpolated = lodash.cloneDeep(data);
+            for (const [key, value] of Object.entries(data))
+                interpolated[key] = interpolate(value, this.varsFrame);
+            this.resources.transformImage(interpolated.imageType, interpolated);
+            return false;
+        }
+        else if (data instanceof parser.DelayData) {
+            this.unsupportedForImported();
+            this.timeout.set(this.next.bind(this),
+                this.varsFrame.evaluate(data.seconds).toNum() * 1000, 2);
+            return false;
+        }
+        else if (data instanceof parser.PauseData) return true;
+        else if (data instanceof parser.EvalData) {
+            const expr = interpolate(data.expr, this.varsFrame);
+            errorHandledAsWarning(async () => await eval(expr))();
+            return false;
+        }
+        else if (data instanceof parser.FuncData) {
+            this.currentPos = this.paragraph.findReturnPosAfter(this.currentPos);
+            return false;
+        }
+        else if (data instanceof parser.CallData) {
+            this.callStack.push(this.getFrame());
+            const pos = this.paragraph.findFuncPos(data.name);
+            const funcData = this.paragraph.dataList[pos] as parser.FuncData;
+            if (funcData.args.length !== data.args.length)
+                throw `Args doesn't match func ${funcData.name} at line ${this.currentPos}`;
+            for (const [i, expr] of data.args.entries())
+                this.varsFrame.setVar(funcData.args[i], this.varsFrame.evaluate(expr));
+            this.currentPos = pos;
+            return false;
+        }
+        else if (data instanceof parser.ReturnData) {
+            const value = data.value === '' ? new vars.GalNum(0) : this.varsFrame.evaluate(data.value);
+            if (this.callStack.length === 0)
+                throw `Call stack is empty`;
+            const frame = this.callStack.pop()!;
+            this.currentPos = frame.pos;
+            this.varsFrame = frame.varsFrame;
+            const varName = (this.paragraph.dataList[frame.pos] as parser.CallData).returnVar;
+            if (varName !== undefined) this.varsFrame.setVar(varName, value);
+            return false;
+        }
+        else if (data instanceof parser.ImportData) {
+            // Execute this file in an no-side-effect mode
+            // And read the vars and enums with these names from the sub-manager
+            // If they weren't defined in this environment yet, define them; otherwise nothing is done
+            // It seems to be difficult to call funcs across files 
+            // So I guess we would implement this a bit later
+            const content = await this.resources.readFile(data.file);
+            const subManager = new Manager(false);
+            await subManager.set(content.split(/\r?\n/));
+            for (; subManager.currentPos < subManager.paragraph.dataList.length;
+                subManager.currentPos++) {
+                await subManager.process(subManager.currentData());
+            }
+            for (const name of data.names) {
+                if (this.varsFrame.isDefinedSymbol(name)) continue;
+                else if (subManager.varsFrame.isDefinedVar(name))
+                    this.varsFrame.setVar(name, subManager.varsFrame.vars[name]);
+                else if (subManager.varsFrame.isDefinedEnum(name))
+                    this.varsFrame.defEnumType(subManager.varsFrame.getEnumType(name)!);
+                else throw `No such symbol in '${data.file}': '${name}'`;
+            }
+            return false;
+        }
+        return false;
     }
-    push(frame) {
+    push(frame: Frame) {
         this.history.push(frame);
     }
     async previous() {
@@ -658,19 +662,24 @@ class Manager {
             this.info.setPart(this.paragraph.getPartAt(this.currentPos));
         } while (!await this.process(this.currentData()));
     }
-    async jump(frame, memorize = true) {
-        if (frame === undefined || frame.pos === undefined) return;
+    async jump(frame?: number | Frame, memorize = true) {
+        if (frame === undefined) return;
         if (memorize) this.push(this.getFrame());
-        this.currentPos = frame.pos;
-        if (frame.varsFrame !== undefined) this.varsFrame = frame.varsFrame;
-        if (frame.resources !== undefined)
-            this.resources = ResourceManager.fromString(frame.resources);
-        if (frame.customData !== undefined) this.customData = frame.customData;
+        if (typeof frame === 'number') {
+            this.currentPos = frame;
+        }
+        else {
+            this.currentPos = frame.pos;
+            if (frame.varsFrame !== undefined) this.varsFrame = frame.varsFrame;
+            if (frame.resources !== undefined)
+                this.resources = ResourceManager.fromString(frame.resources);
+            if (frame.customData !== undefined) this.customData = frame.customData;
+        }
         this.info.setLine(this.currentPos);
         this.info.setPart(this.paragraph.getPartAt(this.currentPos));
         while (!await this.process(this.paragraph.dataList[this.currentPos])) this.currentPos++;
     } // DO NOT call `jump` directly in `process`!!!
-    async eval(line) {
+    async eval(line: string) {
         await this.process(parser.parseLine(line));
     }
     getFrame() {
@@ -694,32 +703,30 @@ class Manager {
 
 const manager = new Manager();
 
-const initPromise = new Promise((resolve, reject) => {
-    ipcRenderer.on('send-data', async (_, data) => {
+const initPromise = new Promise<void>((resolve, reject) => {
+    ipcRenderer.on('test-data', async (_, data) => {
         try {
             await manager.set(data.content.split(/\r?\n/));
             manager.resources.filename = data.filename;
             logger.isDebug = data.isDebug;
             resolve();
         } catch (e) {
-            logger.error(e);
-            error.error(e);
+            logger.error(e as string);
+            error.error(e as string);
             reject(e);
         }
     });
 });
 
-function isNum(value) {
+function isNum(value: string) {
     return Number.isFinite(Number(value)) && value !== '';
 }
 
 async function main() {
     await initPromise;
 
-    const bindFunction = (id, func) => document.getElementById(id).addEventListener('click', func);
-
     window.addEventListener('keydown', errorHandled(async event => {
-        if (event.target.tagName.toLowerCase() === 'input') return;
+        if ((event.target as HTMLElement).tagName.toLowerCase() === 'input') return;
         const key = event.key;
         if (key === 'Backspace') await manager.previous();
         else if (key === 'Enter') await manager.next();
@@ -731,7 +738,8 @@ async function main() {
     bindFunction('previous', manager.previous.bind(manager));
     bindFunction('next', manager.next.bind(manager));
 
-    const bindInput = (button, input, func) => {
+    const bindInput = (button: HTMLButtonElement, input: HTMLInputElement,
+        func: (() => void) | (() => Promise<void>)) => {
         button.addEventListener('click', errorHandled(func));
         input.addEventListener('keyup', errorHandled(async event => {
             if (event.key === 'Enter') {
@@ -743,7 +751,7 @@ async function main() {
 
     bindInput(jump, lineInput, async () => {
         const index = lineInput.value;
-        if (isNum(index)) await manager.jump(new Frame(index));
+        if (isNum(index)) await manager.jump(Number.parseInt(index));
     });
 
     bindInput(evalButton, codeInput, async () => {

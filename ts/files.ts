@@ -52,7 +52,7 @@ export class Files {
                 { name: 'Text Files', extensions: ['txt'] },
                 { name: 'All Files', extensions: ['*'] }
             ]
-        }).then((result: SaveDialogReturnValue) => 
+        }).then((result: OpenDialogReturnValue) => 
             result.canceled ? undefined : result.filePath);
     }
 

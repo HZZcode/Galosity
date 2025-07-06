@@ -1,15 +1,17 @@
-'use strict';
-
 import { GalIpcRenderer } from "./types";
 const electron = require('electron');
 const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
-import { TransformData, parseLine, Paragraph, ImageData, VarData, ImportData, GalData, FuncData, JumpData, CallData } from './parser.js';
+import {
+    TransformData, parseLine, Paragraph, ImageData, VarData,
+    ImportData, GalData, FuncData, JumpData, CallData
+} from './parser.js';
 import { GalVars } from './vars.js';
 import { AutoComplete, FileComplete } from './completer.js';
 import { Files } from './files.js';
 import { logger } from './logger.js';
 import { isInterpolate } from './split.js';
+import { bindFunction } from "./bind-function.js";
 
 const textarea = document.getElementById('input') as HTMLTextAreaElement;
 class TextAreaManager {
@@ -243,9 +245,6 @@ textarea.addEventListener('input', updateInfo);
 textarea.addEventListener('selectionchange', updateInfo);
 setInterval(async () => await file.autoSave(), 60000);
 (() => {
-    const bindFunction = (id: string, func: ((event: Event) => void) | (() => void)) =>
-        document.getElementById(id)?.addEventListener('click', func);
-
     bindFunction('new', file.new.bind(file));
     bindFunction('open', file.open.bind(file));
     bindFunction('save', file.save.bind(file));

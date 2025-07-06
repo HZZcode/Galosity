@@ -86,11 +86,11 @@ export class CaseData extends GalData {
     getPublicArgs() {
         return this.getArgs().filter(key => !['key', 'timeout'].includes(key));
     }
-    constructor(text: string, config: { [_: string]: any }) {
+    constructor(text: string, config: { [_: string]: string }) {
         super('case');
         this.text = text;
         for (const key of this.getArgs())
-            if (key in config) this[key] = config[key].trim();
+            if (key in config) this[key] = config[key].trim() as this[keyof this & string];
     }
 }
 export class BreakData extends GalData {

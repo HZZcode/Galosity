@@ -1,5 +1,5 @@
 const lodash = require('lodash');
-// @ts-expect-error
+// @ts-expect-error This import is relative to the compiled js file
 import * as grammar from './grammar.js';
 import { splitWith } from './split.js';
 
@@ -139,7 +139,7 @@ class GalBoolEnumType extends GalEnumType {
         super('bool', ['false', 'true']);
     }
     ofBool(b: boolean) {
-        return this.getValue(b ? 'true' : 'false')
+        return this.getValue(b ? 'true' : 'false');
     }
 }
 
@@ -387,7 +387,9 @@ export class GalVars {
 
     evaluateFactor(node: any): GalVar {
         const value = this.evaluateNode(node.value);
-        const noOp = (): never => { throw `Operator ${node.operator} cannot be applied on ${value.getType()}`; };
+        const noOp = (): never => {
+            throw `Operator ${node.operator} cannot be applied on ${value.getType()}`;
+        };
         switch (node.operator) {
             case '+':
                 if (!isNum(value)) return noOp();

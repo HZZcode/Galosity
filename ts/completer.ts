@@ -12,7 +12,6 @@ export class AutoComplete {
     setList(list: string[]) {
         this.list = list;
     }
-    // eslint-disable-next-line require-await
     getList(): string[] | Promise<string[]> {
         return this.list;
     }

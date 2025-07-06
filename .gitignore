@@ -7,14 +7,6 @@ import-test.txt
 mathjax
 font-awesome
 
-# Hopefully one day we can ignore the entire `./js` directory
-js/completer.js
-js/files.js
-js/index.js
-js/keybind.js
-js/logger.js
-js/main.js
-js/parser.js
-js/split.js
-js/timeout.js
-js/vars.js
+js
+!js/grammar.js
+!js/grammar.pegjs
