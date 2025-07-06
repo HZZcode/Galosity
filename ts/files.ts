@@ -36,32 +36,24 @@ export class Files {
         return await this.getRelative('src/' + file);
     }
 
-    async requestSavePath() {
-        let path = null;
-        await ipcRenderer.invoke('showSaveDialog', {
+    async requestSavePath(): Promise<string | undefined> {
+        return await ipcRenderer.invoke('showSaveDialog', {
             defaultPath: 'gal.txt',
             filters: [
                 { name: 'Text Files', extensions: ['txt'] },
                 { name: 'All Files', extensions: ['*'] }
             ]
-        }).then((result: SaveDialogReturnValue) => {
-            if (result.canceled) return;
-            path = result.filePath;
-        });
-        return path;
+        }).then((result: SaveDialogReturnValue) => 
+            result.canceled ? undefined : result.filePath);
     }
-    async requestOpenPath() {
-        let path = null;
-        await ipcRenderer.invoke('showOpenDialog', {
+    async requestOpenPath(): Promise<string | undefined> {
+        return await ipcRenderer.invoke('showOpenDialog', {
             filters: [
                 { name: 'Text Files', extensions: ['txt'] },
                 { name: 'All Files', extensions: ['*'] }
             ]
-        }).then((result: OpenDialogReturnValue) => {
-            if (result.canceled) return;
-            path = result.filePaths[0];
-        });
-        return path;
+        }).then((result: SaveDialogReturnValue) => 
+            result.canceled ? undefined : result.filePath);
     }
 
     async writeFile(path: string, content: string) {

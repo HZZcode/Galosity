@@ -165,7 +165,7 @@ export class TransformData extends GalData {
                 ? [key] : [key, key.slice(0, -1)])
         )].sort();
     }
-    constructor(imageType: string, transformations: { [_: string]: any }) {
+    constructor(imageType?: string, transformations?: { [_: string]: any }) {
         super('transform');
         this.imageType = imageType;
         if (transformations === undefined) return;

@@ -10,6 +10,9 @@ export interface GalIpcRenderer extends IpcRenderer {
   invoke(channel: 'directory'): Promise<string>;
   invoke(channel: 'readdir', path: string): Promise<string[]>;
   invoke(channel: 'openExternal', url: string): Promise<void>;
-  invoke(channel: 'test', data: { content: string, filename: string, isDebug: boolean }): Promise<void>;
+  invoke(channel: 'test', data: { content: string, filename?: string, isDebug: boolean }): Promise<void>;
   invoke(channel: 'log', str: string): Promise<void>;
+
+  on(channel: 'send-data', handler: (_: unknown, data: { isDebug: boolean, file: string }) => void | Promise<void>): void;
+  on(channel: 'before-close', handler: (_: unknown) => void | Promise<void>): void;
 }

@@ -17,6 +17,7 @@ export default defineConfig([
 
       "./js/completer.js",
       "./js/files.js",
+      "./js/index.js",
       "./js/keybind.js",
       "./js/logger.js",
       "./js/main.js",
