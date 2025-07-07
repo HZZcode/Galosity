@@ -210,7 +210,7 @@ async function help(event: Event) {
 
 ipcRenderer.on('send-data', async (_, data) => {
     logger.isDebug = data.isDebug;
-    if (data.file !== null) await file.read(data.file);
+    if (data.file !== undefined) await file.read(data.file);
     else if (data.isDebug) await file.read('gal.txt');
 });
 

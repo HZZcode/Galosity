@@ -17,7 +17,7 @@ import { CustomData } from "./custom-data.js";
 import { Frame } from "./frame.js";
 import { ResourceManager } from "./resources.js";
 import { SaveLoadManager } from "./save-load.js";
-import { getType } from "../utils/type-dispatch.js";
+import { getType } from "../utils/types.js";
 import { part, currentLine, character, speech } from "./elements.js";
 import { processor, ProcessorRegister } from "./processors.js";
 
@@ -81,7 +81,7 @@ export class Manager {
     async process(data: dataTypes.GalData) {
         if (this.currentPos >= this.paragraph.dataList.length) return true;
         if (data === undefined) return false;
-        if (this.buttons !== null) this.buttons.clear();
+        if (this.buttons !== undefined) this.buttons.clear();
         this.timeout.clear();
         this.keybind.clear();
         this.setEnums();

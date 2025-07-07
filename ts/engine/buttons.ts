@@ -31,7 +31,7 @@ export class ButtonsManager {
         if (!button.enable) element.className += ' disabled';
         element.style.bottom = bottom;
         element.style.height = '7%';
-        if (button.func !== null && button.enable)
+        if (button.func !== undefined && button.enable)
             element.addEventListener('click', button.func);
         this.parent.appendChild(element);
         MathJax.typeset();

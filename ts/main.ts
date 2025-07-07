@@ -9,7 +9,7 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 function getArgvFileName() {
     for (const file of process.argv.slice(1))
         if (file !== '.' && fs.existsSync(file)) return file;
-    return null;
+    return undefined;
 }
 
 function handleLink(window: BrowserWindow) {

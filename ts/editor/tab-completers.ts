@@ -1,7 +1,7 @@
 import * as dataTypes from "../parser/data-types.js";
 import { Paragraph, parseLine } from "../parser/parser.js";
 import { isInterpolate } from "../utils/split.js";
-import { Func } from "../utils/type-dispatch.js";
+import { Func } from "../utils/types.js";
 import { GalVars } from "../vars/vars.js";
 import { AutoComplete, FileComplete } from "./completer.js";
 import { file } from "./file-manager.js";

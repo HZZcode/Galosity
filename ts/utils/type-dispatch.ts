@@ -1,11 +1,6 @@
+import { Constructor, Func } from "./types.js";
+
 const { v4: uuid } = require('uuid');
-
-export function getType(object: any) {
-    return Object.prototype.toString.call(object).slice(8, -1);
-}
-
-export type Func<TArgs extends any[], TReturn>
-    = ((...args: TArgs) => TReturn) | ((...args: TArgs) => Promise<TReturn>);
 
 export type DispatchFunc<TThisArg, TArgs extends any[], TReturn> = Func<[TThisArg, ...TArgs], TReturn>;
 
@@ -21,8 +16,9 @@ export class TypeDispatch<TArgs extends any[], TReturn, TThisBase = unknown> {
         this.defaultValue = defaultValue;
     }
 
-    register<TThisArg extends TThisBase>(prototype: TThisArg, func: DispatchFunc<TThisArg, TArgs, TReturn>) {
-        (prototype as { [_: string]: DispatchFunc<TThisArg, TArgs, TReturn> })[this.funcName] = func;
+    register<TThisArg extends TThisBase>(type: Constructor<TThisArg>,
+        func: DispatchFunc<TThisArg, TArgs, TReturn>) {
+        type.prototype[this.funcName] = func;
     }
 
     async call<TThisArg extends TThisBase>(thisArg: TThisArg, ...args: TArgs) {

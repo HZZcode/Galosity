@@ -13,7 +13,8 @@ export class ResourceManager extends Files {
         return [...this.getImageElements(), this.getElement('background')] as HTMLDivElement[];
     }
     getElement(pos: string) {
-        return document.getElementById(`${pos}-image`) as HTMLDivElement;
+        const element = document.getElementById(`${pos}-image`);
+        return element === null ? undefined : element as HTMLDivElement;
     }
 
     async clear() {
@@ -23,7 +24,8 @@ export class ResourceManager extends Files {
 
     defImagePos(pos: string, left: string, bottom: string) {
         const id = `${pos}-image`;
-        const setPos = (element: HTMLDivElement) => {
+        const setPos = (element?: HTMLDivElement) => {
+            if (element === undefined) return;
             if (left !== '') element.style.left = left;
             if (bottom !== '') element.style.bottom = bottom;
         };
@@ -38,11 +40,11 @@ export class ResourceManager extends Files {
         this.parent.appendChild(element);
     }
 
-    setElementBackground(element: HTMLDivElement, background: string) {
+    setElementBackground(element: HTMLDivElement | undefined, background: string) {
         if (element === undefined || element.style === undefined) return;
         element.style.backgroundImage = background;
     }
-    async setElementImage(element: HTMLDivElement, file: string) {
+    async setElementImage(element: HTMLDivElement | undefined, file: string) {
         this.setElementBackground(element, file !== 'clear' ? `url("${await this.getSource(file)}")` : '');
     }
     async setImage(pos: string, file: string) {
@@ -58,7 +60,7 @@ export class ResourceManager extends Files {
         else await this.setElementImage(this.getElement(pos), file);
     }
 
-    transformElement(element: HTMLDivElement, transform: string) {
+    transformElement(element: HTMLDivElement | undefined, transform: string) {
         if (element === undefined || element.style === undefined) return;
         element.style.transform = transform.toString();
     }

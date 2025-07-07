@@ -11,8 +11,8 @@ export class FileManager extends Files {
         this.setFile(await this.resolve(file));
         return this;
     }
-    async write(path: string) {
-        if (path === null) return;
+    async write(path?: string) {
+        if (path === undefined) return;
         const content = getManager().content;
         try {
             await this.writeFile(path, content);
