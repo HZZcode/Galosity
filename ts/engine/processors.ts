@@ -7,7 +7,7 @@ import { ButtonData } from "./buttons.js";
 import { error, errorHandled, errorHandledAsWarning } from "./error-handler.js";
 import { interpolate } from "./interpolation.js";
 import { ipcRenderer, Manager } from "./manager.js";
-import { Func, TypeDispatch } from "../utils/type-dispatch.js";
+import { DispatchFunc, TypeDispatch } from "../utils/type-dispatch.js";
 
 export const processor = new TypeDispatch<[self: Manager], boolean, dataTypes.GalData>();
 processor.defaultTo(false);
@@ -16,12 +16,12 @@ export class ProcessorRegistry {
     prototype;
     processor;
 
-    private constructor(prototype: dataTypes.GalData, processor: Func<any, [self: Manager], boolean>) {
+    private constructor(prototype: dataTypes.GalData, processor: DispatchFunc<any, [self: Manager], boolean>) {
         this.prototype = prototype;
         this.processor = processor;
     }
 
-    static of<T extends dataTypes.GalData>(prototype: T, processor: Func<T, [self: Manager], boolean>) {
+    static of<T extends dataTypes.GalData>(prototype: T, processor: DispatchFunc<T, [self: Manager], boolean>) {
         return new ProcessorRegistry(prototype, processor);
     }
 }

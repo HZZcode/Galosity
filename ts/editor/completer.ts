@@ -34,7 +34,7 @@ export class AutoComplete {
             this.clear();
             this.found = await this.findWords(start);
         }
-        return this.found[this.chosenFoundIndex];
+        return this.found.at(this.chosenFoundIndex);
     }
     async findWords(start: string) {
         return (await this.getList()).filter(word => word.toLowerCase().startsWith(start.toLowerCase()));

@@ -45,8 +45,7 @@ export class Paragraph {
         this.dataList = lines.map(parseLine);
     }
     getPartAt(pos: number) {
-        const sub = this.dataList.slice(0, pos + 1)
-            .filter(data => data instanceof dataTypes.PartData);
+        const sub = this.dataList.slice(0, pos + 1).filterType(dataTypes.PartData);
         if (sub.length === 0) return '';
         return sub.at(-1)!.part;
     }
@@ -75,13 +74,13 @@ export class Paragraph {
         return ans;
     }
     scanEnumsAt(pos: number) {
-        return this.dataList.slice(0, pos + 1).filter(data => data instanceof dataTypes.EnumData);
+        return this.dataList.slice(0, pos + 1).filterType(dataTypes.EnumData);
     }
     scanEnums() {
         return this.scanEnumsAt(this.dataList.length);
     }
     scanVarsAt(pos: number) {
-        return this.dataList.slice(0, pos + 1).filter(data => data instanceof dataTypes.VarData);
+        return this.dataList.slice(0, pos + 1).filterType(dataTypes.VarData);
     }
     getCasePosAt(pos: number) {
         for (let i = pos; i >= 0; i--)

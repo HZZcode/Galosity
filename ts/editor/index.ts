@@ -4,126 +4,16 @@ const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
 import * as parser from '../parser/parser.js';
 import * as dataTypes from '../parser/data-types.js';
-import { GalVars } from '../vars/vars.js';
-import { AutoComplete, FileComplete } from './completer.js';
-import { Files } from '../utils/files.js';
 import { logger } from '../utils/logger.js';
-import { isInterpolate } from '../utils/split.js';
 import { bindFunction } from "../utils/bind-events.js";
-import { ErrorManager } from "../utils/error-manager.js";
-import { TextAreaManager } from "./text-manager.js";
 import { TagScanner } from "./tag-scanner.js";
+import { FileManager } from "./file-manager.js";
+import { error, getManager, scanControlBlocks, textarea, updateInfo } from "./elements.js";
+import { file } from "./file-manager.js";
+import { TabCompleters } from "./tab-completers.js";
 
-const textarea = document.getElementById('input') as HTMLTextAreaElement;
-const getManager = () => new TextAreaManager(textarea);
-
-class FileManager extends Files {
-    previousFiles: string[] = [];
-    constructor() {
-        super();
-    }
-    async ofFile(file: string) {
-        this.setFile(await this.resolve(file));
-        return this;
-    }
-    async write(path: string) {
-        if (path === null) return;
-        const manager = getManager();
-        const content = manager.content;
-        try {
-            await this.writeFile(path, content);
-            this.setFile(await this.resolve(path));
-            updateInfo();
-            info.innerText += ' Saved!';
-            setTimeout(updateInfo, 1000);
-        } catch (e) {
-            logger.error(e);
-            error.error(`Failed to Write to ${path}`);
-        }
-    }
-    async read(path?: string, memorize = true) {
-        if (path === undefined) return;
-        try {
-            if (memorize) await this.remember();
-            const content = await this.readFile(path);
-            textarea.value = content;
-            this.setFile(await this.resolve(path));
-            updateInfo();
-            return content;
-        } catch (e) {
-            logger.error(e);
-            error.error(`Failed to Read from ${path}`);
-        };
-    }
-    async remember() {
-        await this.check();
-        const file = this.filename!;
-        if (this.valid && this.previousFiles.at(-1) !== file)
-            this.previousFiles.push(file);
-    }
-    async autoSave() {
-        if (this.valid) await this.write(this.filename!);
-    }
-    async save(event?: Event) {
-        if (event !== undefined) event.preventDefault();
-        let path = this.filename;
-        if (!this.valid && textarea.value === '') return;
-        if (!this.valid) path = await this.requestSavePath();
-        if (path !== undefined) await this.write(path);
-    }
-    async saveAs(event?: Event) {
-        if (event !== undefined) event.preventDefault();
-        const path = await this.requestSavePath();
-        if (path !== undefined) await this.write(path);
-    }
-    async openFile(path?: string, memorize = true) {
-        if (path === undefined) return;
-        this.save();
-        await this.read(path, memorize);
-    }
-    async back(event?: Event) {
-        if (event !== undefined) event.preventDefault();
-        await this.openFile(this.previousFiles.pop(), false);
-    }
-    async open(event?: Event) {
-        if (event !== undefined) event.preventDefault();
-        await this.openFile(await this.requestOpenPath());
-    }
-    async new(event?: Event) {
-        if (event !== undefined) event.preventDefault();
-        await this.save();
-        textarea.value = '';
-        this.setFile(undefined);
-    }
-}
-const info = document.getElementById('info') as HTMLDivElement;
-const error = new ErrorManager(document.getElementById('error') as HTMLDivElement);
-const characters = new AutoComplete();
-const tags = new AutoComplete([
-    '[Character]', '[Part]', '[Note]',
-    '[Jump]', '[Anchor]',
-    '[Select]', '[Case]', '[Break]', '[End]',
-    '[Var]', '[Enum]', '[Switch]',
-    '[Input]', '[Delay]', '[Pause]', '[Eval]',
-    '[Image]', '[Transform]',
-    '[Func]', '[Return]', '[Call]',
-    '[Import]'
-]);
-const colonTags = ['[Case]', '[Var]', '[Enum]', '[Image]', '[Transform]', '[Import]'];
-// [Note] I hope to use less words with same beginning letters for better Tab completing
-const anchorCompleter = new AutoComplete();
-const symbolCompleter = new AutoComplete();
-const imageTypes = ['background', 'left', 'center', 'right'];
-const imageTypeCompleter = new AutoComplete();
-const transformTypeCompleter = new AutoComplete(new dataTypes.TransformData().getAllArgs());
-const caseConfigCompleter = new AutoComplete(['show', 'enable']);
-const funcNameCompleter = new AutoComplete();
 const characterScanner = new TagScanner(getManager(), '[Character]');
 const anchorScanner = new TagScanner(getManager(), '[Anchor]');
-const imageTypeScanner = new TagScanner(getManager(), '[Image]');
-const file = new FileManager();
-const fileCompleter = new FileComplete(() => file.getPath(), 'txt');
-const imageCompleter = new FileComplete(() => file.getSourcePath());
 textarea.addEventListener('keydown', processKeyDown);
 textarea.addEventListener('mouseup', jump);
 updateInfo();
@@ -160,13 +50,6 @@ async function processKeyDown(event: KeyboardEvent) {
     else if (key === '{') completeBraces(event);
     else if (key === '(') completeParentheses(event);
     else if (event.ctrlKey && key.toLowerCase() === 'l') completeLatex(event);
-}
-function updateInfo(_?: Event) {
-    error.clear();
-    const manager = getManager();
-    const filename = file.valid ? file.filename : 'Unnamed';
-    info.innerText = `${filename}: Line ${manager.currentLineCount()}, Column ${manager.currentColumn()}`;
-    scanControlBlocks();
 }
 function completeBraces(event: Event) {
     const manager = getManager();
@@ -224,160 +107,11 @@ async function autoComplete(event: Event) {
     const manager = getManager();
     event.preventDefault();
     let line = manager.currentLine();
-    const front = manager.currentLineFrontContent();
     if (line.trim().startsWith('【')) {
         line = line.replace('【', '[');
         manager.edit(manager.currentLineCount(), line);
     }
-    if (line.trim().startsWith('[') && (line.search(']') === -1 || front.trim().endsWith(']')))
-        await completeTag(event);
-    else {
-        await completeCharaterName(event);
-        await completeJump(event);
-        await completeSymbol(event);
-        await completeImageType(event);
-        await completeTransformType(event);
-        await completeJumpFile(event);
-        await completeImage(event);
-        await completeCaseConfig(event);
-        await completeFunctions(event);
-        await completeImportFile(event);
-        await completeImportSymbol(event);
-    }
-}
-async function completeJumpFile(_?: Event) {
-    const manager = getManager();
-    const front = manager.currentLineFrontContent();
-    if (!front.trim().startsWith('[Jump]') || front.search('>') === -1) return;
-    const filePart = front.substring(front.search('>') + 1).trim();
-    const file = await fileCompleter.completeInclude(filePart);
-    if (file !== undefined) manager.complete(file, filePart);
-}
-async function completeImage(_?: Event) {
-    const manager = getManager();
-    const front = manager.currentLineFrontContent();
-    if (!front.trim().startsWith('[Image]') || front.search(':') === -1) return;
-    const imagePart = front.substring(front.search(':') + 1).trim();
-    const image = await imageCompleter.completeInclude(imagePart);
-    if (image !== undefined) manager.complete(image, imagePart);
-}
-function scanImageTypes() {
-    return (imageTypeScanner.scanRawList()
-        .map(parser.parseLine) as dataTypes.ImageData[])
-        .filter(data => data.imageFile.trim().startsWith('@'))
-        .map(data => data.imageType)
-        .concat(imageTypes);
-}
-async function completeImageType(_?: Event) {
-    const manager = getManager();
-    imageTypeCompleter.setList(scanImageTypes());
-    const front = manager.currentLineFrontContent();
-    if (!['[Image]', '[Transform]'].some(tag => front.trim().startsWith(tag))
-        || front.search(':') !== -1) return;
-    const typePart = front.substring(front.search(/\]/) + 1).trim();
-    const type = await imageTypeCompleter.completeInclude(typePart);
-    if (type !== undefined) manager.complete(type, typePart);
-}
-async function completeTransformType(_?: Event) {
-    const manager = getManager();
-    const front = manager.currentLineFrontContent();
-    if (!front.trim().startsWith('[Transform]')
-        || front.replaceAll(/=.*?,/g, '').includes('=')) return;
-    const typePart = front.substring(Math.max(front.indexOf(':'),
-        front.lastIndexOf(',')) + 1).replace('[Transform]', '').trim();
-    const type = await transformTypeCompleter.completeInclude(typePart);
-    if (type !== undefined) manager.complete(type, typePart);
-}
-async function completeCaseConfig(_?: Event) {
-    const manager = getManager();
-    const front = manager.currentLineFrontContent();
-    if (!front.trim().startsWith('[Case]')
-        || front.replaceAll(/=.*?,/g, '').includes('=')) return;
-    const configPart = front.substring(Math.max(front.indexOf(':'),
-        front.lastIndexOf(',')) + 1).replace('[Case]', '').trim();
-    const config = await caseConfigCompleter.completeInclude(configPart);
-    if (config !== undefined) manager.complete(config, configPart);
-}
-async function completeCharaterName(_?: Event) {
-    characters.setList(characterScanner.scanList());
-    const manager = getManager();
-    const line = manager.currentLine();
-    const colonPos = line.search(':');
-    if (colonPos !== -1 && colonPos !== line.length - 1) return;
-    if (line.trim().startsWith('[')) return;
-    const namePart = line;
-    const name = await characters.complete(namePart, colonPos === -1);
-    if (name !== undefined) manager.edit(manager.currentLineCount(), name + ':');
-}
-async function completeTag(_?: Event) {
-    const manager = getManager();
-    const line = manager.currentLine();
-    const tag = await tags.complete('[' + line.replaceAll('[', '')
-        .replaceAll(']', ''), line.search(']') === -1);
-    if (tag !== undefined) manager.edit(manager.currentLineCount(), tag);
-    if (colonTags.some(t => t === tag)) {
-        manager.edit(manager.currentLineCount(), tag + ':');
-        manager.move(-1);
-    }
-}
-async function completeJump(_?: Event) {
-    const manager = getManager();
-    const line = manager.currentLine();
-    if (!line.trim().startsWith('[Jump]')) return;
-    const anchors = anchorScanner.scanList();
-    anchorCompleter.setList(anchors);
-    const anchorPart = line.replace('[Jump]', '').trim();
-    const anchor = await anchorCompleter.completeInclude(anchorPart);
-    if (anchor !== undefined) manager.complete(anchor, anchorPart);
-}
-function getBuiltins() {
-    const frame = new GalVars();
-    frame.initBuiltins();
-    return [...Object.keys(frame.builtins), ...Object.keys(frame.builtinFuncs)];
-}
-async function completeSymbol(_?: Event) {
-    const manager = getManager();
-    if (!needSymbol()) return;
-    const symbols = [...scanSymbols(), ...getBuiltins()];
-    symbolCompleter.setList(symbols);
-    const symbolPart = manager.currentLineFrontContent().replaceAll('${', ' ').split(/\s/).at(-1);
-    if (symbolPart === undefined || !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(symbolPart)) return;
-    const symbol = await symbolCompleter.completeInclude(symbolPart);
-    if (symbol !== undefined) manager.complete(symbol, symbolPart);
-}
-function needSymbol() {
-    const manager = getManager();
-    const isVar = /^\[Var\].*?:/.test(manager.currentLineFrontContent().trim());
-    const isSwitch = manager.currentLineFrontContent().trim().startsWith('[Switch]');
-    const isInterpolation = isInterpolate(manager.currentLineFrontContent(),
-        manager.currentLineBackContent());
-    return isVar || isSwitch || isInterpolation;
-}
-function scanSymbols(lines?: string[]) {
-    lines ??= getManager().lines;
-    const paragraph = new parser.Paragraph(lines);
-    const dataList = paragraph.dataList;
-    const varList = dataList.filter(data => data instanceof dataTypes.VarData).map(data => data.name);
-
-    const enumList = paragraph.scanEnums();
-    const enumTypes = enumList.map(data => data.name);
-    const enumValues = enumList.map(data => data.values).flat();
-
-    const importedSymbols = dataList.filter(data => data instanceof dataTypes.ImportData)
-        .map(data => data.names).flat();
-
-    return [... new Set([...varList, ...enumTypes, ...enumValues, ...importedSymbols])]
-        .filter(symbol => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(symbol));
-} //Scans: var name; enum type; enum value; imported symbols
-async function completeFunctions(_?: Event) {
-    const manager = getManager();
-    const front = manager.currentLineFrontContent().trim();
-    if (front.startsWith('[Call]') && !front.includes('(')) {
-        funcNameCompleter.setList(Object.keys(scanFunctions()));
-        const funcPart = front.replace('[Call]', '').trim();
-        const funcName = await funcNameCompleter.completeInclude(funcPart);
-        if (funcName !== undefined) manager.complete(funcName, funcPart);
-    }
+    await TabCompleters.apply(getManager());
 }
 function scanFunctions() {
     return Object.fromEntries(
@@ -386,24 +120,6 @@ function scanFunctions() {
             .filter(entry => entry[0] instanceof dataTypes.FuncData)
             .map(entry => [(entry[0] as dataTypes.FuncData).name, entry[1]])
     );
-}
-async function completeImportFile(_?: Event) {
-    const manager = getManager();
-    const front = manager.currentLineFrontContent();
-    if (!front.trim().startsWith('[Import]') || front.search(':') !== -1) return;
-    const filePart = front.replace('[Import]', '').trim();
-    const file = await fileCompleter.completeInclude(filePart);
-    if (file !== undefined) manager.complete(file, filePart);
-}
-async function completeImportSymbol(_?: Event) {
-    const manager = getManager();
-    const front = manager.currentLineFrontContent();
-    if (!front.trim().startsWith('[Import]') || front.search(':') === -1) return;
-    const data = parser.parseLine(front) as dataTypes.ImportData;
-    const completer = new AutoComplete(scanSymbols((await file.readFile(data.file)).split(/\r?\n/)));
-    const symbolPart = data.names.at(-1)!;
-    const symbol = await completer.completeInclude(symbolPart);
-    if (symbol !== undefined) manager.complete(symbol, symbolPart);
 }
 async function jump(event: MouseEvent) {
     if (!event.ctrlKey) return;
@@ -473,15 +189,6 @@ function comment(_?: Event) {
         lines[index] = '// ' + line;
     for (const [index, line] of lines.entries())
         manager.edit(start + index, line);
-}
-function scanControlBlocks() {
-    const manager = getManager();
-    try {
-        return new parser.Paragraph(manager.lines).getControlBlocks();
-    } catch (e) {
-        logger.error(e);
-        error.error(e);
-    }
 }
 async function test(fileManager = file, content = textarea.value) {
     await file.autoSave();
