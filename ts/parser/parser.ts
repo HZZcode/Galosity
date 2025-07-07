@@ -1,251 +1,15 @@
-import * as string from '../utils/string.js';
-import { splitWith } from '../utils/split.js';
-
-export class GalData { }
-export class EmptyData extends GalData { }
-export class CharacterData extends GalData {
-    name;
-    constructor(name: string) {
-        super();
-        this.name = name;
-    }
-}
-export class SpeechData extends GalData {
-    character;
-    sentence;
-    constructor(character: string, sentence: string) {
-        super();
-        this.character = character;
-        this.sentence = sentence;
-    }
-}
-export class PartData extends GalData {
-    part;
-    constructor(part: string) {
-        super();
-        this.part = part;
-    }
-}
-export class NoteData extends GalData {
-    note;
-    constructor(note: string) {
-        super();
-        this.note = note;
-    }
-}
-export class JumpData extends GalData {
-    href = false;
-    crossFile = false;
-    anchor;
-    constructor(anchor: string) {
-        super();
-        if (anchor.startsWith('%')) {
-            this.href = true;
-            this.anchor = anchor.substring(1).trim();
-        }
-        else if (anchor.startsWith('>')) {
-            this.crossFile = true;
-            this.anchor = anchor.substring(1).trim();
-        }
-        else this.anchor = anchor;
-    }
-}
-export class AnchorData extends GalData {
-    anchor;
-    constructor(anchor: string) {
-        super();
-        this.anchor = anchor;
-    }
-}
-export class SelectData extends GalData { }
-export class CaseData extends GalData {
-    text;
-    show = 'true';   // Whether the player can see this choice
-    enable = 'true'; // Whether the player can select this choice
-    key?: string;      // This case can be chosen with a key
-    timeout?: string;  // After how many seconds will the choice be directly chosen.
-    // Note that arguments `timeout` and `key` are secretly undocumented.
-    // They apply even if the choice is neither shown nor enabled.
-
-    getArgs(): (keyof this & string)[] {
-        return Object.keys(this).filter(key => key !== 'text') as (keyof this & string)[];
-    }
-    getPublicArgs() {
-        return this.getArgs().filter(key => !['key', 'timeout'].includes(key));
-    }
-    constructor(text: string, config: { [_: string]: string }) {
-        super();
-        this.text = text;
-        for (const key of this.getArgs())
-            if (key in config) this[key] = config[key].trim() as this[keyof this & string];
-    }
-}
-export class BreakData extends GalData { }
-export class EndData extends GalData { }
-export class VarData extends GalData {
-    name;
-    expr;
-    constructor(name: string, expr: string) {
-        super();
-        this.name = name;
-        this.expr = expr;
-    }
-}
-export class EnumData extends GalData {
-    name;
-    values;
-    constructor(name: string, values: string[]) {
-        super();
-        this.name = name;
-        this.values = values;
-    }
-}
-export class SwitchData extends GalData {
-    expr;
-    constructor(expr: string) {
-        super();
-        this.expr = expr;
-    }
-}
-export class InputData extends GalData {
-    valueVar;
-    errorVar;
-    constructor(valueVar: string, errorVar: string) {
-        super();
-        this.valueVar = valueVar;
-        this.errorVar = errorVar;
-    }
-}
-export class ImageData extends GalData {
-    imageType;
-    imageFile;
-    constructor(imageType: string, imageFile: string) {
-        super();
-        this.imageType = imageType;
-        this.imageFile = imageFile;
-    }
-}
-export class TransformData extends GalData {
-    imageType;
-    translateX = '0px';
-    translateY = '0px';
-    scaleX = 1;
-    scaleY = 1;
-    skewX = 0;
-    skewY = 0;
-    rotate = 0;
-    getArgs(): (keyof this & string)[] {
-        return Object.keys(this).filter(key => !['type', 'imageType']
-            .includes(key)) as (keyof this & string)[];
-    }
-    getAllArgs() {
-        return [...new Set(
-            this.getArgs().flatMap(key => ['X', 'Y'].includes(key.at(-1)!)
-                ? [key] : [key, key.slice(0, -1)])
-        )].sort();
-    }
-    constructor(imageType?: string, transformations?: { [_: string]: any }) {
-        super();
-        this.imageType = imageType;
-        if (transformations === undefined) return;
-        for (const key of this.getArgs()) {
-            if (key in transformations)
-                this[key] = transformations[key];
-            if (['X', 'Y'].includes(key.at(-1)!)) {
-                const subKey = key.substring(0, key.length - 1);
-                if (subKey in transformations)
-                    this[key] = transformations[subKey];
-            }
-        }
-    }
-    toString() {
-        return this.getArgs().map(arg => `${arg}(${this[arg]})`).map(s => s.replace(' ', '')).join(' ');
-    }
-}
-export class DelayData extends GalData {
-    seconds = '0';
-    constructor(seconds: string) {
-        super();
-        this.seconds = seconds;
-    }
-}
-export class PauseData extends GalData { }
-export class EvalData extends GalData {
-    expr;
-    constructor(expr: string) {
-        super();
-        this.expr = expr;
-    }
-}
-export class FuncData extends GalData {
-    name;
-    args;
-    constructor(name: string, args: string[]) {
-        super();
-        this.name = name;
-        this.args = args;
-    }
-}
-export class ReturnData extends GalData {
-    value;
-    constructor(value: string) {
-        super();
-        this.value = value;
-    }
-}
-export class CallData extends GalData {
-    name;
-    args;
-    returnVar;
-    constructor(name: string, args: string[], returnVar?: string) {
-        super();
-        this.name = name;
-        this.args = args;
-        this.returnVar = returnVar;
-    }
-}
-export class ImportData extends GalData {
-    file;
-    names;
-    constructor(file: string, names: string[]) {
-        super();
-        this.file = file;
-        this.names = names;
-    }
-}
+import * as dataTypes from './data-types.js';
+import { ParserRegister, parsers } from './parsers.js';
 
 function parseSpeech(line: string) {
     const index = line.search(':');
-    return new SpeechData(line.substring(0, index), line.substring(index + 1));
+    return new dataTypes.SpeechData(line.substring(0, index), line.substring(index + 1));
 }
 
-function parseConfig(configs: string) {
-    const object: { [_: string]: any } = {};
-    for (const config of configs.split(',')) {
-        if (!config.includes('=')) continue;
-        const key = config.substring(0, config.indexOf('=')).trim();
-        const value = config.substring(config.indexOf('=') + 1).trim();
-        object[key] = value;
-    }
-    return object;
-}
+export function parseLine(line: string): dataTypes.GalData {
+    ParserRegister.register();
 
-function parseFunc(func: string): [string, string[]] {
-    const left = func.search(/\(/), right = func.search(/\)/);
-    if (left === -1 || right === -1) {
-        const name = func.trim();
-        if (!string.isIdentifier(name)) throw `Invalid func name: ${name}`;
-        return [name, []];
-    }
-    const name = func.substring(0, left).trim();
-    const argsPart = func.substring(left + 1, right);
-    const args = argsPart.trim() === '' ? [] : argsPart.split(',').map(arg => arg.trim());
-    if (!string.isIdentifier(name)) throw `Invalid func name: ${name}`;
-    return [name, args];
-} //e.g. 'f(a,b,c)' => ['f',['a','b','c']]
-
-export function parseLine(line: string): GalData {
-    if (line.trim().startsWith('//')) return new EmptyData();
+    if (line.trim().startsWith('//')) return new dataTypes.EmptyData();
     if (!line.trim().startsWith('[') || line.search(']') === -1)
         return parseSpeech(line);
 
@@ -254,61 +18,7 @@ export function parseLine(line: string): GalData {
     const tag = line.substring(leftBracket + 1, rightBracket).trim();
     const nonTagPart = line.substring(rightBracket + 1).trim();
 
-    switch (tag) {
-        case 'Character': return new CharacterData(nonTagPart);
-        case 'Part': return new PartData(nonTagPart);
-        case 'Note': return new NoteData(nonTagPart);
-        case 'Jump': return new JumpData(nonTagPart);
-        case 'Anchor': return new AnchorData(nonTagPart);
-        case 'Select': return new SelectData();
-        case 'Switch': return new SwitchData(nonTagPart);
-        case 'Case': {
-            const [value, configs] = splitWith(':')(nonTagPart);
-            return new CaseData(value, parseConfig(configs));
-        }
-        case 'Break': return new BreakData();
-        case 'End': return new EndData();
-        case 'Var': {
-            const [name, expr] = splitWith(':')(nonTagPart);
-            return new VarData(name, expr);
-        }
-        case 'Enum': {
-            const [name, values] = splitWith(':')(nonTagPart);
-            return new EnumData(name, values.split(',').map(value => value.trim()));
-        }
-        case 'Input': {
-            const [valueVar, errorVar] = splitWith(',')(nonTagPart);
-            return new InputData(valueVar, errorVar);
-        }
-        case 'Image': {
-            const [imageType, imageFile] = splitWith(':')(nonTagPart);
-            return new ImageData(imageType, imageFile);
-        }
-        case 'Transform': {
-            const [imageType, configs] = splitWith(':')(nonTagPart);
-            return new TransformData(imageType, parseConfig(configs));
-        }
-        case 'Delay': return new DelayData(nonTagPart);
-        case 'Pause': return new PauseData();
-        case 'Eval': return new EvalData(nonTagPart);
-        case 'Func': {
-            const [name, args] = parseFunc(nonTagPart);
-            const invalids = args.filter(arg => !string.isIdentifier(arg));
-            if (invalids.length !== 0) throw `Invalid func arg: ${invalids.join(',')}`;
-            return new FuncData(name, args);
-        }
-        case 'Return': return new ReturnData(nonTagPart);
-        case 'Call': {
-            const [funcCall, returnVar] = nonTagPart.includes(':')
-                ? splitWith(':')(nonTagPart) : [nonTagPart, undefined];
-            const [name, args] = parseFunc(funcCall);
-            return new CallData(name, args, returnVar);
-        }
-        case 'Import': {
-            const [file, names] = splitWith(':')(nonTagPart);
-            return new ImportData(file, names.split(',').map(name => name.trim()));
-        }
-    }
+    if (tag in parsers) return parsers[tag](nonTagPart);
 
     return parseSpeech(line);
 }
@@ -336,23 +46,23 @@ export class Paragraph {
     }
     getPartAt(pos: number) {
         const sub = this.dataList.slice(0, pos + 1)
-            .filter(data => data instanceof PartData);
+            .filter(data => data instanceof dataTypes.PartData);
         if (sub.length === 0) return '';
         return sub.at(-1)!.part;
     }
     getControlBlocks(): ControlBlock[] {
-        const isControlTag = (data: GalData): boolean =>
-            data instanceof SwitchData || data instanceof SelectData;
+        const isControlTag = (data: dataTypes.GalData): boolean =>
+            data instanceof dataTypes.SwitchData || data instanceof dataTypes.SelectData;
         const ans = [];
         const stack = [];
         for (const [index, data] of this.dataList.entries()) {
             if (isControlTag(data)) stack.push(new ControlBlock(index, [], -1));
-            else if (data instanceof CaseData) {
+            else if (data instanceof dataTypes.CaseData) {
                 if (stack.length === 0)
                     throw `Error: [Case] tag out of control block at line ${index}`;
                 stack[stack.length - 1].casesPosList.push(index);
             }
-            else if (data instanceof EndData) {
+            else if (data instanceof dataTypes.EndData) {
                 if (stack.length === 0)
                     throw `Error: Extra [End] found at line ${index}`;
                 const block = stack.pop()!;
@@ -365,24 +75,24 @@ export class Paragraph {
         return ans;
     }
     scanEnumsAt(pos: number) {
-        return this.dataList.slice(0, pos + 1).filter(data => data instanceof EnumData);
+        return this.dataList.slice(0, pos + 1).filter(data => data instanceof dataTypes.EnumData);
     }
     scanEnums() {
         return this.scanEnumsAt(this.dataList.length);
     }
     scanVarsAt(pos: number) {
-        return this.dataList.slice(0, pos + 1).filter(data => data instanceof VarData);
+        return this.dataList.slice(0, pos + 1).filter(data => data instanceof dataTypes.VarData);
     }
     getCasePosAt(pos: number) {
         for (let i = pos; i >= 0; i--)
-            if (this.dataList[i] instanceof CaseData)
+            if (this.dataList[i] instanceof dataTypes.CaseData)
                 return i;
         return -1;
     }
     isSwitchCase(casePos: number) {
         const block = this.findCaseControlBlock(casePos);
         const data = this.dataList[block.startPos];
-        return data instanceof SwitchData;
+        return data instanceof dataTypes.SwitchData;
     }
     findStartControlBlock(startPos: number) {
         return this.getControlBlocks().find(block => block.startPos === startPos);
@@ -392,20 +102,20 @@ export class Paragraph {
     }
     findAnchorPos(anchor: string) {
         for (const [i, data] of this.dataList.entries())
-            if (data instanceof AnchorData && data.anchor === anchor)
+            if (data instanceof dataTypes.AnchorData && data.anchor === anchor)
                 return i;
         return -1;
     }
     findFuncPos(name: string) {
         for (const [i, data] of this.dataList.entries())
-            if (data instanceof FuncData && data.name === name)
+            if (data instanceof dataTypes.FuncData && data.name === name)
                 return i;
         return -1;
     }
     findReturnPosAfter(pos: number) {
         for (const [i, data] of this.dataList.entries()) {
             if (i <= pos) continue;
-            if (data instanceof ReturnData) return i;
+            if (data instanceof dataTypes.ReturnData) return i;
         }
         throw `No return found after line ${pos}`;
     }

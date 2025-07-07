@@ -3,6 +3,7 @@ const electron = require('electron');
 const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
 import * as parser from '../parser/parser.js';
+import * as dataTypes from '../parser/data-types.js';
 import { GalVars } from '../vars/vars.js';
 import { AutoComplete, FileComplete } from './completer.js';
 import { Files } from '../utils/files.js';
@@ -114,7 +115,7 @@ const anchorCompleter = new AutoComplete();
 const symbolCompleter = new AutoComplete();
 const imageTypes = ['background', 'left', 'center', 'right'];
 const imageTypeCompleter = new AutoComplete();
-const transformTypeCompleter = new AutoComplete(new parser.TransformData().getAllArgs());
+const transformTypeCompleter = new AutoComplete(new dataTypes.TransformData().getAllArgs());
 const caseConfigCompleter = new AutoComplete(['show', 'enable']);
 const funcNameCompleter = new AutoComplete();
 const characterScanner = new TagScanner(getManager(), '[Character]');
@@ -262,7 +263,7 @@ async function completeImage(_?: Event) {
 }
 function scanImageTypes() {
     return (imageTypeScanner.scanRawList()
-        .map(parser.parseLine) as parser.ImageData[])
+        .map(parser.parseLine) as dataTypes.ImageData[])
         .filter(data => data.imageFile.trim().startsWith('@'))
         .map(data => data.imageType)
         .concat(imageTypes);
@@ -353,16 +354,16 @@ function needSymbol() {
     return isVar || isSwitch || isInterpolation;
 }
 function scanSymbols(lines?: string[]) {
-    if (lines === undefined) lines = getManager().lines;
+    lines ??= getManager().lines;
     const paragraph = new parser.Paragraph(lines);
     const dataList = paragraph.dataList;
-    const varList = dataList.filter(data => data instanceof parser.VarData).map(data => data.name);
+    const varList = dataList.filter(data => data instanceof dataTypes.VarData).map(data => data.name);
 
     const enumList = paragraph.scanEnums();
     const enumTypes = enumList.map(data => data.name);
     const enumValues = enumList.map(data => data.values).flat();
 
-    const importedSymbols = dataList.filter(data => data instanceof parser.ImportData)
+    const importedSymbols = dataList.filter(data => data instanceof dataTypes.ImportData)
         .map(data => data.names).flat();
 
     return [... new Set([...varList, ...enumTypes, ...enumValues, ...importedSymbols])]
@@ -381,9 +382,9 @@ async function completeFunctions(_?: Event) {
 function scanFunctions() {
     return Object.fromEntries(
         new parser.Paragraph(getManager().lines).dataList
-            .map((data, line): [parser.GalData, number] => [data, line])
-            .filter(entry => entry[0] instanceof parser.FuncData)
-            .map(entry => [(entry[0] as parser.FuncData).name, entry[1]])
+            .map((data, line): [dataTypes.GalData, number] => [data, line])
+            .filter(entry => entry[0] instanceof dataTypes.FuncData)
+            .map(entry => [(entry[0] as dataTypes.FuncData).name, entry[1]])
     );
 }
 async function completeImportFile(_?: Event) {
@@ -398,7 +399,7 @@ async function completeImportSymbol(_?: Event) {
     const manager = getManager();
     const front = manager.currentLineFrontContent();
     if (!front.trim().startsWith('[Import]') || front.search(':') === -1) return;
-    const data = parser.parseLine(front) as parser.ImportData;
+    const data = parser.parseLine(front) as dataTypes.ImportData;
     const completer = new AutoComplete(scanSymbols((await file.readFile(data.file)).split(/\r?\n/)));
     const symbolPart = data.names.at(-1)!;
     const symbol = await completer.completeInclude(symbolPart);
@@ -418,7 +419,7 @@ async function jumpTo(_?: Event) {
         if (pos !== -1) manager.jumpTo(pos);
     }
     else if (front.trim().startsWith('[Jump]')) {
-        const data = parser.parseLine(line) as parser.JumpData;
+        const data = parser.parseLine(line) as dataTypes.JumpData;
         const anchor = data.anchor;
         if (data.crossFile) await file.openFile(anchor);
         else if (data.href) ipcRenderer.invoke('openExternal', anchor);
@@ -448,7 +449,7 @@ async function jumpTo(_?: Event) {
         }
     }
     else if (front.trim().startsWith('[Call]')) {
-        const name = (parser.parseLine(line) as parser.CallData).name;
+        const name = (parser.parseLine(line) as dataTypes.CallData).name;
         const funcs = scanFunctions();
         if (name in funcs) {
             manager.jumpTo(funcs[name]);
@@ -456,7 +457,7 @@ async function jumpTo(_?: Event) {
         }
     }
     else if (front.trim().startsWith('[Import]')) {
-        const path = (parser.parseLine(line) as parser.ImportData).file;
+        const path = (parser.parseLine(line) as dataTypes.ImportData).file;
         await file.openFile(path);
     }
 }

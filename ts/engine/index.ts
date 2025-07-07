@@ -7,10 +7,9 @@ import { bindFunction, bindInput } from "../utils/bind-events.js";
 import { errorHandled, error } from "./error-handler.js";
 import { isNum } from "../utils/string.js";
 import { jump, lineInput, evalButton, codeInput } from "./elements.js";
-import { Manager } from "./manager.js"; 
-import { registerProcessors } from "./processors.js";
+import { Manager } from "./manager.js";
 
-const manager = new Manager(true, registerProcessors);
+const manager = new Manager(true);
 
 const initPromise = new Promise<void>((resolve, reject) => {
     ipcRenderer.on('test-data', async (_, data) => {

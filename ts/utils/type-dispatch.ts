@@ -4,7 +4,7 @@ export function getType(object: any) {
     return Object.prototype.toString.call(object).slice(8, -1);
 }
 
-type Func<TThisArg, TArgs extends any[], TReturn>
+export type Func<TThisArg, TArgs extends any[], TReturn>
     = ((thisArg: TThisArg, ...args: TArgs) => TReturn)
     | ((thisArg: TThisArg, ...args: TArgs) => Promise<TReturn>);
 

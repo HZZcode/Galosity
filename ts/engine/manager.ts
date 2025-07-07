@@ -4,6 +4,7 @@ export const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
 const lodash = require('lodash');
 import * as parser from '../parser/parser.js';
+import * as dataTypes from '../parser/data-types.js';
 import * as vars from '../vars/vars.js';
 import * as types from '../vars/types.js';
 import { logger } from '../utils/logger.js';
@@ -16,8 +17,9 @@ import { CustomData } from "./custom-data.js";
 import { Frame } from "./frame.js";
 import { ResourceManager } from "./resources.js";
 import { SaveLoadManager } from "./save-load.js";
-import { getType, TypeDispatch } from "../utils/type-dispatch.js";
+import { getType } from "../utils/type-dispatch.js";
 import { part, currentLine, character, speech } from "./elements.js";
+import { processor, ProcessorRegister } from "./processors.js";
 
 export class Manager {
     varsFrame;
@@ -33,17 +35,13 @@ export class Manager {
     saveLoad = new SaveLoadManager(this.resources.filename!);
     timeout = new TimeoutManager();
     keybind = new KeybindManager();
-    processor = new TypeDispatch<[self: Manager], boolean, parser.GalData>();
-    processorRegistry;
     isMain;
-    constructor(isMain: boolean, processorRegistry: (self: Manager) => void) {
+    constructor(isMain: boolean) {
         this.isMain = isMain;
         if (!isMain) this.info.setLine = this.info.setPart
             = this.timeout.set = this.timeout.clear = (): any => 0;
-        
-        this.processor.defaultTo(false);
-        this.processorRegistry = processorRegistry;
-        processorRegistry(this);
+
+        ProcessorRegister.register();
 
         this.varsFrame = new vars.GalVars();
         this.varsFrame.initBuiltins();
@@ -61,7 +59,7 @@ export class Manager {
     }
     isSelecting() {
         const data = this.paragraph.dataList[this.currentPos];
-        return data !== undefined && data instanceof parser.SelectData;
+        return data !== undefined && data instanceof dataTypes.SelectData;
     }
     setEnums() {
         for (const data of this.paragraph.scanEnumsAt(this.currentPos)) {
@@ -80,14 +78,14 @@ export class Manager {
                 throw `Cannot open file ${path}`;
             });
     }
-    async process(data: parser.GalData) {
+    async process(data: dataTypes.GalData) {
         if (this.currentPos >= this.paragraph.dataList.length) return true;
         if (data === undefined) return false;
         if (this.buttons !== null) this.buttons.clear();
         this.timeout.clear();
         this.keybind.clear();
         this.setEnums();
-        return await this.processor.call(data, this);
+        return await processor.call(data, this);
     }
     push(frame: Frame) {
         this.history.push(frame);
