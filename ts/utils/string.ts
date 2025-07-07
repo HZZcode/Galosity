@@ -4,3 +4,6 @@ export function isIdentifier(str: string) {
 export function isDiscarded(str: string) {
     return /^_+$/.test(str);
 }
+export function isNum(value: string) {
+    return Number.isFinite(Number(value)) && value !== '';
+}

@@ -1,22 +1,12 @@
-import * as vars from '../vars/vars.js';
 import * as string from '../utils/string.js';
 import { splitWith } from '../utils/split.js';
 
-export class GalData {
-    type;
-    constructor(type: string) {
-        this.type = type;
-    }
-}
-export class EmptyData extends GalData {
-    constructor() {
-        super('comment');
-    }
-}
+export class GalData { }
+export class EmptyData extends GalData { }
 export class CharacterData extends GalData {
     name;
     constructor(name: string) {
-        super('character');
+        super();
         this.name = name;
     }
 }
@@ -24,7 +14,7 @@ export class SpeechData extends GalData {
     character;
     sentence;
     constructor(character: string, sentence: string) {
-        super('sentence');
+        super();
         this.character = character;
         this.sentence = sentence;
     }
@@ -32,14 +22,14 @@ export class SpeechData extends GalData {
 export class PartData extends GalData {
     part;
     constructor(part: string) {
-        super('part');
+        super();
         this.part = part;
     }
 }
 export class NoteData extends GalData {
     note;
     constructor(note: string) {
-        super('note');
+        super();
         this.note = note;
     }
 }
@@ -48,7 +38,7 @@ export class JumpData extends GalData {
     crossFile = false;
     anchor;
     constructor(anchor: string) {
-        super('jump');
+        super();
         if (anchor.startsWith('%')) {
             this.href = true;
             this.anchor = anchor.substring(1).trim();
@@ -63,15 +53,11 @@ export class JumpData extends GalData {
 export class AnchorData extends GalData {
     anchor;
     constructor(anchor: string) {
-        super('anchor');
+        super();
         this.anchor = anchor;
     }
 }
-export class SelectData extends GalData {
-    constructor() {
-        super('select');
-    }
-}
+export class SelectData extends GalData { }
 export class CaseData extends GalData {
     text;
     show = 'true';   // Whether the player can see this choice
@@ -88,27 +74,19 @@ export class CaseData extends GalData {
         return this.getArgs().filter(key => !['key', 'timeout'].includes(key));
     }
     constructor(text: string, config: { [_: string]: string }) {
-        super('case');
+        super();
         this.text = text;
         for (const key of this.getArgs())
             if (key in config) this[key] = config[key].trim() as this[keyof this & string];
     }
 }
-export class BreakData extends GalData {
-    constructor() {
-        super('break');
-    }
-}
-export class EndData extends GalData {
-    constructor() {
-        super('end');
-    }
-}
+export class BreakData extends GalData { }
+export class EndData extends GalData { }
 export class VarData extends GalData {
     name;
     expr;
     constructor(name: string, expr: string) {
-        super('var');
+        super();
         this.name = name;
         this.expr = expr;
     }
@@ -117,7 +95,7 @@ export class EnumData extends GalData {
     name;
     values;
     constructor(name: string, values: string[]) {
-        super('enum');
+        super();
         this.name = name;
         this.values = values;
     }
@@ -125,7 +103,7 @@ export class EnumData extends GalData {
 export class SwitchData extends GalData {
     expr;
     constructor(expr: string) {
-        super('switch');
+        super();
         this.expr = expr;
     }
 }
@@ -133,7 +111,7 @@ export class InputData extends GalData {
     valueVar;
     errorVar;
     constructor(valueVar: string, errorVar: string) {
-        super('input');
+        super();
         this.valueVar = valueVar;
         this.errorVar = errorVar;
     }
@@ -142,7 +120,7 @@ export class ImageData extends GalData {
     imageType;
     imageFile;
     constructor(imageType: string, imageFile: string) {
-        super('image');
+        super();
         this.imageType = imageType;
         this.imageFile = imageFile;
     }
@@ -167,7 +145,7 @@ export class TransformData extends GalData {
         )].sort();
     }
     constructor(imageType?: string, transformations?: { [_: string]: any }) {
-        super('transform');
+        super();
         this.imageType = imageType;
         if (transformations === undefined) return;
         for (const key of this.getArgs()) {
@@ -187,19 +165,15 @@ export class TransformData extends GalData {
 export class DelayData extends GalData {
     seconds = '0';
     constructor(seconds: string) {
-        super('delay');
+        super();
         this.seconds = seconds;
     }
 }
-export class PauseData extends GalData {
-    constructor() {
-        super('pause');
-    }
-}
+export class PauseData extends GalData { }
 export class EvalData extends GalData {
     expr;
     constructor(expr: string) {
-        super('eval');
+        super();
         this.expr = expr;
     }
 }
@@ -207,7 +181,7 @@ export class FuncData extends GalData {
     name;
     args;
     constructor(name: string, args: string[]) {
-        super('func');
+        super();
         this.name = name;
         this.args = args;
     }
@@ -215,7 +189,7 @@ export class FuncData extends GalData {
 export class ReturnData extends GalData {
     value;
     constructor(value: string) {
-        super('return');
+        super();
         this.value = value;
     }
 }
@@ -224,7 +198,7 @@ export class CallData extends GalData {
     args;
     returnVar;
     constructor(name: string, args: string[], returnVar?: string) {
-        super('call');
+        super();
         this.name = name;
         this.args = args;
         this.returnVar = returnVar;
@@ -234,7 +208,7 @@ export class ImportData extends GalData {
     file;
     names;
     constructor(file: string, names: string[]) {
-        super('import');
+        super();
         this.file = file;
         this.names = names;
     }
@@ -367,7 +341,7 @@ export class Paragraph {
         return sub.at(-1)!.part;
     }
     getControlBlocks(): ControlBlock[] {
-        const isControlTag = (data: GalData): boolean => 
+        const isControlTag = (data: GalData): boolean =>
             data instanceof SwitchData || data instanceof SelectData;
         const ans = [];
         const stack = [];

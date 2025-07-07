@@ -2,121 +2,20 @@ import { GalIpcRenderer } from "../types";
 const electron = require('electron');
 const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
-import {
-    TransformData, parseLine, Paragraph, ImageData, VarData,
-    ImportData, GalData, FuncData, JumpData, CallData
-} from '../parser/parser.js';
+import * as parser from '../parser/parser.js';
 import { GalVars } from '../vars/vars.js';
 import { AutoComplete, FileComplete } from './completer.js';
 import { Files } from '../utils/files.js';
 import { logger } from '../utils/logger.js';
 import { isInterpolate } from '../utils/split.js';
-import { bindFunction } from "../utils/bind-function.js";
+import { bindFunction } from "../utils/bind-events.js";
 import { ErrorManager } from "../utils/error-manager.js";
+import { TextAreaManager } from "./text-manager.js";
+import { TagScanner } from "./tag-scanner.js";
 
 const textarea = document.getElementById('input') as HTMLTextAreaElement;
-class TextAreaManager {
-    content;
-    start;
-    end;
-    lines;
-    constructor() {
-        this.content = textarea.value;
-        this.start = textarea.selectionStart;
-        this.end = textarea.selectionEnd;
-        this.lines = this.content.split(/\r?\n/);
-    }
-    sync() {
-        const line = this.currentLineCount();
-        textarea.value = this.lines.join('\n');
-        this.jumpTo(line);
-    }
-    currentLineCount() {
-        return this.content.substring(0, this.start).split(/\r?\n/).length - 1;
-    }
-    currentEndLineCount() {
-        return this.content.substring(0, this.end).split(/\r?\n/).length - 1;
-    }
-    currentColumn() {
-        return this.currentLineFrontContent().length;
-    }
-    currentLine() {
-        return this.lines[this.currentLineCount()];
-    }
-    currentLineFrontContent() {
-        return this.content.substring(0, this.start).split(/\r?\n/)[this.currentLineCount()];
-    }
-    currentLineBackContent() {
-        return this.content.substring(this.start).split(/\r?\n/)[0];
-    }
-    beforeLines() {
-        return this.lines.slice(0, this.currentLineCount());
-    }
-    beforeLinesLength() {
-        return this.beforeLines().join('\n').length + 1;
-    }
-    insert(text: string, length = 0, pos?: number) {
-        const line = this.currentLine();
-        if (pos === undefined) pos = this.currentColumn();
-        const modified = line.substring(0, pos - length) + text + line.substring(pos);
-        const start = this.start;
-        this.edit(this.currentLineCount(), modified);
-        textarea.selectionStart = textarea.selectionEnd = start + text.length - length;
-    }
-    complete(text: string, part: string) {
-        this.insert(text, part.length);
-    }
-    move(step: number) {
-        textarea.selectionStart += step;
-        textarea.selectionEnd += step;
-    }
-    edit(line: number, modified: string) {
-        this.lines[line] = modified;
-        this.sync();
-    }
-    jumpTo(line: number) {
-        textarea.focus(); // does so fixes bugs. don't know why but just works.
-        const endOfLine = this.lines.slice(0, line + 1).join('\n').length;
-        textarea.selectionStart = textarea.selectionEnd = endOfLine;
-        const tempElement = document.createElement('div');
-        tempElement.style.position = 'absolute';
-        tempElement.style.visibility = 'hidden';
-        tempElement.style.whiteSpace = 'pre-wrap';
-        tempElement.style.fontFamily = textarea.style.fontFamily;
-        tempElement.style.fontSize = textarea.style.fontSize;
-        tempElement.innerHTML = textarea.value.substring(0, endOfLine);
-        document.body.appendChild(tempElement);
-        const lineHeight = tempElement.offsetHeight / (line + 1);
-        const scrollTop = line * lineHeight;
-        document.body.removeChild(tempElement);
-        textarea.scrollTop = scrollTop;
-        textarea.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-    }
-}
-class TagScanner {
-    tag;
-    constructor(tag: string) {
-        this.tag = tag;
-    }
-    scanRawList() {
-        const manager = new TextAreaManager();
-        return manager.lines.filter(line => line.startsWith(this.tag));
-    }
-    scanList() {
-        return this.scanRawList().map(line => line.substring(this.tag.length).trim());
-    }
-    scanLines(name: string) {
-        const manager = new TextAreaManager();
-        return manager.lines.map((line, index): [string, number] => [line, index])
-            .filter(entry => entry[0].startsWith(this.tag)
-                && entry[0].substring(this.tag.length).trim() === name.trim())
-            .map(entry => entry[1]);
-    }
-    scanLine(name: string) {
-        const lines = this.scanLines(name);
-        return lines.length === 0 ? -1 : lines[0];
-    }
-}
+const getManager = () => new TextAreaManager(textarea);
+
 class FileManager extends Files {
     previousFiles: string[] = [];
     constructor() {
@@ -128,7 +27,7 @@ class FileManager extends Files {
     }
     async write(path: string) {
         if (path === null) return;
-        const manager = new TextAreaManager();
+        const manager = getManager();
         const content = manager.content;
         try {
             await this.writeFile(path, content);
@@ -215,12 +114,12 @@ const anchorCompleter = new AutoComplete();
 const symbolCompleter = new AutoComplete();
 const imageTypes = ['background', 'left', 'center', 'right'];
 const imageTypeCompleter = new AutoComplete();
-const transformTypeCompleter = new AutoComplete(new TransformData().getAllArgs());
+const transformTypeCompleter = new AutoComplete(new parser.TransformData().getAllArgs());
 const caseConfigCompleter = new AutoComplete(['show', 'enable']);
 const funcNameCompleter = new AutoComplete();
-const characterScanner = new TagScanner('[Character]');
-const anchorScanner = new TagScanner('[Anchor]');
-const imageTypeScanner = new TagScanner('[Image]');
+const characterScanner = new TagScanner(getManager(), '[Character]');
+const anchorScanner = new TagScanner(getManager(), '[Anchor]');
+const imageTypeScanner = new TagScanner(getManager(), '[Image]');
 const file = new FileManager();
 const fileCompleter = new FileComplete(() => file.getPath(), 'txt');
 const imageCompleter = new FileComplete(() => file.getSourcePath());
@@ -263,13 +162,13 @@ async function processKeyDown(event: KeyboardEvent) {
 }
 function updateInfo(_?: Event) {
     error.clear();
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const filename = file.valid ? file.filename : 'Unnamed';
     info.innerText = `${filename}: Line ${manager.currentLineCount()}, Column ${manager.currentColumn()}`;
     scanControlBlocks();
 }
 function completeBraces(event: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const start = manager.start - manager.beforeLinesLength();
     const end = manager.end - manager.beforeLinesLength();
     if (start !== end) {
@@ -287,7 +186,7 @@ function completeBraces(event: Event) {
     }
 }
 function completeParentheses(event: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const start = manager.start - manager.beforeLinesLength();
     const end = manager.end - manager.beforeLinesLength();
     if (start !== end) {
@@ -305,7 +204,7 @@ function completeParentheses(event: Event) {
 }
 function completeLatex(event: KeyboardEvent) {
     event.preventDefault();
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const start = manager.start - manager.beforeLinesLength();
     const end = manager.end - manager.beforeLinesLength();
     const before = event.shiftKey ? '$$' : '\\(';
@@ -321,7 +220,7 @@ function completeLatex(event: KeyboardEvent) {
     }
 }
 async function autoComplete(event: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     event.preventDefault();
     let line = manager.currentLine();
     const front = manager.currentLineFrontContent();
@@ -346,7 +245,7 @@ async function autoComplete(event: Event) {
     }
 }
 async function completeJumpFile(_?: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const front = manager.currentLineFrontContent();
     if (!front.trim().startsWith('[Jump]') || front.search('>') === -1) return;
     const filePart = front.substring(front.search('>') + 1).trim();
@@ -354,7 +253,7 @@ async function completeJumpFile(_?: Event) {
     if (file !== undefined) manager.complete(file, filePart);
 }
 async function completeImage(_?: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const front = manager.currentLineFrontContent();
     if (!front.trim().startsWith('[Image]') || front.search(':') === -1) return;
     const imagePart = front.substring(front.search(':') + 1).trim();
@@ -363,13 +262,13 @@ async function completeImage(_?: Event) {
 }
 function scanImageTypes() {
     return (imageTypeScanner.scanRawList()
-        .map(parseLine) as ImageData[])
+        .map(parser.parseLine) as parser.ImageData[])
         .filter(data => data.imageFile.trim().startsWith('@'))
         .map(data => data.imageType)
         .concat(imageTypes);
 }
 async function completeImageType(_?: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     imageTypeCompleter.setList(scanImageTypes());
     const front = manager.currentLineFrontContent();
     if (!['[Image]', '[Transform]'].some(tag => front.trim().startsWith(tag))
@@ -379,7 +278,7 @@ async function completeImageType(_?: Event) {
     if (type !== undefined) manager.complete(type, typePart);
 }
 async function completeTransformType(_?: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const front = manager.currentLineFrontContent();
     if (!front.trim().startsWith('[Transform]')
         || front.replaceAll(/=.*?,/g, '').includes('=')) return;
@@ -389,7 +288,7 @@ async function completeTransformType(_?: Event) {
     if (type !== undefined) manager.complete(type, typePart);
 }
 async function completeCaseConfig(_?: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const front = manager.currentLineFrontContent();
     if (!front.trim().startsWith('[Case]')
         || front.replaceAll(/=.*?,/g, '').includes('=')) return;
@@ -400,7 +299,7 @@ async function completeCaseConfig(_?: Event) {
 }
 async function completeCharaterName(_?: Event) {
     characters.setList(characterScanner.scanList());
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const line = manager.currentLine();
     const colonPos = line.search(':');
     if (colonPos !== -1 && colonPos !== line.length - 1) return;
@@ -410,7 +309,7 @@ async function completeCharaterName(_?: Event) {
     if (name !== undefined) manager.edit(manager.currentLineCount(), name + ':');
 }
 async function completeTag(_?: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const line = manager.currentLine();
     const tag = await tags.complete('[' + line.replaceAll('[', '')
         .replaceAll(']', ''), line.search(']') === -1);
@@ -421,7 +320,7 @@ async function completeTag(_?: Event) {
     }
 }
 async function completeJump(_?: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const line = manager.currentLine();
     if (!line.trim().startsWith('[Jump]')) return;
     const anchors = anchorScanner.scanList();
@@ -436,7 +335,7 @@ function getBuiltins() {
     return [...Object.keys(frame.builtins), ...Object.keys(frame.builtinFuncs)];
 }
 async function completeSymbol(_?: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     if (!needSymbol()) return;
     const symbols = [...scanSymbols(), ...getBuiltins()];
     symbolCompleter.setList(symbols);
@@ -446,7 +345,7 @@ async function completeSymbol(_?: Event) {
     if (symbol !== undefined) manager.complete(symbol, symbolPart);
 }
 function needSymbol() {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const isVar = /^\[Var\].*?:/.test(manager.currentLineFrontContent().trim());
     const isSwitch = manager.currentLineFrontContent().trim().startsWith('[Switch]');
     const isInterpolation = isInterpolate(manager.currentLineFrontContent(),
@@ -454,23 +353,23 @@ function needSymbol() {
     return isVar || isSwitch || isInterpolation;
 }
 function scanSymbols(lines?: string[]) {
-    if (lines === undefined) lines = new TextAreaManager().lines;
-    const paragraph = new Paragraph(lines);
+    if (lines === undefined) lines = getManager().lines;
+    const paragraph = new parser.Paragraph(lines);
     const dataList = paragraph.dataList;
-    const varList = dataList.filter(data => data instanceof VarData).map(data => data.name);
+    const varList = dataList.filter(data => data instanceof parser.VarData).map(data => data.name);
 
     const enumList = paragraph.scanEnums();
     const enumTypes = enumList.map(data => data.name);
     const enumValues = enumList.map(data => data.values).flat();
 
-    const importedSymbols = dataList.filter(data => data instanceof ImportData)
+    const importedSymbols = dataList.filter(data => data instanceof parser.ImportData)
         .map(data => data.names).flat();
 
     return [... new Set([...varList, ...enumTypes, ...enumValues, ...importedSymbols])]
         .filter(symbol => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(symbol));
 } //Scans: var name; enum type; enum value; imported symbols
 async function completeFunctions(_?: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const front = manager.currentLineFrontContent().trim();
     if (front.startsWith('[Call]') && !front.includes('(')) {
         funcNameCompleter.setList(Object.keys(scanFunctions()));
@@ -481,14 +380,14 @@ async function completeFunctions(_?: Event) {
 }
 function scanFunctions() {
     return Object.fromEntries(
-        new Paragraph(new TextAreaManager().lines).dataList
-            .map((data, line): [GalData, number] => [data, line])
-            .filter(entry => entry[0] instanceof FuncData)
-            .map(entry => [(entry[0] as FuncData).name, entry[1]])
+        new parser.Paragraph(getManager().lines).dataList
+            .map((data, line): [parser.GalData, number] => [data, line])
+            .filter(entry => entry[0] instanceof parser.FuncData)
+            .map(entry => [(entry[0] as parser.FuncData).name, entry[1]])
     );
 }
 async function completeImportFile(_?: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const front = manager.currentLineFrontContent();
     if (!front.trim().startsWith('[Import]') || front.search(':') !== -1) return;
     const filePart = front.replace('[Import]', '').trim();
@@ -496,10 +395,10 @@ async function completeImportFile(_?: Event) {
     if (file !== undefined) manager.complete(file, filePart);
 }
 async function completeImportSymbol(_?: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const front = manager.currentLineFrontContent();
     if (!front.trim().startsWith('[Import]') || front.search(':') === -1) return;
-    const data = parseLine(front) as ImportData;
+    const data = parser.parseLine(front) as parser.ImportData;
     const completer = new AutoComplete(scanSymbols((await file.readFile(data.file)).split(/\r?\n/)));
     const symbolPart = data.names.at(-1)!;
     const symbol = await completer.completeInclude(symbolPart);
@@ -510,7 +409,7 @@ async function jump(event: MouseEvent) {
     await jumpTo(event);
 }
 async function jumpTo(_?: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const front = manager.currentLineFrontContent();
     const line = manager.currentLine();
     if (front.search(':') === -1 && line.search(':') !== -1 && !line.trim().startsWith('[')) {
@@ -519,7 +418,7 @@ async function jumpTo(_?: Event) {
         if (pos !== -1) manager.jumpTo(pos);
     }
     else if (front.trim().startsWith('[Jump]')) {
-        const data = parseLine(line) as JumpData;
+        const data = parser.parseLine(line) as parser.JumpData;
         const anchor = data.anchor;
         if (data.crossFile) await file.openFile(anchor);
         else if (data.href) ipcRenderer.invoke('openExternal', anchor);
@@ -530,8 +429,8 @@ async function jumpTo(_?: Event) {
     }
     else if (line.trim().startsWith('[End]')) {
         const index = manager.currentLineCount();
-        const blocks = scanControlBlocks();
-        for (const block of blocks ?? []) {
+        const blocks = scanControlBlocks() ?? [];
+        for (const block of blocks) {
             if (block.endPos === index) {
                 manager.jumpTo(block.startPos);
                 return;
@@ -540,8 +439,8 @@ async function jumpTo(_?: Event) {
     }
     else if (line.trim().startsWith('[Case]')) {
         const index = manager.currentLineCount();
-        const blocks = scanControlBlocks();
-        for (const block of blocks ?? []) {
+        const blocks = scanControlBlocks() ?? [];
+        for (const block of blocks) {
             if (block.casesPosList.some(i => i === index)) {
                 manager.jumpTo(block.startPos);
                 return;
@@ -549,7 +448,7 @@ async function jumpTo(_?: Event) {
         }
     }
     else if (front.trim().startsWith('[Call]')) {
-        const name = (parseLine(line) as CallData).name;
+        const name = (parser.parseLine(line) as parser.CallData).name;
         const funcs = scanFunctions();
         if (name in funcs) {
             manager.jumpTo(funcs[name]);
@@ -557,12 +456,12 @@ async function jumpTo(_?: Event) {
         }
     }
     else if (front.trim().startsWith('[Import]')) {
-        const path = (parseLine(line) as ImportData).file;
+        const path = (parser.parseLine(line) as parser.ImportData).file;
         await file.openFile(path);
     }
 }
 function comment(_?: Event) {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     const start = manager.currentLineCount();
     const end = manager.currentEndLineCount();
     const lines = manager.lines.slice(start, end + 1);
@@ -575,9 +474,9 @@ function comment(_?: Event) {
         manager.edit(start + index, line);
 }
 function scanControlBlocks() {
-    const manager = new TextAreaManager();
+    const manager = getManager();
     try {
-        return new Paragraph(manager.lines).getControlBlocks();
+        return new parser.Paragraph(manager.lines).getControlBlocks();
     } catch (e) {
         logger.error(e);
         error.error(e);
