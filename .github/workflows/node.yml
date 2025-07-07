@@ -69,6 +69,10 @@ jobs:
       - name: Compile Typescript files
         run: npm run tsc
 
+      - name: Copy grammar file
+        run: import shutil; shutil.copy2('./grammar/grammar.js', './js/vars/grammar.js')
+        shell: python
+
       - name: Build the application
         run: npm run build --if-present
 
