@@ -7,3 +7,13 @@ export function isDiscarded(str: string) {
 export function isNum(value: string) {
     return Number.isFinite(Number(value)) && value !== '';
 }
+
+declare global {
+    interface String {
+        splitLine(): string[];
+    }
+}
+
+String.prototype.splitLine = function () {
+    return this.split(/\r?\n/);
+};

@@ -9,7 +9,7 @@ export class TextAreaManager {
         this.content = textarea.value;
         this.start = textarea.selectionStart;
         this.end = textarea.selectionEnd;
-        this.lines = this.content.split(/\r?\n/);
+        this.lines = this.content.splitLine();
     }
     sync() {
         const line = this.currentLineCount();
@@ -17,10 +17,10 @@ export class TextAreaManager {
         this.jumpTo(line);
     }
     currentLineCount() {
-        return this.content.substring(0, this.start).split(/\r?\n/).length - 1;
+        return this.content.substring(0, this.start).splitLine().length - 1;
     }
     currentEndLineCount() {
-        return this.content.substring(0, this.end).split(/\r?\n/).length - 1;
+        return this.content.substring(0, this.end).splitLine().length - 1;
     }
     currentColumn() {
         return this.currentLineFrontContent().length;
@@ -29,10 +29,10 @@ export class TextAreaManager {
         return this.lines[this.currentLineCount()];
     }
     currentLineFrontContent() {
-        return this.content.substring(0, this.start).split(/\r?\n/)[this.currentLineCount()];
+        return this.content.substring(0, this.start).splitLine()[this.currentLineCount()];
     }
     currentLineBackContent() {
-        return this.content.substring(this.start).split(/\r?\n/)[0];
+        return this.content.substring(this.start).splitLine()[0];
     }
     beforeLines() {
         return this.lines.slice(0, this.currentLineCount());
@@ -59,8 +59,10 @@ export class TextAreaManager {
         this.lines[line] = modified;
         this.sync();
     }
-    jumpTo(line: number) {
-        this.textarea.focus(); // does so fixes bugs. don't know why but just works.
+    jumpTo(line: number): boolean {
+        if (line < 0 || line >= this.lines.length) return false;
+        this.textarea.focus(); // does so fixes bugs.
+        // don't know why but just works. it doesn't make things worse though.
         const endOfLine = this.lines.slice(0, line + 1).join('\n').length;
         this.textarea.selectionStart = this.textarea.selectionEnd = endOfLine;
         const tempElement = document.createElement('div');
@@ -76,5 +78,6 @@ export class TextAreaManager {
         document.body.removeChild(tempElement);
         this.textarea.scrollTop = scrollTop;
         this.textarea.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        return true;
     }
 }

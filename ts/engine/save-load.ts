@@ -57,7 +57,7 @@ export class SaveLoadManager extends Files {
             const str = await this.readFile(await this.getSaveFilePath(slot));
             const file = (await this.getInfo(slot)).sourceFile;
             return [
-                file === this.source ? undefined : (await this.readFile(file)).split(/\r?\n/),
+                file === this.source ? undefined : (await this.readFile(file)).splitLine(),
                 Frame.fromString(splitWith('\n')(str)[1])
             ];
         }

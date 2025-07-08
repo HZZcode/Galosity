@@ -14,7 +14,7 @@ const manager = new Manager(true);
 const initPromise = new Promise<void>((resolve, reject) => {
     ipcRenderer.on('test-data', async (_, data) => {
         try {
-            await manager.set(data.content.split(/\r?\n/));
+            await manager.set(data.content.splitLine());
             manager.resources.filename = data.filename;
             logger.isDebug = data.isDebug;
             resolve();

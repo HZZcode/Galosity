@@ -2,18 +2,14 @@ import { GalIpcRenderer } from "../types";
 const electron = require('electron');
 const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
-import * as parser from '../parser/parser.js';
-import * as dataTypes from '../parser/data-types.js';
 import { logger } from '../utils/logger.js';
 import { bindFunction } from "../utils/bind-events.js";
-import { TagScanner } from "./tag-scanner.js";
 import { FileManager } from "./file-manager.js";
-import { error, getManager, scanControlBlocks, textarea, updateInfo } from "./elements.js";
+import { error, getManager, textarea, updateInfo } from "./elements.js";
 import { file } from "./file-manager.js";
 import { TabCompleters } from "./tab-completers.js";
+import { Jumpers } from "./jumpers.js";
 
-const characterScanner = new TagScanner(getManager(), '[Character]');
-const anchorScanner = new TagScanner(getManager(), '[Anchor]');
 textarea.addEventListener('keydown', processKeyDown);
 textarea.addEventListener('mouseup', jump);
 updateInfo();
@@ -113,69 +109,12 @@ async function autoComplete(event: Event) {
     }
     await TabCompleters.apply(getManager());
 }
-function scanFunctions() {
-    return Object.fromEntries(
-        new parser.Paragraph(getManager().lines).dataList
-            .map((data, line): [dataTypes.GalData, number] => [data, line])
-            .filter(entry => entry[0] instanceof dataTypes.FuncData)
-            .map(entry => [(entry[0] as dataTypes.FuncData).name, entry[1]])
-    );
-}
 async function jump(event: MouseEvent) {
     if (!event.ctrlKey) return;
-    await jumpTo(event);
+    await jumpTo();
 }
-async function jumpTo(_?: Event) {
-    const manager = getManager();
-    const front = manager.currentLineFrontContent();
-    const line = manager.currentLine();
-    if (front.search(':') === -1 && line.search(':') !== -1 && !line.trim().startsWith('[')) {
-        const name = line.substring(0, line.search(':'));
-        const pos = characterScanner.scanLine(name);
-        if (pos !== -1) manager.jumpTo(pos);
-    }
-    else if (front.trim().startsWith('[Jump]')) {
-        const data = parser.parseLine(line) as dataTypes.JumpData;
-        const anchor = data.anchor;
-        if (data.crossFile) await file.openFile(anchor);
-        else if (data.href) ipcRenderer.invoke('openExternal', anchor);
-        else {
-            const pos = anchorScanner.scanLine(anchor);
-            if (pos !== -1) manager.jumpTo(pos);
-        }
-    }
-    else if (line.trim().startsWith('[End]')) {
-        const index = manager.currentLineCount();
-        const blocks = scanControlBlocks() ?? [];
-        for (const block of blocks) {
-            if (block.endPos === index) {
-                manager.jumpTo(block.startPos);
-                return;
-            }
-        }
-    }
-    else if (line.trim().startsWith('[Case]')) {
-        const index = manager.currentLineCount();
-        const blocks = scanControlBlocks() ?? [];
-        for (const block of blocks) {
-            if (block.casesPosList.some(i => i === index)) {
-                manager.jumpTo(block.startPos);
-                return;
-            }
-        }
-    }
-    else if (front.trim().startsWith('[Call]')) {
-        const name = (parser.parseLine(line) as dataTypes.CallData).name;
-        const funcs = scanFunctions();
-        if (name in funcs) {
-            manager.jumpTo(funcs[name]);
-            return;
-        }
-    }
-    else if (front.trim().startsWith('[Import]')) {
-        const path = (parser.parseLine(line) as dataTypes.ImportData).file;
-        await file.openFile(path);
-    }
+async function jumpTo() {
+    await Jumpers.apply(getManager());
 }
 function comment(_?: Event) {
     const manager = getManager();

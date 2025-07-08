@@ -25,6 +25,7 @@ export function scanControlBlocks() {
     } catch (e) {
         logger.error(e);
         error.error(e);
+        return [];
     }
 }
 

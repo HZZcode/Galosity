@@ -33,6 +33,8 @@ export class ProcessorRegister {
     private static registries: ProcessorRegistry[] = [];
     private static done = false;
 
+    private constructor() { }
+
     static add(registry: ProcessorRegistry) {
         this.registries.push(registry);
     }
@@ -204,7 +206,7 @@ ProcessorRegister.add(ProcessorRegistry.of(dataTypes.ImportData, async (data, se
     // So I guess we would implement self a bit later
     const content = await self.resources.readFile(data.file);
     const subManager = new Manager(false);
-    await subManager.set(content.split(/\r?\n/));
+    await subManager.set(content.splitLine());
     for (; subManager.currentPos < subManager.paragraph.dataList.length;
         subManager.currentPos++) {
         await subManager.process(subManager.currentData());
