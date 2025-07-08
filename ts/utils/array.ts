@@ -11,6 +11,12 @@ declare global {
         filterType<U>(type: Constructor<U>): U[];
 
         findIndexOfType<U>(type: Constructor<U>, predicate: Func<[U], boolean>): number;
+
+        all(): boolean;
+        any(): boolean;
+
+        mins(key?: (value: T) => number): T[];
+        maxs(key?: (value: T) => number): T[];
     }
 }
 
@@ -25,3 +31,25 @@ Array.prototype.filterType = function <U>(type: Constructor<U>): U[] {
 Array.prototype.findIndexOfType = function <U>(type: Constructor<U>, predicate: Func<[U], boolean>) {
     return this.findIndex(value => value instanceof type && predicate(value));
 };
+
+Array.prototype.all = function () {
+    return this.every(value => value);
+};
+Array.prototype.any = function () {
+    return this.some(value => value);
+};
+
+Array.prototype.mins = function (key?: (value: any) => number) {
+    key ??= value => value;
+    const minKey = Math.min(...this.map(key));
+    return this.filter(value => key(value) === minKey);
+};
+Array.prototype.maxs = function (key?: (value: any) => number) {
+    key ??= value => value;
+    const maxKey = Math.max(...this.map(key));
+    return this.filter(value => key(value) === maxKey);
+};
+
+export function sum(nums: number[]) {
+    return nums.reduce((x, y) => x + y, 0);
+}

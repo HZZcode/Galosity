@@ -9,6 +9,7 @@ import { interpolate } from "./interpolation.js";
 import { ipcRenderer, Manager } from "./manager.js";
 import { TypeDispatch, DispatchFunc } from "../utils/type-dispatch.js";
 import { Constructor } from '../utils/types.js';
+import { KeyType } from '../utils/keybind.js';
 
 export const processor = new TypeDispatch<[self: Manager], boolean, dataTypes.GalData>();
 processor.defaultTo(false);
@@ -62,18 +63,20 @@ ProcessorRegister.add(ProcessorRegistry.of(dataTypes.NoteData, (data, self) => {
 }));
 ProcessorRegister.add(ProcessorRegistry.of(dataTypes.JumpData, (data, self) => {
     const anchor = interpolate(data.anchor, self.varsFrame);
-    if (data.crossFile) {
-        self.unsupportedForImported();
-        self.jumpFile(anchor);
-    }
-    else if (data.href) {
-        self.unsupportedForImported();
-        ipcRenderer.invoke('openExternal', anchor);
-    }
-    else {
-        const pos = self.paragraph.findAnchorPos(anchor);
-        if (pos === -1) throw `Anchor not found: ${anchor}`;
-        self.currentPos = pos - 1;
+    switch (data.type) {
+        case dataTypes.JumpType.File:
+            self.unsupportedForImported();
+            self.jumpFile(anchor);
+            break;
+        case dataTypes.JumpType.Link:
+            self.unsupportedForImported();
+            ipcRenderer.invoke('openExternal', anchor);
+            break;
+        default: {
+            const pos = self.paragraph.findAnchorPos(anchor);
+            if (pos === -1) throw `Anchor not found: ${anchor}`;
+            self.currentPos = pos - 1;
+        }
     }
     return false;
 }));
@@ -92,7 +95,7 @@ ProcessorRegister.add(ProcessorRegistry.of(dataTypes.SelectData, (_, self) => {
         if (data.timeout !== undefined)
             self.timeout.set(callback, self.varsFrame.evaluate(data.timeout).toNum() * 1000);
         if (data.key !== undefined)
-            self.keybind.bind(interpolate(data.key, self.varsFrame), callback);
+            self.keybind.bind(KeyType.of(interpolate(data.key, self.varsFrame)), callback);
     }
     self.buttons.drawButtons(buttons);
     return true;

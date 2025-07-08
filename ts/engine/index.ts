@@ -8,6 +8,7 @@ import { errorHandled, error } from "./error-handler.js";
 import { isNum } from "../utils/string.js";
 import { jump, lineInput, evalButton, codeInput } from "./elements.js";
 import { Manager } from "./manager.js";
+import { KeybindManager, KeyType } from "../utils/keybind.js";
 
 const manager = new Manager(true);
 
@@ -29,14 +30,14 @@ const initPromise = new Promise<void>((resolve, reject) => {
 async function main() {
     await initPromise;
 
+    const keybind = new KeybindManager()
+        .bind(KeyType.of('Backspace'), manager.previous.bind(manager))
+        .bind(KeyType.of('Enter'), manager.next.bind(manager));
+
     window.addEventListener('keydown', errorHandled(async event => {
         if ((event.target as HTMLElement).tagName.toLowerCase() === 'input') return;
-        const key = event.key;
-        if (key === 'Backspace') await manager.previous();
-        else if (key === 'Enter') await manager.next();
-        // else if (event.ctrlKey && key.toLowerCase() === 's') await manager.save();
-        // else if (event.ctrlKey && key.toLowerCase() === 'l') await manager.load();
-        else manager.keybind.check(event);
+        if (!await keybind.check(event))
+            await manager.keybind.check(event);
     }));
 
     bindFunction('previous', errorHandled(manager.previous.bind(manager)));
@@ -52,10 +53,6 @@ async function main() {
         await manager.eval(code);
     });
 }
-// TODO: Tip before jumping
-// TODO: save & load
-// TODO: search & replace
-// TODO: import funcs
 
 // eslint-disable-next-line floatingPromise/no-floating-promise
 main();

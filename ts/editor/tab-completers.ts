@@ -138,8 +138,8 @@ TabCompleters.register(TabCompleter.ofCombined(
 )); // Jump anchors
 TabCompleters.register(TabCompleter.ofCombined(
     new FileComplete(() => file.getPath(), 'txt'),
-    context => context.data instanceof dataTypes.JumpData && context.data.crossFile
-        ? context.data.anchor : undefined
+    context => context.data instanceof dataTypes.JumpData
+        && context.data.type === dataTypes.JumpType.File ? context.data.anchor : undefined
 )); // Jump files
 TabCompleters.register(new TabCompleter(
     new AutoComplete(new dataTypes.CaseData('', {}).getPublicArgs()),

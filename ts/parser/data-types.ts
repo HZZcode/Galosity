@@ -31,21 +31,25 @@ export class NoteData extends GalData {
         this.note = note;
     }
 }
+export enum JumpType { Anchor, File, Link }
 export class JumpData extends GalData {
-    href = false;
-    crossFile = false;
+    type;
     anchor;
+
     constructor(anchor: string) {
         super();
         if (anchor.startsWith('%')) {
-            this.href = true;
+            this.type = JumpType.Link;
             this.anchor = anchor.substring(1).trim();
         }
         else if (anchor.startsWith('>')) {
-            this.crossFile = true;
+            this.type = JumpType.File;
             this.anchor = anchor.substring(1).trim();
         }
-        else this.anchor = anchor;
+        else {
+            this.type = JumpType.Anchor;
+            this.anchor = anchor;
+        }
     }
 }
 export class AnchorData extends GalData {
@@ -62,8 +66,6 @@ export class CaseData extends GalData {
     enable = 'true'; // Whether the player can select this choice
     key?: string; // This case can be chosen with a key
     timeout?: string; // After how many seconds will the choice be directly chosen.
-
-
 
     // Note that arguments `timeout` and `key` are secretly undocumented.
     // They apply even if the choice is neither shown nor enabled.

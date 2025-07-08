@@ -116,10 +116,12 @@ Jumpers.register(Jumper.of(
     dataTypes.JumpData,
     context => {
         const anchor = context.data.anchor;
-        if (context.data.crossFile) return JumpResult.ofFile(anchor);
-        if (context.data.href) return JumpResult.ofLink(anchor);
-        return JumpResult.ofLine(context.dataList
-            .findIndexOfType(dataTypes.AnchorData, data => data.anchor === anchor));
+        switch (context.data.type) {
+            case dataTypes.JumpType.File: return JumpResult.ofFile(anchor);
+            case dataTypes.JumpType.Link: return JumpResult.ofLink(anchor);
+            default: return JumpResult.ofLine(context.dataList
+                .findIndexOfType(dataTypes.AnchorData, data => data.anchor === anchor));
+        }
     }
 ));
 Jumpers.register(Jumper.of(
