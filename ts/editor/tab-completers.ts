@@ -1,5 +1,6 @@
 import * as dataTypes from "../parser/data-types.js";
-import { Paragraph, parseLine } from "../parser/parser.js";
+import { parseLine } from "../parser/parser.js";
+import { Parsers } from "../parser/parsers.js";
 import { isInterpolate } from "../utils/split.js";
 import { Func } from "../utils/types.js";
 import { GalVars } from "../vars/vars.js";
@@ -85,16 +86,7 @@ export class TabCompleters {
     }
 }
 
-const tags = [
-    '[Character]', '[Part]', '[Note]',
-    '[Jump]', '[Anchor]',
-    '[Select]', '[Case]', '[Break]', '[End]',
-    '[Var]', '[Enum]', '[Switch]',
-    '[Input]', '[Delay]', '[Pause]', '[Eval]',
-    '[Image]', '[Transform]',
-    '[Func]', '[Return]', '[Call]',
-    '[Import]'
-];
+const tags = Parsers.tags().map(tag => `[${tag}]`);
 const colonTags = ['[Case]', '[Var]', '[Enum]', '[Image]', '[Transform]', '[Import]'];
 const imageTypes = ['background', 'left', 'center', 'right'];
 const transformTypes = new dataTypes.TransformData('').getAllArgs();

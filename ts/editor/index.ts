@@ -52,7 +52,7 @@ keybind.bind(KeyType.of('l', KeyConfig.Ctrl), surround('\\(', '\\)'));
 keybind.bind(KeyType.of('l', KeyConfig.Ctrl | KeyConfig.Shift), surround('$$', '$$'));
 
 async function processKeyDown(event: KeyboardEvent) {
-    if (await keybind.check(event)) event.preventDefault();
+    if (await keybind.apply(event)) event.preventDefault();
 }
 
 async function autoComplete() {

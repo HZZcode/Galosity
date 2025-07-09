@@ -72,7 +72,7 @@ export class KeybindManager {
         this.binds = [];
     }
 
-    async check(event: KeyboardEvent): Promise<boolean> {
+    async apply(event: KeyboardEvent): Promise<boolean> {
         const found = this.binds.filter(bind => bind.match(event));
         for (const bind of found.maxs(bind => bind.key.constraints())) await bind.func();
         return found.length !== 0;

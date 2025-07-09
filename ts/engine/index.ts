@@ -30,14 +30,14 @@ const initPromise = new Promise<void>((resolve, reject) => {
 async function main() {
     await initPromise;
 
-    const keybind = new KeybindManager()
-        .bind(KeyType.of('Backspace'), manager.previous.bind(manager))
-        .bind(KeyType.of('Enter'), manager.next.bind(manager));
+    const keybind = new KeybindManager();
+    keybind.bind(KeyType.of('Backspace'), manager.previous.bind(manager));
+    keybind.bind(KeyType.of('Enter'), manager.next.bind(manager));
 
     window.addEventListener('keydown', errorHandled(async event => {
         if ((event.target as HTMLElement).tagName.toLowerCase() === 'input') return;
-        if (!await keybind.check(event))
-            await manager.keybind.check(event);
+        if (await keybind.apply(event) || await manager.keybind.apply(event))
+            event.preventDefault();
     }));
 
     bindFunction('previous', errorHandled(manager.previous.bind(manager)));

@@ -1,5 +1,5 @@
 import * as dataTypes from './data-types.js';
-import { ParserRegister, parsers } from './parsers.js';
+import { Parsers } from './parsers.js';
 
 function parseSpeech(line: string) {
     const index = line.search(':');
@@ -7,8 +7,6 @@ function parseSpeech(line: string) {
 }
 
 export function parseLine(line: string): dataTypes.GalData {
-    ParserRegister.register();
-
     if (line.trim().startsWith('//')) return new dataTypes.EmptyData();
     if (!line.trim().startsWith('[') || line.search(']') === -1)
         return parseSpeech(line);
@@ -18,9 +16,7 @@ export function parseLine(line: string): dataTypes.GalData {
     const tag = line.substring(leftBracket + 1, rightBracket).trim();
     const nonTagPart = line.substring(rightBracket + 1).trim();
 
-    if (tag in parsers) return parsers[tag](nonTagPart);
-
-    return parseSpeech(line);
+    return Parsers.parse(tag, nonTagPart) ?? parseSpeech(line);
 }
 
 export class ControlBlock {

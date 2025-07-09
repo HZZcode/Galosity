@@ -28,83 +28,93 @@ export function parseFunc(func: string): [string, string[]] {
     return [name, args];
 } //e.g. 'f(a,b,c)' => ['f',['a','b','c']]
 
-export const parsers: { [tag: string]: (nonTagPart: string) => GalData } = {};
-
 export class ParserRegistry {
     tag;
     parser;
-    constructor(tag: string, parser: (nonTagPart: string) => GalData) {
+    colon = false;
+
+    constructor(tag: string, parser: (part: string) => GalData) {
         this.tag = tag;
         this.parser = parser;
     }
-}
 
-export class ParserRegister {
-    private static registries: ParserRegistry[] = [];
-    private static done = false;
-
-    static add(registry: ParserRegistry) {
-        this.registries.push(registry);
-    }
-
-    static register() {
-        if (this.done) return;
-        for (const registry of this.registries)
-            parsers[registry.tag] = registry.parser;
-        this.done = true;
+    completeColon() {
+        this.colon = true;
+        return this;
     }
 }
 
-ParserRegister.add(new ParserRegistry('Character', nonTagPart => new dataTypes.CharacterData(nonTagPart)));
-ParserRegister.add(new ParserRegistry('Part', nonTagPart => new dataTypes.PartData(nonTagPart)));
-ParserRegister.add(new ParserRegistry('Note', nonTagPart => new dataTypes.NoteData(nonTagPart)));
-ParserRegister.add(new ParserRegistry('Jump', nonTagPart => new dataTypes.JumpData(nonTagPart)));
-ParserRegister.add(new ParserRegistry('Anchor', nonTagPart => new dataTypes.AnchorData(nonTagPart)));
-ParserRegister.add(new ParserRegistry('Select', _ => new dataTypes.SelectData()));
-ParserRegister.add(new ParserRegistry('Switch', nonTagPart => new dataTypes.SwitchData(nonTagPart)));
-ParserRegister.add(new ParserRegistry('Case', nonTagPart => {
-    const [value, configs] = splitWith(':')(nonTagPart);
+export class Parsers {
+    private static parsers: ParserRegistry[] = [];
+
+    static register(registry: ParserRegistry) {
+        this.parsers.push(registry);
+    }
+
+    static parse(tag: string, nonTagPart: string) {
+        const parsers = this.parsers.filter(parser => parser.tag === tag);
+        return parsers.first()?.parser(nonTagPart);
+    }
+
+    static tags() {
+        return this.parsers.map(parser => parser.tag);
+    }
+
+    static colonTags() {
+        return this.parsers.filter(parser => parser.colon).map(parser => parser.tag);
+    }
+}
+
+Parsers.register(new ParserRegistry('Character', part => new dataTypes.CharacterData(part)));
+Parsers.register(new ParserRegistry('Part', part => new dataTypes.PartData(part)));
+Parsers.register(new ParserRegistry('Note', part => new dataTypes.NoteData(part)));
+Parsers.register(new ParserRegistry('Jump', part => new dataTypes.JumpData(part)));
+Parsers.register(new ParserRegistry('Anchor', part => new dataTypes.AnchorData(part)));
+Parsers.register(new ParserRegistry('Select', _ => new dataTypes.SelectData()));
+Parsers.register(new ParserRegistry('Switch', part => new dataTypes.SwitchData(part)));
+Parsers.register(new ParserRegistry('Case', part => {
+    const [value, configs] = splitWith(':')(part);
     return new dataTypes.CaseData(value, parseConfig(configs));
-}));
-ParserRegister.add(new ParserRegistry('Break', _ => new dataTypes.BreakData()));
-ParserRegister.add(new ParserRegistry('End', _ => new dataTypes.EndData()));
-ParserRegister.add(new ParserRegistry('Var', nonTagPart => {
-    const [name, expr] = splitWith(':')(nonTagPart);
+}).completeColon());
+Parsers.register(new ParserRegistry('Break', _ => new dataTypes.BreakData()));
+Parsers.register(new ParserRegistry('End', _ => new dataTypes.EndData()));
+Parsers.register(new ParserRegistry('Var', part => {
+    const [name, expr] = splitWith(':')(part);
     return new dataTypes.VarData(name, expr);
-}));
-ParserRegister.add(new ParserRegistry('Enum', nonTagPart => {
-    const [name, values] = splitWith(':')(nonTagPart);
+}).completeColon());
+Parsers.register(new ParserRegistry('Enum', part => {
+    const [name, values] = splitWith(':')(part);
     return new dataTypes.EnumData(name, values.split(',').map(value => value.trim()));
-}));
-ParserRegister.add(new ParserRegistry('Input', nonTagPart => {
-    const [valueVar, errorVar] = splitWith(',')(nonTagPart);
+}).completeColon());
+Parsers.register(new ParserRegistry('Input', part => {
+    const [valueVar, errorVar] = splitWith(',')(part);
     return new dataTypes.InputData(valueVar, errorVar);
 }));
-ParserRegister.add(new ParserRegistry('Image', nonTagPart => {
-    const [imageType, imageFile] = splitWith(':')(nonTagPart);
+Parsers.register(new ParserRegistry('Image', part => {
+    const [imageType, imageFile] = splitWith(':')(part);
     return new dataTypes.ImageData(imageType, imageFile);
-}));
-ParserRegister.add(new ParserRegistry('Transform', nonTagPart => {
-    const [imageType, configs] = splitWith(':')(nonTagPart);
+}).completeColon());
+Parsers.register(new ParserRegistry('Transform', part => {
+    const [imageType, configs] = splitWith(':')(part);
     return new dataTypes.TransformData(imageType, parseConfig(configs));
-}));
-ParserRegister.add(new ParserRegistry('Delay', nonTagPart => new dataTypes.DelayData(nonTagPart)));
-ParserRegister.add(new ParserRegistry('Pause', _ => new dataTypes.PauseData()));
-ParserRegister.add(new ParserRegistry('Eval', nonTagPart => new dataTypes.EvalData(nonTagPart)));
-ParserRegister.add(new ParserRegistry('Func', nonTagPart => {
-    const [name, args] = parseFunc(nonTagPart);
+}).completeColon());
+Parsers.register(new ParserRegistry('Delay', part => new dataTypes.DelayData(part)));
+Parsers.register(new ParserRegistry('Pause', _ => new dataTypes.PauseData()));
+Parsers.register(new ParserRegistry('Eval', part => new dataTypes.EvalData(part)));
+Parsers.register(new ParserRegistry('Func', part => {
+    const [name, args] = parseFunc(part);
     const invalids = args.filter(arg => !string.isIdentifier(arg));
     if (invalids.length !== 0) throw `Invalid func arg: ${invalids.join(',')}`;
     return new dataTypes.FuncData(name, args);
 }));
-ParserRegister.add(new ParserRegistry('Return', nonTagPart => new dataTypes.ReturnData(nonTagPart)));
-ParserRegister.add(new ParserRegistry('Call', nonTagPart => {
-    const [funcCall, returnVar] = nonTagPart.includes(':')
-        ? splitWith(':')(nonTagPart) : [nonTagPart, undefined];
+Parsers.register(new ParserRegistry('Return', part => new dataTypes.ReturnData(part)));
+Parsers.register(new ParserRegistry('Call', part => {
+    const [funcCall, returnVar] = part.includes(':')
+        ? splitWith(':')(part) : [part, undefined];
     const [name, args] = parseFunc(funcCall);
     return new dataTypes.CallData(name, args, returnVar);
 }));
-ParserRegister.add(new ParserRegistry('Import', nonTagPart => {
-    const [file, names] = splitWith(':')(nonTagPart);
+Parsers.register(new ParserRegistry('Import', part => {
+    const [file, names] = splitWith(':')(part);
     return new dataTypes.ImportData(file, names.split(',').map(name => name.trim()));
-}));
+}).completeColon());
