@@ -11,6 +11,9 @@ import { TabCompleters } from "./tab-completers.js";
 import { Jumpers } from "./jumpers.js";
 import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
 import { surround } from "./surround.js";
+import { loadPlugins } from "../plugin/loader.js";
+
+loadPlugins();
 
 updateInfo();
 

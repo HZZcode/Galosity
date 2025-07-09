@@ -1,6 +1,5 @@
 const lodash = require('lodash');
-// @ts-expect-error This import is relative to the compiled js file
-import * as grammar from './grammar.js';
+import * as grammar from './grammar/grammar.js';
 import { assert } from '../utils/assert.js';
 import { splitWith } from '../utils/split.js';
 import { GalVar, GalNum, GalEnum, GalEnumType, BoolType, isBool, isEnum, isNum } from './types.js';

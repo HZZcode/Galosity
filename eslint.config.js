@@ -12,7 +12,7 @@ export default defineConfig([
   {
     ignores: [
       "./js/*",
-      "./grammar/grammar.js",
+      "./ts/vars/grammar/grammar.js",
       "package-lock.json",
       "eslint.config.js",
       "mathjax/*",

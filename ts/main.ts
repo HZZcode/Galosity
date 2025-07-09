@@ -67,8 +67,10 @@ app.whenReady().then(() => {
     ipcMain.handle('hasFile', (_, path: string) => fs.promises.access(path, fs.constants.F_OK)
         .then(() => true).catch(() => false));
     ipcMain.handle('directory', _ => path.dirname(__dirname));
-    ipcMain.handle('readdir', (_, path: string) => fs.promises.readdir(path));
+    ipcMain.handle('readdir', (_, path: string, withFileTypes: boolean = false) => 
+        fs.promises.readdir(path, { withFileTypes: withFileTypes as any }));
     ipcMain.handle('openExternal', (_, url: string) => shell.openExternal(url));
+    ipcMain.handle('exists', (_, path: string) => fs.existsSync(path));
     ipcMain.handle('test', (_, data: { content: string, filename: string, isDebug: boolean }) => {
         const newWindow = new BrowserWindow({
             width: 1200,

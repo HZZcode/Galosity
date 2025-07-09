@@ -50,12 +50,15 @@
       "!src",
       "!save",
       "!import-test.txt",
-      "!ts"
+      "!ts",
+      "!exports.txt",
+      "!get-exports.py"
     ],
     "extraFiles": [
       "example.txt",
       "src",
-      "save"
+      "save",
+      "exports.txt"
     ],
     "win": {
       "target": "nsis"

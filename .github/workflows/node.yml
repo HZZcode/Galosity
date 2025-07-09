@@ -73,6 +73,13 @@ jobs:
         run: import shutil; shutil.copy2('./grammar/grammar.js', './js/vars/grammar.js')
         shell: python
 
+      - name: List export files
+        run: |
+          import os;
+          with open('./exports.txt', 'w+', encoding='utf-8') as out:
+            print('\n'.join('/'.join(path) + '/' + os.path.splitext(file)[0] for root, _, files in os.walk('./ts') for file in files if file.endswith(".ts") or file.endswith(".js") if len(path := root.split(os.sep)[1:]) != 0), file=out, end='')
+        shell: python
+
       - name: Build the application
         run: npm run build --if-present
 
