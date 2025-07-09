@@ -53,12 +53,14 @@
       "!ts",
       "!exports.txt",
       "!get-exports.py"
+      ,"!plugins"
     ],
     "extraFiles": [
       "example.txt",
       "src",
       "save",
-      "exports.txt"
+      "exports.txt",
+      "plugins"
     ],
     "win": {
       "target": "nsis"

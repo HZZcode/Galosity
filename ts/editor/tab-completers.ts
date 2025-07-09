@@ -86,10 +86,10 @@ export class TabCompleters {
     }
 }
 
-const tags = Parsers.tags().map(tag => `[${tag}]`);
-const colonTags = ['[Case]', '[Var]', '[Enum]', '[Image]', '[Transform]', '[Import]'];
-const imageTypes = ['background', 'left', 'center', 'right'];
-const transformTypes = new dataTypes.TransformData('').getAllArgs();
+export const getTags = () => Parsers.tags().map(tag => `[${tag}]`);
+export const getColonTags = () => ['[Case]', '[Var]', '[Enum]', '[Image]', '[Transform]', '[Import]'];
+export const imageTypes = ['background', 'left', 'center', 'right'];
+export const transformTypes = new dataTypes.TransformData('').getAllArgs();
 
 const isConfigKey = (front: string) => front.replaceAll(/=.*?,/g, '').includes('=');
 const getConfigKey = (front: string) => front.substring(Math.max(front.indexOf(':'),
@@ -111,10 +111,11 @@ function scanSymbols(dataList: dataTypes.GalData[]) {
 }
 
 TabCompleters.register(new TabCompleter(
-    new AutoComplete(tags.map(tag => colonTags.includes(tag) ? (tag + ':') : tag)),
+    new AutoComplete(),
     context => context.front.trim().startsWith('[')
         && (!context.front.includes(']') || context.front.trim().endsWith(']')),
     context => context.front,
+    _ => getTags().map(tag => getColonTags().includes(tag) ? (tag + ':') : tag)
 )); // Tags
 TabCompleters.register(new TabCompleter(
     new AutoComplete(),

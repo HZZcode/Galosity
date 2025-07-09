@@ -11,57 +11,35 @@ import { TypeDispatch, DispatchFunc } from "../utils/type-dispatch.js";
 import { Constructor } from '../utils/types.js';
 import { KeyType } from '../utils/keybind.js';
 
-export const processor = new TypeDispatch<[self: Manager], boolean, dataTypes.GalData>();
-processor.defaultTo(false);
-
-export class ProcessorRegistry {
-    type;
-    processor;
-
-    private constructor(type: Constructor<dataTypes.GalData>,
-        processor: DispatchFunc<any, [self: Manager], boolean>) {
-        this.type = type;
-        this.processor = processor;
-    }
-
-    static of<T extends dataTypes.GalData>(type: Constructor<T>,
-        processor: DispatchFunc<T, [self: Manager], boolean>) {
-        return new ProcessorRegistry(type, processor);
-    }
-}
-
-export class ProcessorRegister {
-    private static registries: ProcessorRegistry[] = [];
-    private static done = false;
+export class Processors {
+    private static dispatch = new TypeDispatch<[self: Manager], boolean, dataTypes.GalData>(false);
 
     private constructor() { }
 
-    static add(registry: ProcessorRegistry) {
-        this.registries.push(registry);
+    static register<T extends dataTypes.GalData>(type: Constructor<T>,
+        processor: DispatchFunc<T, [self: Manager], boolean>) {
+        this.dispatch.register(type, processor);
     }
 
-    static register() {
-        if (this.done) return;
-        for (const registry of this.registries)
-            processor.register(registry.type, registry.processor);
-        this.done = true;
+    static apply(data: dataTypes.GalData, self: Manager) {
+        return this.dispatch.call(data, self);
     }
 }
 
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.SpeechData, (data, self) => {
+Processors.register(dataTypes.SpeechData, (data, self) => {
     self.unsupportedForImported();
     if (data.character.trim() === '' && data.sentence.trim() === '')
         return false;
     self.texts.outputText(interpolate(data.character, self.varsFrame),
         interpolate(data.sentence, self.varsFrame));
     return true;
-}));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.NoteData, (data, self) => {
+});
+Processors.register(dataTypes.NoteData, (data, self) => {
     self.unsupportedForImported();
     self.texts.outputNote(interpolate(data.note, self.varsFrame));
     return true;
-}));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.JumpData, (data, self) => {
+});
+Processors.register(dataTypes.JumpData, (data, self) => {
     const anchor = interpolate(data.anchor, self.varsFrame);
     switch (data.type) {
         case dataTypes.JumpType.File:
@@ -79,8 +57,8 @@ ProcessorRegister.add(ProcessorRegistry.of(dataTypes.JumpData, (data, self) => {
         }
     }
     return false;
-}));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.SelectData, (_, self) => {
+});
+Processors.register(dataTypes.SelectData, (_, self) => {
     self.unsupportedForImported();
     const block = self.paragraph.findStartControlBlock(self.currentPos);
     const buttons = [];
@@ -99,8 +77,8 @@ ProcessorRegister.add(ProcessorRegistry.of(dataTypes.SelectData, (_, self) => {
     }
     self.buttons.drawButtons(buttons);
     return true;
-}));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.CaseData, (data, self) => {
+});
+Processors.register(dataTypes.CaseData, (data, self) => {
     if (self.paragraph.isSwitchCase(self.currentPos)) {
         const block = self.paragraph.findCaseControlBlock(self.currentPos);
         const switchData = self.paragraph.dataList[block.startPos] as dataTypes.SwitchData;
@@ -117,22 +95,22 @@ ProcessorRegister.add(ProcessorRegistry.of(dataTypes.CaseData, (data, self) => {
         }
     }
     return false;
-}));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.BreakData, (_, self) => {
+});
+Processors.register(dataTypes.BreakData, (_, self) => {
     const casePos = self.paragraph.getCasePosAt(self.currentPos);
     const block = self.paragraph.findCaseControlBlock(casePos);
     if (block === undefined) throw `[Break] at line ${self.currentPos} is not in control block`;
     const endPos = block.endPos;
     self.currentPos = endPos;
     return false;
-}));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.VarData, (data, self) => {
+});
+Processors.register(dataTypes.VarData, (data, self) => {
     self.varsFrame.warn = '';
     errorHandled(() => self.varsFrame.setVar(data.name, self.varsFrame.evaluate(data.expr)))();
     if (self.varsFrame.warn !== '') error.warn('Warning: ' + self.varsFrame.warn);
     return false;
-}));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.InputData, (data, self) => {
+});
+Processors.register(dataTypes.InputData, (data, self) => {
     self.unsupportedForImported();
     self.buttons.drawInput(self.next.bind(self), expr => {
         try {
@@ -146,40 +124,40 @@ ProcessorRegister.add(ProcessorRegistry.of(dataTypes.InputData, (data, self) => 
         }
     });
     return true;
-}));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.ImageData, async (data, self) => {
+});
+Processors.register(dataTypes.ImageData, async (data, self) => {
     self.unsupportedForImported();
     await self.resources.check();
     const type = interpolate(data.imageType, self.varsFrame);
     const file = interpolate(data.imageFile, self.varsFrame);
     await self.resources.setImage(type, file);
     return false;
-}));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.TransformData, (data, self) => {
+});
+Processors.register(dataTypes.TransformData, (data, self) => {
     self.unsupportedForImported();
     const interpolated = lodash.cloneDeep(data);
     for (const [key, value] of Object.entries(data))
         interpolated[key] = interpolate(value, self.varsFrame);
     self.resources.transformImage(interpolated.imageType, interpolated);
     return false;
-}));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.DelayData, (data, self) => {
+});
+Processors.register(dataTypes.DelayData, (data, self) => {
     self.unsupportedForImported();
     self.timeout.set(self.next.bind(self),
         self.varsFrame.evaluate(data.seconds).toNum() * 1000, 2);
     return false;
-}));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.PauseData, (_, __) => true));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.EvalData, (data, self) => {
+});
+Processors.register(dataTypes.PauseData, (_, __) => true);
+Processors.register(dataTypes.EvalData, (data, self) => {
     const expr = interpolate(data.expr, self.varsFrame);
     errorHandledAsWarning(async () => await eval(expr))();
     return false;
-}));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.FuncData, (_, self) => {
+});
+Processors.register(dataTypes.FuncData, (_, self) => {
     self.currentPos = self.paragraph.findReturnPosAfter(self.currentPos);
     return false;
-}));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.CallData, (data, self) => {
+});
+Processors.register(dataTypes.CallData, (data, self) => {
     self.callStack.push(self.getFrame());
     const pos = self.paragraph.findFuncPos(data.name);
     const funcData = self.paragraph.dataList[pos] as dataTypes.FuncData;
@@ -189,8 +167,8 @@ ProcessorRegister.add(ProcessorRegistry.of(dataTypes.CallData, (data, self) => {
         self.varsFrame.setVar(funcData.args[i], self.varsFrame.evaluate(expr));
     self.currentPos = pos;
     return false;
-}));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.ReturnData, (data, self) => {
+});
+Processors.register(dataTypes.ReturnData, (data, self) => {
     const value = data.value === '' ? new types.GalNum(0) : self.varsFrame.evaluate(data.value);
     if (self.callStack.length === 0)
         throw `Call stack is empty`;
@@ -200,13 +178,13 @@ ProcessorRegister.add(ProcessorRegistry.of(dataTypes.ReturnData, (data, self) =>
     const varName = (self.paragraph.dataList[frame.pos] as dataTypes.CallData).returnVar;
     if (varName !== undefined) self.varsFrame.setVar(varName, value);
     return false;
-}));
-ProcessorRegister.add(ProcessorRegistry.of(dataTypes.ImportData, async (data, self) => {
-    // Execute self file in an no-side-effect mode
+});
+Processors.register(dataTypes.ImportData, async (data, self) => {
+    // Execute this file in an no-side-effect mode
     // And read the vars and enums with these names from the sub-manager
-    // If they weren't defined in self environment yet, define them; otherwise nothing is done
+    // If they weren't defined in this environment yet, define them; otherwise nothing is done
     // It seems to be difficult to call funcs across files 
-    // So I guess we would implement self a bit later
+    // So I guess we would implement this a bit later
     const content = await self.resources.readFile(data.file);
     const subManager = new Manager(false);
     await subManager.set(content.splitLine());
@@ -223,4 +201,4 @@ ProcessorRegister.add(ProcessorRegistry.of(dataTypes.ImportData, async (data, se
         else throw `No such symbol in '${data.file}': '${name}'`;
     }
     return false;
-}));
+});

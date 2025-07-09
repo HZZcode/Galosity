@@ -9,12 +9,14 @@ import { isNum } from "../utils/string.js";
 import { jump, lineInput, evalButton, codeInput } from "./elements.js";
 import { Manager } from "./manager.js";
 import { KeybindManager, KeyType } from "../utils/keybind.js";
+import { loadPlugins } from "../plugin/loader.js";
 
 const manager = new Manager(true);
 
 const initPromise = new Promise<void>((resolve, reject) => {
     ipcRenderer.on('test-data', async (_, data) => {
         try {
+            await loadPlugins();
             await manager.set(data.content.splitLine());
             manager.resources.filename = data.filename;
             logger.isDebug = data.isDebug;

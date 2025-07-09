@@ -71,6 +71,7 @@ app.whenReady().then(() => {
         fs.promises.readdir(path, { withFileTypes: withFileTypes as any }));
     ipcMain.handle('openExternal', (_, url: string) => shell.openExternal(url));
     ipcMain.handle('exists', (_, path: string) => fs.existsSync(path));
+    ipcMain.handle('setTitle', (_, title: string) => win.setTitle(title));
     ipcMain.handle('test', (_, data: { content: string, filename: string, isDebug: boolean }) => {
         const newWindow = new BrowserWindow({
             width: 1200,

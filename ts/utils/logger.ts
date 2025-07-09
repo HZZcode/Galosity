@@ -11,10 +11,12 @@ class Logger {
         if (this.isDebug) console.log(message);
     }
     warn(message: any) {
-        if (this.isDebug) console.warn(message + '\n' + this.getStack());
+        message = message + '\n' + this.getStack();
+        if (this.isDebug) console.warn(message);
     }
     error(message: any) {
-        if (this.isDebug) console.error(message + '\n' + this.getStack());
+        message = message + '\n' + this.getStack();
+        if (this.isDebug) console.error(message);
     }
 }
 

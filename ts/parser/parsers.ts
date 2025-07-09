@@ -31,24 +31,20 @@ export function parseFunc(func: string): [string, string[]] {
 export class ParserRegistry {
     tag;
     parser;
-    colon = false;
+    colon;
 
-    constructor(tag: string, parser: (part: string) => GalData) {
+    constructor(tag: string, parser: (part: string) => GalData, colon: boolean = false) {
         this.tag = tag;
         this.parser = parser;
-    }
-
-    completeColon() {
-        this.colon = true;
-        return this;
+        this.colon = colon;
     }
 }
 
 export class Parsers {
     private static parsers: ParserRegistry[] = [];
 
-    static register(registry: ParserRegistry) {
-        this.parsers.push(registry);
+    static register(tag: string, parser: (part: string) => GalData, colon: boolean = false) {
+        this.parsers.push(new ParserRegistry(tag, parser, colon));
     }
 
     static parse(tag: string, nonTagPart: string) {
@@ -65,56 +61,56 @@ export class Parsers {
     }
 }
 
-Parsers.register(new ParserRegistry('Character', part => new dataTypes.CharacterData(part)));
-Parsers.register(new ParserRegistry('Part', part => new dataTypes.PartData(part)));
-Parsers.register(new ParserRegistry('Note', part => new dataTypes.NoteData(part)));
-Parsers.register(new ParserRegistry('Jump', part => new dataTypes.JumpData(part)));
-Parsers.register(new ParserRegistry('Anchor', part => new dataTypes.AnchorData(part)));
-Parsers.register(new ParserRegistry('Select', _ => new dataTypes.SelectData()));
-Parsers.register(new ParserRegistry('Switch', part => new dataTypes.SwitchData(part)));
-Parsers.register(new ParserRegistry('Case', part => {
+Parsers.register('Character', part => new dataTypes.CharacterData(part));
+Parsers.register('Part', part => new dataTypes.PartData(part));
+Parsers.register('Note', part => new dataTypes.NoteData(part));
+Parsers.register('Jump', part => new dataTypes.JumpData(part));
+Parsers.register('Anchor', part => new dataTypes.AnchorData(part));
+Parsers.register('Select', _ => new dataTypes.SelectData());
+Parsers.register('Switch', part => new dataTypes.SwitchData(part));
+Parsers.register('Case', part => {
     const [value, configs] = splitWith(':')(part);
     return new dataTypes.CaseData(value, parseConfig(configs));
-}).completeColon());
-Parsers.register(new ParserRegistry('Break', _ => new dataTypes.BreakData()));
-Parsers.register(new ParserRegistry('End', _ => new dataTypes.EndData()));
-Parsers.register(new ParserRegistry('Var', part => {
+}, true);
+Parsers.register('Break', _ => new dataTypes.BreakData());
+Parsers.register('End', _ => new dataTypes.EndData());
+Parsers.register('Var', part => {
     const [name, expr] = splitWith(':')(part);
     return new dataTypes.VarData(name, expr);
-}).completeColon());
-Parsers.register(new ParserRegistry('Enum', part => {
+}, true);
+Parsers.register('Enum', part => {
     const [name, values] = splitWith(':')(part);
     return new dataTypes.EnumData(name, values.split(',').map(value => value.trim()));
-}).completeColon());
-Parsers.register(new ParserRegistry('Input', part => {
+}, true);
+Parsers.register('Input', part => {
     const [valueVar, errorVar] = splitWith(',')(part);
     return new dataTypes.InputData(valueVar, errorVar);
-}));
-Parsers.register(new ParserRegistry('Image', part => {
+});
+Parsers.register('Image', part => {
     const [imageType, imageFile] = splitWith(':')(part);
     return new dataTypes.ImageData(imageType, imageFile);
-}).completeColon());
-Parsers.register(new ParserRegistry('Transform', part => {
+}, true);
+Parsers.register('Transform', part => {
     const [imageType, configs] = splitWith(':')(part);
     return new dataTypes.TransformData(imageType, parseConfig(configs));
-}).completeColon());
-Parsers.register(new ParserRegistry('Delay', part => new dataTypes.DelayData(part)));
-Parsers.register(new ParserRegistry('Pause', _ => new dataTypes.PauseData()));
-Parsers.register(new ParserRegistry('Eval', part => new dataTypes.EvalData(part)));
-Parsers.register(new ParserRegistry('Func', part => {
+}, true);
+Parsers.register('Delay', part => new dataTypes.DelayData(part));
+Parsers.register('Pause', _ => new dataTypes.PauseData());
+Parsers.register('Eval', part => new dataTypes.EvalData(part));
+Parsers.register('Func', part => {
     const [name, args] = parseFunc(part);
     const invalids = args.filter(arg => !string.isIdentifier(arg));
     if (invalids.length !== 0) throw `Invalid func arg: ${invalids.join(',')}`;
     return new dataTypes.FuncData(name, args);
-}));
-Parsers.register(new ParserRegistry('Return', part => new dataTypes.ReturnData(part)));
-Parsers.register(new ParserRegistry('Call', part => {
+});
+Parsers.register('Return', part => new dataTypes.ReturnData(part));
+Parsers.register('Call', part => {
     const [funcCall, returnVar] = part.includes(':')
         ? splitWith(':')(part) : [part, undefined];
     const [name, args] = parseFunc(funcCall);
     return new dataTypes.CallData(name, args, returnVar);
-}));
-Parsers.register(new ParserRegistry('Import', part => {
+});
+Parsers.register('Import', part => {
     const [file, names] = splitWith(':')(part);
     return new dataTypes.ImportData(file, names.split(',').map(name => name.trim()));
-}).completeColon());
+}, true);

@@ -7,11 +7,12 @@ export const exports: Exports = {};
 
 function exportObject(path: string[], object: any, root: Exports = exports) {
     path = path.map(name => name.toIdentifier());
-    if (path.length === 1) root[path[0]] = object;
-    else {
-        if (!(path[0] in root)) root[path[0]] = {};
-        exportObject(path.slice(1), object, root[path[0]]);
+    if (path.length === 1) {
+        root[path[0]] = object;
+        return;
     }
+    if (!(path[0] in root)) root[path[0]] = {};
+    exportObject(path.slice(1), object, root[path[0]]);
 }
 
 function exportPack(pack: string) {

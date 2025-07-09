@@ -16,7 +16,8 @@ export function parseLine(line: string): dataTypes.GalData {
     const tag = line.substring(leftBracket + 1, rightBracket).trim();
     const nonTagPart = line.substring(rightBracket + 1).trim();
 
-    return Parsers.parse(tag, nonTagPart) ?? parseSpeech(line);
+    const parsed = Parsers.parse(tag, nonTagPart);
+    return parsed ?? parseSpeech(line);
 }
 
 export class ControlBlock {
@@ -36,9 +37,12 @@ export class ControlBlock {
 }
 
 export class Paragraph {
-    dataList;
+    lines;
     constructor(lines: string[]) {
-        this.dataList = lines.map(parseLine);
+        this.lines = lines;
+    }
+    get dataList() {
+        return this.lines.map(parseLine);
     }
     getPartAt(pos: number) {
         const sub = this.dataList.slice(0, pos + 1).filterType(dataTypes.PartData);

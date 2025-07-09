@@ -13,46 +13,44 @@ import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
 import { surround } from "./surround.js";
 import { loadPlugins } from "../plugin/loader.js";
 
-loadPlugins();
-
-updateInfo();
-
 const keybind = new KeybindManager();
 
-textarea.addEventListener('keydown', processKeyDown);
-textarea.addEventListener('input', updateInfo);
-textarea.addEventListener('selectionchange', updateInfo);
+function binds() {
+    textarea.addEventListener('keydown', processKeyDown);
+    textarea.addEventListener('input', updateInfo);
+    textarea.addEventListener('selectionchange', updateInfo);
 
-setInterval(async () => await file.autoSave(), 60000);
+    setInterval(async () => await file.autoSave(), 60000);
 
-bindFunction('new', file.new.bind(file));
-bindFunction('open', file.open.bind(file));
-bindFunction('save', file.save.bind(file));
-bindFunction('save-as', file.saveAs.bind(file));
-bindFunction('help', help);
+    bindFunction('new', file.new.bind(file));
+    bindFunction('open', file.open.bind(file));
+    bindFunction('save', file.save.bind(file));
+    bindFunction('save-as', file.saveAs.bind(file));
+    bindFunction('help', help);
 
-bindFunction('tab', autoComplete);
-bindFunction('comment', comment);
-bindFunction('jump', jumpTo);
-bindFunction('back', file.back.bind(file));
-bindFunction('test', test);
+    bindFunction('tab', autoComplete);
+    bindFunction('comment', comment);
+    bindFunction('jump', jumpTo);
+    bindFunction('back', file.back.bind(file));
+    bindFunction('test', test);
 
-keybind.bind(KeyType.of('n', KeyConfig.Ctrl), file.new.bind(file));
-keybind.bind(KeyType.of('o', KeyConfig.Ctrl), file.open.bind(file));
-keybind.bind(KeyType.of('s', KeyConfig.Ctrl), file.save.bind(file));
-keybind.bind(KeyType.of('s', KeyConfig.Ctrl | KeyConfig.Shift), file.saveAs.bind(file));
-keybind.bind(KeyType.of('h', KeyConfig.Ctrl), help);
+    keybind.bind(KeyType.of('n', KeyConfig.Ctrl), file.new.bind(file));
+    keybind.bind(KeyType.of('o', KeyConfig.Ctrl), file.open.bind(file));
+    keybind.bind(KeyType.of('s', KeyConfig.Ctrl), file.save.bind(file));
+    keybind.bind(KeyType.of('s', KeyConfig.Ctrl | KeyConfig.Shift), file.saveAs.bind(file));
+    keybind.bind(KeyType.of('h', KeyConfig.Ctrl), help);
 
-keybind.bind(KeyType.of('Tab'), autoComplete);
-keybind.bind(KeyType.of('/', KeyConfig.Ctrl), comment);
-textarea.addEventListener('mouseup', jump);
-keybind.bind(KeyType.of('b', KeyConfig.Ctrl), file.back.bind(file));
-keybind.bind(KeyType.of('F5'), test);
+    keybind.bind(KeyType.of('Tab'), autoComplete);
+    keybind.bind(KeyType.of('/', KeyConfig.Ctrl), comment);
+    textarea.addEventListener('mouseup', jump);
+    keybind.bind(KeyType.of('b', KeyConfig.Ctrl), file.back.bind(file));
+    keybind.bind(KeyType.of('F5'), test);
 
-keybind.bind(KeyType.of('('), surround('(', ')'));
-keybind.bind(KeyType.of('{'), surround('{', '}'));
-keybind.bind(KeyType.of('l', KeyConfig.Ctrl), surround('\\(', '\\)'));
-keybind.bind(KeyType.of('l', KeyConfig.Ctrl | KeyConfig.Shift), surround('$$', '$$'));
+    keybind.bind(KeyType.of('('), surround('(', ')'));
+    keybind.bind(KeyType.of('{'), surround('{', '}'));
+    keybind.bind(KeyType.of('l', KeyConfig.Ctrl), surround('\\(', '\\)'));
+    keybind.bind(KeyType.of('l', KeyConfig.Ctrl | KeyConfig.Shift), surround('$$', '$$'));
+}
 
 async function processKeyDown(event: KeyboardEvent) {
     if (await keybind.apply(event)) event.preventDefault();
@@ -107,13 +105,31 @@ async function help() {
         });
 }
 
-ipcRenderer.on('send-data', async (_, data) => {
-    logger.isDebug = data.isDebug;
-    if (data.file !== undefined) await file.read(data.file);
-    else if (data.isDebug) await file.read('gal.txt');
-});
-
 ipcRenderer.on('before-close', async () => {
     await file.save();
     ipcRenderer.send('before-close-complete');
 });
+
+const initPromise = new Promise<void>((resolve, reject) => {
+    ipcRenderer.on('send-data', async (_, data) => {
+        try {
+            logger.isDebug = data.isDebug;
+            await loadPlugins();
+            if (data.file !== undefined) await file.read(data.file);
+            else if (data.isDebug) await file.read('gal.txt');
+            updateInfo();
+
+            binds();
+            resolve();
+        } catch (e) {
+            reject(e);
+        }
+    });
+});
+
+async function main() {
+    await initPromise;
+}
+
+// eslint-disable-next-line floatingPromise/no-floating-promise
+main();

@@ -19,7 +19,7 @@ import { ResourceManager } from "./resources.js";
 import { SaveLoadManager } from "./save-load.js";
 import { getType } from "../utils/types.js";
 import { part, currentLine, character, speech } from "./elements.js";
-import { processor, ProcessorRegister } from "./processors.js";
+import { Processors } from "./processors.js";
 
 export class Manager {
     varsFrame;
@@ -40,9 +40,6 @@ export class Manager {
         this.isMain = isMain;
         if (!isMain) this.info.setLine = this.info.setPart
             = this.timeout.set = this.timeout.clear = (): any => 0;
-
-        ProcessorRegister.register();
-
         this.varsFrame = new vars.GalVars();
         this.varsFrame.initBuiltins();
     }
@@ -85,7 +82,7 @@ export class Manager {
         this.timeout.clear();
         this.keybind.clear();
         this.setEnums();
-        return await processor.call(data, this);
+        return await Processors.apply(data, this);
     }
     push(frame: Frame) {
         this.history.push(frame);

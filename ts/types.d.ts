@@ -16,6 +16,7 @@ export interface GalIpcRenderer extends IpcRenderer {
   invoke(channel: 'readdir', path: string, withFileTypes: true): Promise<Dirent[]>;
   invoke(channel: 'exists', path: string): Promise<boolean>;
   invoke(channel: 'openExternal', url: string): Promise<void>;
+  invoke(channel: 'setTitle', title: string): Promise<void>;
   invoke(channel: 'test', data: { content: string, filename?: string, isDebug: boolean }): Promise<void>;
   invoke(channel: 'log', str: string): Promise<void>;
 

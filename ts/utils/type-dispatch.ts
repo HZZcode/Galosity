@@ -8,7 +8,8 @@ export class TypeDispatch<TArgs extends any[], TReturn, TThisBase = unknown> {
     funcName;
     defaultValue?: TReturn;
 
-    constructor() {
+    constructor(defaultValue?: TReturn) {
+        if (defaultValue !== undefined) this.defaultTo(defaultValue);
         this.funcName = `dispatch_ZZ_func_${uuid().replaceAll('-', '_')}`;
     }
 
