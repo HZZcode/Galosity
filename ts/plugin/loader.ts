@@ -4,6 +4,7 @@ const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
 import { logger } from "../utils/logger.js";
 import { exportAll, exports } from "./exports.js";
+import { MetaInfo } from "./meta-info.js";
 
 export let finishLoading = false;
 
@@ -17,22 +18,23 @@ function getPath(plugin: string) {
     return `${'../'.repeat(count)}plugins/${plugin}/index.js`;
 }
 
-export async function tryLoadPlugin(path: string) {
+export async function tryLoadPlugin(plugin: string) {
     await exportAll();
     window.galosity = exports;
+    const path = getPath(plugin);
     try {
         const plugin = await import(path);
-        await plugin.setup();
+        await plugin.setup(new MetaInfo());
         return true;
     } catch (e) {
-        logger.error(`Failed to load plugin at ${path}: ${e}`);
+        logger.error(`Failed to load plugin '${plugin}': ${e}`);
         return false;
     }
 }
 
 export async function loadPlugins() {
     const loaded: string[] = (await getPlugins())
-        .filter(async plugin => await tryLoadPlugin(getPath(plugin)));
+        .filter(async plugin => await tryLoadPlugin(plugin));
     await setInfo(loaded);
     finishLoading = true;
 }
