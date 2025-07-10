@@ -46,4 +46,6 @@ export async function setup(info) {
             }
         );
     }
+
+    return enabled;
 }

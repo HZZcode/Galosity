@@ -114,7 +114,10 @@ const initPromise = new Promise<void>((resolve, reject) => {
     ipcRenderer.on('send-data', async (_, data) => {
         try {
             logger.isDebug = data.isDebug;
-            await loadPlugins();
+            await loadPlugins(e => {
+                logger.error(e);
+                error.error(e);
+            });
             if (data.file !== undefined) await file.read(data.file);
             else if (data.isDebug) await file.read('gal.txt');
             updateInfo();

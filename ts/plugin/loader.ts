@@ -3,10 +3,9 @@ const electron = require('electron');
 const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
 import { logger } from "../utils/logger.js";
+import { Func } from "../utils/types.js";
 import { exportAll, exports } from "./exports.js";
 import { MetaInfo } from "./meta-info.js";
-
-export let finishLoading = false;
 
 async function getPlugins() {
     const plugins = await ipcRenderer.invoke('readdir', 'plugins');
@@ -18,25 +17,36 @@ function getPath(plugin: string) {
     return `${'../'.repeat(count)}plugins/${plugin}/index.js`;
 }
 
+class LoadResult {
+    plugin;
+    loaded;
+    error;
+
+    constructor(plugin: string, loaded: boolean, error?: any) {
+        this.plugin = plugin;
+        this.loaded = loaded;
+        this.error = error;
+    }
+}
+
 export async function tryLoadPlugin(plugin: string) {
     await exportAll();
     window.galosity = exports;
     const path = getPath(plugin);
     try {
-        const plugin = await import(path);
-        await plugin.setup(new MetaInfo());
-        return true;
+        const result = await (await import(path)).setup(new MetaInfo()) as boolean | undefined;
+        return new LoadResult(plugin, result === undefined || !!result);
     } catch (e) {
-        logger.error(`Failed to load plugin '${plugin}': ${e}`);
-        return false;
+        return new LoadResult(plugin, false, e);
     }
 }
 
-export async function loadPlugins() {
-    const loaded: string[] = (await getPlugins())
-        .filter(async plugin => await tryLoadPlugin(plugin));
-    await setInfo(loaded);
-    finishLoading = true;
+export async function loadPlugins(onError?: Func<[error: string], void>) {
+    const results = await Promise.all((await getPlugins()).map(async plugin => await tryLoadPlugin(plugin)));
+    await setInfo(results.filter(result => result.loaded).map(result => result.plugin));
+    const errors = results.filter(result => !result.loaded && result.error !== undefined)
+        .map(result => `Failed to load plugin '${result.plugin}': ${result.error}`);
+    if (onError !== undefined && errors.length !== 0) await onError(errors.join('\n'));
 }
 
 async function setInfo(loaded: string[]) {
@@ -44,10 +54,11 @@ async function setInfo(loaded: string[]) {
 }
 
 function info(loaded: string[]) {
+    const maxInfo = 2;
     const length = loaded.length;
     loaded.sort();
     if (length === 0) return 'Vanilla';
     if (length === 1) return `Loaded Plugin: ${loaded[0]}`;
-    if (length <= 3) return `Loaded ${length} Plugins: ${loaded.join(', ')}`;
-    return `Loaded ${length} Plugins: ${loaded.slice(0, 1).join(', ')} +${length - 2} More`;
+    if (length <= maxInfo + 1) return `Loaded ${length} Plugins: ${loaded.join(', ')}`;
+    return `Loaded ${length} Plugins: ${loaded.slice(0, maxInfo).join(', ')} +${length - maxInfo} More`;
 }

@@ -16,7 +16,10 @@ const manager = new Manager(true);
 const initPromise = new Promise<void>((resolve, reject) => {
     ipcRenderer.on('test-data', async (_, data) => {
         try {
-            await loadPlugins();
+            await loadPlugins(e => {
+                logger.error(e);
+                error.error(e);
+            });
             await manager.set(data.content.splitLine());
             manager.resources.filename = data.filename;
             logger.isDebug = data.isDebug;

@@ -7,6 +7,7 @@ export const exports: Exports = {};
 
 function exportObject(path: string[], object: any, root: Exports = exports) {
     path = path.map(name => name.toIdentifier());
+    if (path.length === 0) return;
     if (path.length === 1) {
         root[path[0]] = object;
         return;
@@ -45,6 +46,6 @@ export async function exportAll() {
 
 declare global {
     interface Window {
-        galosity: { [key: string]: any }
+        galosity: Exports;
     }
 }
