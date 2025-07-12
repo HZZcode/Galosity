@@ -7,11 +7,9 @@ import { bindFunction, bindInput } from "../utils/bind-events.js";
 import { errorHandled, error } from "./error-handler.js";
 import { isNum } from "../utils/string.js";
 import { jump, lineInput, evalButton, codeInput } from "./elements.js";
-import { Manager } from "./manager.js";
-import { KeybindManager, KeyType } from "../utils/keybind.js";
+import { manager } from "./manager.js";
+import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
 import { loadPlugins } from "../plugin/loader.js";
-
-const manager = new Manager(true);
 
 const initPromise = new Promise<void>((resolve, reject) => {
     ipcRenderer.on('test-data', async (_, data) => {
@@ -38,10 +36,13 @@ async function main() {
     const keybind = new KeybindManager();
     keybind.bind(KeyType.of('Backspace'), manager.previous.bind(manager));
     keybind.bind(KeyType.of('Enter'), manager.next.bind(manager));
+    keybind.bind(KeyType.of('s', KeyConfig.Ctrl), async () => await manager.SLScreen.show());
+    keybind.bind(KeyType.of('l', KeyConfig.Ctrl), async () => await manager.SLScreen.show());
 
     window.addEventListener('keydown', errorHandled(async event => {
         if ((event.target as HTMLElement).tagName.toLowerCase() === 'input') return;
-        if (await keybind.apply(event) || await manager.keybind.apply(event))
+        if (manager.SLScreen.shown) await manager.SLScreen.keybind.apply(event);
+        else if (await keybind.apply(event) || await manager.keybind.apply(event))
             event.preventDefault();
     }));
 

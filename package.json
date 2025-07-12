@@ -52,8 +52,9 @@
       "!import-test.txt",
       "!ts",
       "!exports.txt",
-      "!get-exports.py"
-      ,"!plugins"
+      "!get-exports.py",
+      "!plugins",
+      "!merge.ps1"
     ],
     "extraFiles": [
       "example.txt",

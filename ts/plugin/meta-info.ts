@@ -56,6 +56,7 @@ class Versions {
     static versions: [Version, name: string][] = [
         [Version.fromString('2.0'), 'Pre-version'],
         [Version.fromString('2.1'), 'Plugin Dev'],
+        [Version.fromString('2.2'), 'UI+S&L!!'],
     ];
 
     private constructor() { }

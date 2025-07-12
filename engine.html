@@ -11,6 +11,7 @@
             color: #333333;
             height: 100vh;
             margin: 0;
+            position: relative;
         }
 
         .info,
@@ -78,7 +79,8 @@
             pointer-events: auto;
         }
 
-        #buttons .input {
+        #buttons .input,
+        #save-load .input {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -207,6 +209,42 @@
         .function:hover {
             background-color: darkblue;
         }
+
+        #save-load {
+            position: fixed;
+            background-color: transparent;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+            pointer-events: none;
+            touch-action: none;
+            display: grid;
+            z-index: 5;
+        }
+
+        .slot {
+            margin: 20px;
+            text-align: center;
+            background-color: #ffffffcc;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px #0000001a;
+            color: black;
+            font-family: Consolas, sans-serif;
+            font-size: medium;
+            border-radius: 10px;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            padding: 10px;
+            white-space: pre-wrap;
+        }
+
+        .save-notes {
+            z-index: 7;
+        }
     </style>
     <link rel="stylesheet" href="font-awesome/css/all.min.css">
     <script id="MathJax-script" async src="mathjax/es5/tex-mml-chtml.js"></script>
@@ -245,6 +283,7 @@
         <div class="image" id="center-image"></div>
         <div class="image" id="right-image"></div>
     </div>
+    <div id="save-load"></div>
     <script src="./js/engine/index.js" type="module"></script>
 </body>
 

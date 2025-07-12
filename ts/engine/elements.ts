@@ -6,3 +6,4 @@ export const lineInput = document.getElementById('line') as HTMLInputElement;
 export const currentLine = document.getElementById('current-line') as HTMLDivElement;
 export const evalButton = document.getElementById('eval') as HTMLButtonElement;
 export const codeInput = document.getElementById('code') as HTMLInputElement;
+export const saveLoad = document.getElementById('save-load') as HTMLDivElement;

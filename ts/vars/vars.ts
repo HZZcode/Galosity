@@ -28,10 +28,11 @@ export class GalVars {
         try {
             const [enumPart, varsPart] = splitWith(';')(str);
             const vars = new GalVars();
-            vars.vars = Object.fromEntries(varsPart.split(',').map(entry => {
-                const [name, value] = splitWith('=')(entry);
-                return [name, vars.evaluate(value)];
-            }));
+            if (varsPart !== '')
+                vars.vars = Object.fromEntries(varsPart.split(',').map(entry => {
+                    const [name, value] = splitWith('=')(entry);
+                    return [name, vars.evaluate(value)];
+                }));
             vars.enumTypes = enumPart.split(',').map(type => GalEnumType.fromString(type));
             return vars;
         } catch (e) {
