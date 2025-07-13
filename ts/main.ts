@@ -35,7 +35,7 @@ function createWindow() {
         },
     });
 
-    win.loadFile('index.html');
+    win.loadFile('./html/editor.html');
 
     win.webContents.on('did-finish-load', () => {
         win.webContents.send('send-data', { isDebug: isDebug, file: getArgvFileName() });
@@ -72,7 +72,7 @@ app.whenReady().then(() => {
     ipcMain.handle('openExternal', (_, url: string) => shell.openExternal(url));
     ipcMain.handle('exists', (_, path: string) => fs.existsSync(path));
     ipcMain.handle('setTitle', (_, title: string) => win.setTitle(title));
-    ipcMain.handle('test', (_, data: { content: string, filename: string, isDebug: boolean }) => {
+    ipcMain.handle('editor-data', (_, data: { content: string, filename: string, isDebug: boolean }) => {
         const newWindow = new BrowserWindow({
             width: 1200,
             height: 800,
@@ -85,9 +85,9 @@ app.whenReady().then(() => {
                 enableRemoteModule: true,
             },
         });
-        newWindow.loadFile('engine.html');
+        newWindow.loadFile('./html/engine.html');
         newWindow.webContents.on('did-finish-load', () => {
-            newWindow.webContents.send('test-data', data);
+            newWindow.webContents.send('editor-data', data);
         });
         newWindow.setMenu(null);
         if (isDebug) newWindow.webContents.openDevTools();

@@ -4,6 +4,9 @@ import {
 } from "electron";
 import { Dirent } from "fs";
 
+type EditorData = { isDebug: boolean, file: string };
+type EngineData = { content: string, filename?: string, isDebug: boolean, theme: number };
+
 export interface GalIpcRenderer extends IpcRenderer {
   invoke(channel: 'showSaveDialog', options: SaveDialogOptions): Promise<SaveDialogReturnValue>;
   invoke(channel: 'showOpenDialog', options: OpenDialogOptions): Promise<OpenDialogReturnValue>;
@@ -17,13 +20,11 @@ export interface GalIpcRenderer extends IpcRenderer {
   invoke(channel: 'exists', path: string): Promise<boolean>;
   invoke(channel: 'openExternal', url: string): Promise<void>;
   invoke(channel: 'setTitle', title: string): Promise<void>;
-  invoke(channel: 'test', data: { content: string, filename?: string, isDebug: boolean }): Promise<void>;
+  invoke(channel: 'editor-data', data: EngineData): Promise<void>;
   invoke(channel: 'log', str: string): Promise<void>;
 
-  on(channel: 'send-data', handler: (_: unknown, data:
-    { isDebug: boolean, file: string }) => void | Promise<void>): void;
-  on(channel: 'test-data', handler: (_: unknown, data:
-    { content: string, filename: string, isDebug: boolean }) => void | Promise<void>): void;
+  on(channel: 'send-data', handler: (_: unknown, data: EditorData) => void | Promise<void>): void;
+  on(channel: 'editor-data', handler: (_: unknown, data: EngineData) => void | Promise<void>): void;
   on(channel: 'before-close', handler: (_: unknown) => void | Promise<void>): void;
 }
 

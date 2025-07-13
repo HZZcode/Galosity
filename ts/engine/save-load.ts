@@ -116,8 +116,8 @@ export class SaveLoadScreen {
         const filled = await manager.SLManager.isFilled(slot);
         const info = filled ? await this.getInfo(slot) : '[Empty]';
         button.innerHTML = `slot ${slot}<br>${info}`;
-        button.style.color = filled ? 'black' : 'gray';
-        button.className = 'slot';
+        button.style.color = filled ? 'var(--color)' : 'var(--color-3)';
+        button.className = 'button slot';
         button.addEventListener('click', async () => filled ? await this.load(slot) : this.save(slot));
         return button;
     }
@@ -144,7 +144,7 @@ export class SaveLoadScreen {
         for (let i = 0; i < this.slots; i++)
             this.element.appendChild(await this.createSlotElement(i + this.start));
 
-        this.element.style.backgroundColor = '#ffffffcc';
+        this.element.style.backgroundColor = 'var(--color-alpha-1)';
         this.element.style.pointerEvents = 'all';
 
         this.listeners.add('wheel', this.wheel.bind(this), { passive: true });

@@ -10,9 +10,10 @@ import { jump, lineInput, evalButton, codeInput } from "./elements.js";
 import { manager } from "./manager.js";
 import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
 import { loadPlugins } from "../plugin/loader.js";
+import { themes } from "../utils/color-theme.js";
 
 const initPromise = new Promise<void>((resolve, reject) => {
-    ipcRenderer.on('test-data', async (_, data) => {
+    ipcRenderer.on('editor-data', async (_, data) => {
         try {
             await loadPlugins(e => {
                 logger.error(e);
@@ -21,6 +22,7 @@ const initPromise = new Promise<void>((resolve, reject) => {
             await manager.set(data.content.splitLine());
             manager.resources.filename = data.filename;
             logger.isDebug = data.isDebug;
+            themes.set(data.theme);
             resolve();
         } catch (e) {
             logger.error(e);
@@ -36,8 +38,8 @@ async function main() {
     const keybind = new KeybindManager();
     keybind.bind(KeyType.of('Backspace'), manager.previous.bind(manager));
     keybind.bind(KeyType.of('Enter'), manager.next.bind(manager));
-    keybind.bind(KeyType.of('s', KeyConfig.Ctrl), async () => await manager.SLScreen.show());
-    keybind.bind(KeyType.of('l', KeyConfig.Ctrl), async () => await manager.SLScreen.show());
+    keybind.bind(KeyType.of('d', KeyConfig.Ctrl), async () => await manager.SLScreen.show());
+    keybind.bind(KeyType.of('t', KeyConfig.Alt), themes.next.bind(themes));
 
     window.addEventListener('keydown', errorHandled(async event => {
         if ((event.target as HTMLElement).tagName.toLowerCase() === 'input') return;

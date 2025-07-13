@@ -7,14 +7,14 @@ export class TextManager {
         this.speech = speech;
     }
     
-    outputText(name: string, text: string, color = 'black') {
+    outputText(name: string, text: string, color = 'var(--color-4)') {
         this.character.innerHTML = name;
         this.speech.innerHTML = text;
         this.speech.style.color = color;
         MathJax.typeset();
     }
     outputNote(note: string) {
-        this.outputText('[Note]', note, 'gray');
+        this.outputText('[Note]', note, 'var(--color-3)');
     }
 }
 

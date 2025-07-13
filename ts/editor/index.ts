@@ -12,6 +12,7 @@ import { Jumpers } from "./jumpers.js";
 import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
 import { surround } from "./surround.js";
 import { loadPlugins } from "../plugin/loader.js";
+import { themes } from "../utils/color-theme.js";
 
 const keybind = new KeybindManager();
 
@@ -50,6 +51,7 @@ function binds() {
     keybind.bind(KeyType.of('{'), surround('{', '}'));
     keybind.bind(KeyType.of('l', KeyConfig.Ctrl), surround('\\(', '\\)'));
     keybind.bind(KeyType.of('l', KeyConfig.Ctrl | KeyConfig.Shift), surround('$$', '$$'));
+    keybind.bind(KeyType.of('t', KeyConfig.Alt), themes.next.bind(themes));
 }
 
 async function processKeyDown(event: KeyboardEvent) {
@@ -90,10 +92,11 @@ function comment() {
 
 async function test(fileManager = file, content = textarea.value) {
     await file.autoSave();
-    await ipcRenderer.invoke('test', {
+    await ipcRenderer.invoke('editor-data', {
         content: content,
         filename: fileManager.filename,
-        isDebug: logger.isDebug
+        isDebug: logger.isDebug,
+        theme: themes.current
     });
 }
 async function help() {
@@ -122,6 +125,7 @@ const initPromise = new Promise<void>((resolve, reject) => {
             else if (data.isDebug) await file.read('gal.txt');
             updateInfo();
 
+            themes.set();
             binds();
             resolve();
         } catch (e) {

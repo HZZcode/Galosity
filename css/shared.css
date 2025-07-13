@@ -1,0 +1,50 @@
+:root {
+    --page-background: transparent;
+
+    --color-4: transparent;
+    --color-3: transparent;
+    --color-2: transparent;
+    --color-1: transparent;
+
+    --color-alpha-4: transparent;
+    --color-alpha-3: transparent;
+    --color-alpha-2: transparent;
+    --color-alpha-1: transparent;
+    
+    --shadow-alpha: transparent;
+
+    --error: transparent;
+    --warning: transparent;
+    --outline: transparent;
+    --function: transparent;
+    --function-hover: transparent;
+
+    --function-size: 30px;
+    --functions-gap: 3px;
+}
+
+#functions {
+    display: grid;
+    gap: var(--functions-gap);
+}
+
+textarea:active, input:active {
+    outline-color: var(--outline);
+}
+
+.function {
+    position: relative;
+    width: var(--function-size);
+    height: var(--function-size);
+    line-height: 20px;
+    text-align: center;
+    border-radius: 50%;
+    border-style: none;
+    cursor: pointer;
+    color: var(--color-1);
+    background-color: var(--function);
+}
+
+.function:hover {
+    background-color: var(--function-hover);
+}
