@@ -72,6 +72,7 @@
     }
   },
   "dependencies": {
+    "highlight.js": "^11.11.1",
     "lodash": "^4.17.21",
     "mathjax": "^3.2.2",
     "pegjs": "^0.10.0",

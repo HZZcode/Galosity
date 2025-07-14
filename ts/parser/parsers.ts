@@ -52,8 +52,8 @@ export class Parsers {
         return parsers.first()?.parser(nonTagPart);
     }
 
-    static tags() {
-        return this.parsers.map(parser => parser.tag);
+    static nonColonTags() {
+        return this.parsers.filter(parser => !parser.colon).map(parser => parser.tag);
     }
 
     static colonTags() {
@@ -113,4 +113,9 @@ Parsers.register('Call', part => {
 Parsers.register('Import', part => {
     const [file, names] = splitWith(':')(part);
     return new dataTypes.ImportData(file, names.split(',').map(name => name.trim()));
+}, true);
+Parsers.register('Text', part => new dataTypes.TextData(part));
+Parsers.register('Code', part => {
+    const [language, code] = splitWith(':')(part);
+    return new dataTypes.CodeData(language, code);
 }, true);

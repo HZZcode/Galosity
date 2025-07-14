@@ -118,6 +118,16 @@ body {
     font-style: italic;
 }
 
+#texts {
+    font-family: Consolas, sans-serif;
+    font-size: large;
+    padding-left: 5%;
+    padding-right: 5%;
+    padding-top: 20%;
+    padding-bottom: 40%;
+    white-space: pre-wrap;
+}
+
 /* WebKit browsers */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {

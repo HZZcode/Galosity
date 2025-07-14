@@ -17,7 +17,7 @@ import { CustomData } from "./custom-data.js";
 import { Frame } from "./frame.js";
 import { ResourceManager } from "./resources.js";
 import { getType } from "../utils/types.js";
-import { part, currentLine, character, speech } from "./elements.js";
+import { part, currentLine, character, speech, texts } from "./elements.js";
 import { Processors } from "./processors.js";
 import { SaveLoadManager, SaveLoadScreen } from "./save-load.js";
 
@@ -29,7 +29,7 @@ export class Manager {
     callStack: Frame[] = []; //frames of [Call]s
     customData = new CustomData(); //might be used by [Eval] custom data
     info = new InfoManager(part, currentLine);
-    texts = new TextManager(character, speech);
+    texts = new TextManager(character, speech, texts);
     buttons = new ButtonsManager();
     resources = new ResourceManager();
     timeout = new TimeoutManager();

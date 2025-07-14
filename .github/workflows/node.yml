@@ -42,6 +42,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Copy Highlight.js
+        run: import shutil; shutil.copytree('./node_modules/highlight.js', './highlight', dirs_exist_ok=True)
+        shell: python
+
       - name: Copy MathJax
         run: import shutil; shutil.copytree('./node_modules/mathjax', './mathjax', dirs_exist_ok=True)
         shell: python

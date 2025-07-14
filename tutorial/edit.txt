@@ -7,12 +7,14 @@ ZZ: They are put between ^​{, _​{, %​{ or ~​{ and }.
 ZZ: Line feed\nis represented as \​n.
 
 
---Character & Speeches--
+--Character & Speeches & Texts--
 ZZ: Define a character with tag `[Character]`.
 Ichiku: Try: input `[ch` on a new line and press Tab. Galosity contains many Tab completions to improve productivity.
 ZZ: Now input `[Character] ZZ`. This tells the system that there will be a character named ZZ.
 Ichiku: Try: input `z` on a new line and press Tab.
 Ichiku: Then input `ZZ: Hello Galosity!` and see how it is presented.
+ZZ: Insert whole-screen text with `[Text]` and code block with `[Code]`.
+Ichiku: For example, try `[Text] multi\nline\ntext` and `[Code] js: console.log('Hello world!')`
 
 --Parts & Notes--
 [Part] Notice this!

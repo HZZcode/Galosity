@@ -1,20 +1,31 @@
+const hljs = require('highlight.js');
+
 export class TextManager {
     character;
     speech;
+    texts;
 
-    constructor(character: HTMLDivElement, speech: HTMLDivElement) {
+    constructor(character: HTMLDivElement, speech: HTMLDivElement, texts: HTMLDivElement) {
         this.character = character;
         this.speech = speech;
+        this.texts = texts;
     }
     
-    outputText(name: string, text: string, color = 'var(--color-4)') {
+    outputSpeech(name: string, text: string, color = 'var(--color-4)') {
         this.character.innerHTML = name;
         this.speech.innerHTML = text;
         this.speech.style.color = color;
         MathJax.typeset();
     }
     outputNote(note: string) {
-        this.outputText('[Note]', note, 'var(--color-3)');
+        this.outputSpeech('[Note]', note, 'var(--color-3)');
+    }
+    outputTexts(texts: string) {
+        this.texts.innerHTML = texts;
+        MathJax.typeset();
+    }
+    outputCode(language: string, code: string) {
+        this.outputTexts(hljs.highlight(code, { language: language }).value);
     }
 }
 

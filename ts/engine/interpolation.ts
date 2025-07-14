@@ -30,6 +30,10 @@ class Interpolations {
     }
 }
 
+export function escape(text: string) {
+    return text.replaceAll(/(?<!\\)\\n/g, '\n').replaceAll(/\\\\/g, '\\');
+}
+
 export function interpolate(text: string, varsFrame: vars.GalVars) {
     if (typeof text !== 'string') return text;
     const interpolation = new Interpolations();
@@ -51,5 +55,5 @@ export function interpolate(text: string, varsFrame: vars.GalVars) {
         return `<ruby><rb>${rb}</rb><rt>${rt}</rt><rp>(${rt})</rp></ruby>`;
     });
     interpolation.register('*', sub => `<button class="function"><i class="fa-solid ${sub}"></i></button>`);
-    return interpolation.process(text).replaceAll(/\\n/g, '<br>');
+    return interpolation.process(text).replaceAll(/(?<!\\)\\n/g, '<br>').replaceAll(/\\\\/g, '\\');
 }
