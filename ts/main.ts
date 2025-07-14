@@ -60,17 +60,20 @@ app.whenReady().then(() => {
         dialog.showSaveDialog(BrowserWindow.fromWebContents(event.sender)!, options));
     ipcMain.handle('showOpenDialog', (event, options: OpenDialogOptions) =>
         dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender)!, options));
-    ipcMain.handle('writeFile', (_, path: string, content: string) => 
-        fs.promises.writeFile(path, content, 'utf-8'));
+    ipcMain.handle('writeFile', (_, pathname: string, content: string) => {
+        fs.mkdirSync(path.dirname(pathname), { recursive: true });
+        fs.writeFileSync(pathname, content, 'utf-8');
+    });
     ipcMain.handle('readFile', (_, path: string) => fs.promises.readFile(path, 'utf-8'));
     ipcMain.handle('resolve', (_, pathname: string) => path.resolve(pathname).replaceAll('\\', '/'));
     ipcMain.handle('hasFile', (_, path: string) => fs.promises.access(path, fs.constants.F_OK)
         .then(() => true).catch(() => false));
     ipcMain.handle('directory', _ => path.dirname(__dirname));
-    ipcMain.handle('readdir', (_, path: string, withFileTypes: boolean = false) => 
+    ipcMain.handle('readdir', (_, path: string, withFileTypes: boolean = false) =>
         fs.promises.readdir(path, { withFileTypes: withFileTypes as any }));
     ipcMain.handle('openExternal', (_, url: string) => shell.openExternal(url));
     ipcMain.handle('exists', (_, path: string) => fs.existsSync(path));
+    ipcMain.handle('delete', (_, path: string) => fs.unlinkSync(path));
     ipcMain.handle('setTitle', (_, title: string) => win.setTitle(title));
     ipcMain.handle('editor-data', (_, data: { content: string, filename: string, isDebug: boolean }) => {
         const newWindow = new BrowserWindow({

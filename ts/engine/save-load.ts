@@ -1,3 +1,7 @@
+import { GalIpcRenderer } from "../types";
+const electron = require('electron');
+const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
+
 import { EventListener } from "../utils/event-listener.js";
 import { Files } from "../utils/files.js";
 import { KeybindManager, KeyType } from "../utils/keybind.js";
@@ -70,6 +74,9 @@ export class SaveLoadManager extends Files {
             throw `Cannot load from slot ${slot}: ${e}`;
         }
     }
+    async delete(slot: number) {
+        await ipcRenderer.invoke('delete', await this.getSaveFilePath(slot));
+    }
 }
 
 export class SaveLoadScreen {
@@ -118,7 +125,17 @@ export class SaveLoadScreen {
         button.innerHTML = `slot ${slot}<br>${info}`;
         button.style.color = filled ? 'var(--color)' : 'var(--color-3)';
         button.className = 'button slot';
-        button.addEventListener('click', async () => filled ? await this.load(slot) : this.save(slot));
+        button.addEventListener('mouseup', async event => {
+            if (event.button === 0) {
+                if (filled) await this.load(slot);
+                else this.save(slot);
+            }
+            else {
+                if (!filled) return;
+                await this.delete(slot);
+                event.preventDefault();
+            }
+        });
         return button;
     }
 
@@ -183,5 +200,11 @@ export class SaveLoadScreen {
         const [lines, frame] = await manager.SLManager.load(slot);
         if (lines !== undefined) manager.set(lines);
         manager.jump(frame, false);
+        this.clear();
+    }
+
+    async delete(slot: number) {
+        await manager.SLManager.delete(slot);
+        await this.flush();
     }
 }

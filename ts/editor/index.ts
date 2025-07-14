@@ -100,11 +100,12 @@ async function test(fileManager = file, content = textarea.value) {
     });
 }
 async function help() {
-    await file.readFile('example.txt')
-        .then(async content => await test(await new FileManager().ofFile('example.txt'), content))
+    const tutorial = 'tutorial/main.txt';
+    await file.readFile(tutorial)
+        .then(async content => await test(await new FileManager().ofFile(tutorial), content))
         .catch(e => {
             logger.error(e);
-            error.error(`Cannot find example.txt`);
+            error.error(`Cannot find ${tutorial}`);
         });
 }
 

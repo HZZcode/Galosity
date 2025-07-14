@@ -71,7 +71,10 @@ export class Manager {
     async jumpFile(path: string) {
         path = await this.resources.getRelative(path);
         await ipcRenderer.invoke('readFile', path)
-            .then(async content => await this.set(content.splitLine()))
+            .then(async content => {
+                await this.set(content.splitLine());
+                this.resources.setFile(path);
+            })
             .catch(e => {
                 logger.error(e);
                 error.error(e);

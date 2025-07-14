@@ -73,20 +73,21 @@ export class ResourceManager extends Files {
     }
 
     toString() {
-        return this.getElements().map(element => [
+        return [this.filename, this.getElements().map(element => [
             this.getPos(element.id),
             element.style.left,
             element.style.bottom,
             element.style.backgroundImage,
             element.style.transform
-        ].join('|')).join(';');
+        ].join('|'))].join(';');
     }
     static fromString(str: string) {
         const manager = new ResourceManager();
         manager.clear();
         if (!str.includes(';')) return manager;
         const elements = str.split(';');
-        for (const element of elements) {
+        manager.setFile(elements[0]);
+        for (const element of elements.slice(1)) {
             const [pos, left, bottom, image, transform] = element.split('|');
             manager.defImagePos(pos, left, bottom);
             if (image !== '') manager.setElementBackground(manager.getElement(pos), image);

@@ -29,6 +29,7 @@ class Interpolations {
         return text;
     }
 }
+
 export function interpolate(text: string, varsFrame: vars.GalVars) {
     if (typeof text !== 'string') return text;
     const interpolation = new Interpolations();
@@ -49,5 +50,6 @@ export function interpolate(text: string, varsFrame: vars.GalVars) {
         const [rb, rt] = splitWith(':')(sub);
         return `<ruby><rb>${rb}</rb><rt>${rt}</rt><rp>(${rt})</rp></ruby>`;
     });
+    interpolation.register('*', sub => `<button class="function"><i class="fa-solid ${sub}"></i></button>`);
     return interpolation.process(text).replaceAll(/\\n/g, '<br>');
 }

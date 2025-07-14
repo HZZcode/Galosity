@@ -1,17 +1,4 @@
-[Part] Galosity Example Tutorial
-[Character] ZZ
-ZZ: Hi! I'm ZZ.
-[Character] Ichiku
-Ichiku: Hi, I'm Ichiku nya~
-ZZ: Welcome to Galosity, a lite pure-text galgame editor. Hope you enjoy this journey.
-ZZ: Here you can press Enter to the next sentence, and Backspace to the previous.
-
 --Basic Editing Functions--
-ZZ: There are several shortcuts that you'll need to know.
-ZZ: Ctrl+S to save, and Ctrl+Shift+S to save as file.
-Ichiku: By default, your file will be automatically saved every 5 minutes.
-ZZ: Ctrl+O to open file, and Ctrl+N to create new file.
-Ichiku: Press F5 to see how your script look like.
 ZZ: \(\LaTeX\) is supported in Galosity.
 Ichiku: Just put your formula between two $$s or \​( and \​).
 ZZ: For example: \(a^2+b^2=c^2\).

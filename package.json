@@ -41,13 +41,12 @@
     },
     "files": [
       "**/*",
-      "!example.txt",
+      "!tutorial",
       "!gal.txt",
       "!README.md",
       "!LICENSE.txt",
       "!sum.txt",
       "!eslint.config.js",
-      "!src",
       "!save",
       "!import-test.txt",
       "!ts",
@@ -57,8 +56,7 @@
       "!merge.ps1"
     ],
     "extraFiles": [
-      "example.txt",
-      "src",
+      "tutorial",
       "save",
       "exports.txt",
       "plugins"
