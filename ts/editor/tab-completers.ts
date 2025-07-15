@@ -35,29 +35,25 @@ export class TabCompleter {
     predicate;
     partGetter;
     scanner;
-    postComplete;
 
     constructor(complete: AutoComplete,
         predicate: (context: TabCompleteContext) => boolean,
         partGetter: (context: TabCompleteContext) => string,
-        scanner?: Func<[context: TabCompleteContext], string[]>,
-        postComplete?: Func<[TextAreaManager], void>) {
+        scanner?: Func<[context: TabCompleteContext], string[]>) {
         this.complete = complete;
         this.predicate = predicate;
         this.partGetter = partGetter;
         this.scanner = scanner;
-        this.postComplete = postComplete;
     }
 
     static ofCombined(complete: AutoComplete,
         predicateAndPartGetter: (context: TabCompleteContext) => string | undefined,
-        scanner?: Func<[context: TabCompleteContext], string[]>,
-        postComplete?: Func<[TextAreaManager], void>) {
+        scanner?: Func<[context: TabCompleteContext], string[]>) {
         return new TabCompleter(
             complete,
             context => predicateAndPartGetter(context) !== undefined,
             context => predicateAndPartGetter(context)!,
-            scanner, postComplete
+            scanner
         );
     }
 
@@ -70,7 +66,6 @@ export class TabCompleter {
         const word = await this.complete.completeInclude(part);
         if (word === undefined) return false;
         manager.complete(word, part);
-        if (this.postComplete !== undefined) await this.postComplete(manager);
         return true;
     }
 }
@@ -91,8 +86,7 @@ export class TabCompleters {
     }
 }
 
-export const getNonColonTags = () => Parsers.nonColonTags().map(tag => `[${tag}]`);
-export const getColonTags = () => Parsers.colonTags().map(tag => `[${tag}]:`);
+export const getTags = () => Parsers.tags().map(tag => `[${tag}]`);
 export const imageTypes = ['background', 'left', 'center', 'right'];
 export const transformTypes = new dataTypes.TransformData('').getAllArgs();
 
@@ -120,16 +114,8 @@ TabCompleters.register(new TabCompleter(
     context => context.front.trim().startsWith('[')
         && (!context.front.includes(']') || context.front.trim().endsWith(']')),
     context => context.front,
-    getNonColonTags
-)); // Tags without colon
-TabCompleters.register(new TabCompleter(
-    new AutoComplete(),
-    context => context.front.trim().startsWith('[')
-        && (!context.front.includes(']') || context.front.trim().endsWith(']')),
-    context => context.front,
-    getColonTags,
-    manager => manager.move(-1)
-)); // Tags with colon
+    getTags
+)); // Tags
 TabCompleters.register(new TabCompleter(
     new AutoComplete(),
     context => !context.front.includes('[')

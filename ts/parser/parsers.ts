@@ -31,20 +31,18 @@ export function parseFunc(func: string): [string, string[]] {
 export class ParserRegistry {
     tag;
     parser;
-    colon;
 
-    constructor(tag: string, parser: (part: string) => GalData, colon: boolean = false) {
+    constructor(tag: string, parser: (part: string) => GalData) {
         this.tag = tag;
         this.parser = parser;
-        this.colon = colon;
     }
 }
 
 export class Parsers {
     private static parsers: ParserRegistry[] = [];
 
-    static register(tag: string, parser: (part: string) => GalData, colon: boolean = false) {
-        this.parsers.push(new ParserRegistry(tag, parser, colon));
+    static register(tag: string, parser: (part: string) => GalData) {
+        this.parsers.push(new ParserRegistry(tag, parser));
     }
 
     static parse(tag: string, nonTagPart: string) {
@@ -52,12 +50,8 @@ export class Parsers {
         return parsers.first()?.parser(nonTagPart);
     }
 
-    static nonColonTags() {
-        return this.parsers.filter(parser => !parser.colon).map(parser => parser.tag);
-    }
-
-    static colonTags() {
-        return this.parsers.filter(parser => parser.colon).map(parser => parser.tag);
+    static tags() {
+        return this.parsers.map(parser => parser.tag);
     }
 }
 
@@ -71,17 +65,17 @@ Parsers.register('Switch', part => new dataTypes.SwitchData(part));
 Parsers.register('Case', part => {
     const [value, configs] = splitWith(':')(part);
     return new dataTypes.CaseData(value, parseConfig(configs));
-}, true);
+});
 Parsers.register('Break', _ => new dataTypes.BreakData());
 Parsers.register('End', _ => new dataTypes.EndData());
 Parsers.register('Var', part => {
     const [name, expr] = splitWith(':')(part);
     return new dataTypes.VarData(name, expr);
-}, true);
+});
 Parsers.register('Enum', part => {
     const [name, values] = splitWith(':')(part);
     return new dataTypes.EnumData(name, values.split(',').map(value => value.trim()));
-}, true);
+});
 Parsers.register('Input', part => {
     const [valueVar, errorVar] = splitWith(',')(part);
     return new dataTypes.InputData(valueVar, errorVar);
@@ -89,11 +83,11 @@ Parsers.register('Input', part => {
 Parsers.register('Image', part => {
     const [imageType, imageFile] = splitWith(':')(part);
     return new dataTypes.ImageData(imageType, imageFile);
-}, true);
+});
 Parsers.register('Transform', part => {
     const [imageType, configs] = splitWith(':')(part);
     return new dataTypes.TransformData(imageType, parseConfig(configs));
-}, true);
+});
 Parsers.register('Delay', part => new dataTypes.DelayData(part));
 Parsers.register('Pause', _ => new dataTypes.PauseData());
 Parsers.register('Eval', part => new dataTypes.EvalData(part));
@@ -113,9 +107,9 @@ Parsers.register('Call', part => {
 Parsers.register('Import', part => {
     const [file, names] = splitWith(':')(part);
     return new dataTypes.ImportData(file, names.split(',').map(name => name.trim()));
-}, true);
+});
 Parsers.register('Text', part => new dataTypes.TextData(part));
 Parsers.register('Code', part => {
     const [language, code] = splitWith(':')(part);
     return new dataTypes.CodeData(language, code);
-}, true);
+});

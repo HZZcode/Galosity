@@ -11,6 +11,7 @@ import { saveLoad } from "./elements.js";
 import { error, errorHandled } from "./error-handler.js";
 import { Frame } from "./frame.js";
 import { manager } from "./manager.js";
+import { confirm } from "../utils/confirm.js";
 
 class SaveInfo {
     time;
@@ -197,14 +198,18 @@ export class SaveLoadScreen {
     }
 
     async load(slot: number) {
-        const [lines, frame] = await manager.SLManager.load(slot);
-        if (lines !== undefined) manager.set(lines);
-        manager.jump(frame, false);
-        this.clear();
+        if (await confirm(`Load save file at slot ${slot}?`)) {
+            const [lines, frame] = await manager.SLManager.load(slot);
+            if (lines !== undefined) manager.set(lines);
+            manager.jump(frame, false);
+            this.clear();
+        }
     }
 
     async delete(slot: number) {
-        await manager.SLManager.delete(slot);
-        await this.flush();
+        if (await confirm(`Delete save file at slot ${slot}?`)) {
+            await manager.SLManager.delete(slot);
+            await this.flush();
+        }
     }
 }

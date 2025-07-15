@@ -10,6 +10,7 @@ import { ipcRenderer, Manager } from "./manager.js";
 import { TypeDispatch, DispatchFunc } from "../utils/type-dispatch.js";
 import { Constructor } from '../utils/types.js';
 import { KeyType } from '../utils/keybind.js';
+import { confirm } from '../utils/confirm.js';
 
 export class Processors {
     private static dispatch = new TypeDispatch<[manager: Manager], boolean, dataTypes.GalData>(false);
@@ -39,7 +40,7 @@ Processors.register(dataTypes.NoteData, (data, manager) => {
     manager.texts.outputNote(interpolate(data.note, manager.varsFrame));
     return true;
 });
-Processors.register(dataTypes.JumpData, (data, manager) => {
+Processors.register(dataTypes.JumpData, async (data, manager) => {
     const anchor = interpolate(data.anchor, manager.varsFrame);
     switch (data.type) {
         case dataTypes.JumpType.File:
@@ -48,7 +49,8 @@ Processors.register(dataTypes.JumpData, (data, manager) => {
             break;
         case dataTypes.JumpType.Link:
             manager.unsupportedForImported();
-            ipcRenderer.invoke('openExternal', anchor);
+            if (await confirm(`Open '${anchor}'?`))
+                await ipcRenderer.invoke('openExternal', anchor);
             break;
         default: {
             const pos = manager.paragraph.findAnchorPos(anchor);

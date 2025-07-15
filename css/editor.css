@@ -1,13 +1,3 @@
-body {
-    font-family: Consolas, sans-serif;
-    background-color: var(--page-background);
-    color: var(--color-4);
-    height: 100vh;
-    margin: 0;
-    overflow: hidden;
-    position: relative;
-}
-
 .container {
     background-color: var(--color-1);
     padding: 20px;
@@ -52,18 +42,9 @@ textarea {
     font-size: medium;
 }
 
-#error {
-    color: var(--error);
-}
-
 #functions {
     margin-top: 5px;
 
     --columns: 5;
     --rows: 2;
-
-    width: calc(var(--columns) * (var(--function-size) + var(--functions-gap)) - var(--functions-gap));
-    height: calc(var(--rows) * (var(--function-size) + var(--functions-gap)) - var(--functions-gap));
-    grid-template-columns: repeat(var(--columns), 1fr);
-    grid-template-rows: repeat(var(--rows), 1fr);
 }
