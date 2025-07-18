@@ -1,12 +1,19 @@
 import { GalVar, isNum, GalNum } from './types.js';
 
 export class BuiltinVar {
-    factory;
-    constructor(factory: () => GalVar) {
-        this.factory = factory;
+    getter;
+    setter;
+    constructor(getter: () => GalVar, setter?: (value: GalVar) => void) {
+        this.getter = getter;
+        this.setter = setter;
     }
     get() {
-        return this.factory();
+        return this.getter();
+    }
+    set(value: GalVar) {
+        if (this.setter === undefined)
+            throw `Cannot assign to readonly builtin var`;
+        this.setter(value);
     }
 }
 export class BuiltinFunc {
