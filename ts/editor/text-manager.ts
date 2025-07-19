@@ -1,3 +1,7 @@
+import { EditData, LineEditData, HistoryManager } from "./history.js";
+
+export const textHistory = new HistoryManager();
+
 export class TextAreaManager {
     textarea;
     content;
@@ -40,12 +44,12 @@ export class TextAreaManager {
     beforeLinesLength() {
         return this.beforeLines().join('\n').length + 1;
     }
-    insert(text: string, length = 0, pos?: number) {
+    insert(text: string, length = 0, pos?: number, tag?: string) {
         const line = this.currentLine();
         if (pos === undefined) pos = this.currentColumn();
         const modified = line.substring(0, pos - length) + text + line.substring(pos);
         const start = this.start;
-        this.edit(this.currentLineCount(), modified);
+        this.edit(this.currentLineCount(), modified, true, tag);
         this.textarea.selectionStart = this.textarea.selectionEnd = start + text.length - length;
     }
     complete(text: string, part: string) {
@@ -55,9 +59,26 @@ export class TextAreaManager {
         this.textarea.selectionStart += step;
         this.textarea.selectionEnd += step;
     }
-    edit(line: number, modified: string) {
+    edit(line: number, modified: string, record: boolean = true, tag?: string) {
+        if (record) textHistory.record(new LineEditData(line, this.lines[line], modified, tag));
         this.lines[line] = modified;
         this.sync();
+    }
+    editData(edit?: EditData, record: boolean = false) {
+        if (edit === undefined) return;
+        if (record) textHistory.record(edit);
+        this.lines = [
+            ...this.lines.slice(0, edit.befores.minLine),
+            ...edit.afters,
+            ...this.lines.slice(edit.befores.maxLine + 1)
+        ];
+        this.sync();
+    }
+    undo() {
+        textHistory.undos().forEach(edit => this.editData(edit));
+    }
+    redo() {
+        textHistory.redos().forEach(edit => this.editData(edit));
     }
     jumpTo(line: number): boolean {
         if (line < 0 || line >= this.lines.length) return false;

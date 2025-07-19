@@ -1,18 +1,22 @@
 [Part] Editor operations
 ZZ: Let us introduce some operations of Galosity editor and engine.
 ZZ: You can see an area for editing and some buttons on the editor screen.
+
 ZZ: Button *{fa-file-circle-plus}, or Ctrl+N, is for creating new file.
 Ichiku: Button *{fa-file-import}, or Ctrl+O, is for opening file.
 ZZ: Button *{fa-floppy-disk}, or Ctrl+S, is for saving file.
 Ichiku: Button *{fa-file-export}, or Ctrl+Shift+S, is for saving file as another.
-ZZ: Button *{fa-question}, or Ctrl+H, is for showing this tutorial.
-Ichiku: Button *{fa-angles-right}, or Tab, is for auto completing.
-ZZ: Button *{fa-text-slash}, or Ctrl+/, is for commenting.
-Ichiku: Button *{fa-turn-down}, or Ctrl+Click, is for jumping.
-ZZ: Button *{fa-turn-up}, or Ctrl+B, is for jumping back.
-Ichiku: Button *{fa-terminal}, or F5, is for testing your script in engine.
+ZZ: Button *{fa-terminal}, or F5, is for testing your script in engine.
+Ichiku: Button *{fa-question}, or Ctrl+H, is for showing this tutorial.
+
+ZZ: Button *{fa-undo}, or Ctrl+Z, is for undo.
+Ichiku: Button *{fa-redo}, or Ctrl+Y, is for redo.
+ZZ: Button *{fa-angles-right}, or Tab, is for auto completing.
+Ichiku: Button *{fa-text-slash}, or Ctrl+/, is for commenting.
+ZZ: Button *{fa-turn-down}, or Ctrl+Click, is for jumping.
+Ichiku: Alt+T switches the theme (light or dark).
 ZZ: Ctrl+L and Ctrl+Shift+L are for inserting inline or multi-line latex.
-ZZ: Alt+T switches the theme (light or dark).
+Ichiku: Alt+T switches the theme (light or dark).
 ZZ: When inserting ( or {, the other part is completed.
 
 [Part] Engine operations

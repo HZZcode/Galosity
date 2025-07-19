@@ -45,6 +45,6 @@ textarea {
 #functions {
     margin-top: 5px;
 
-    --columns: 5;
+    --columns: 6;
     --rows: 2;
 }

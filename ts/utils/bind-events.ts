@@ -1,4 +1,4 @@
-export const bindFunction = (id: string, func: ((_: Event) => void) | (() => void)) =>
+export const bindFunction = (id: string, func: () => void) =>
     document.getElementById(id)?.addEventListener('click', func);
 
 export const bindInput = (button: HTMLButtonElement, input: HTMLInputElement,

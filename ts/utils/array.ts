@@ -53,3 +53,16 @@ Array.prototype.maxs = function (key?: (value: any) => number) {
 export function sum(nums: number[]) {
     return nums.reduce((x, y) => x + y, 0);
 }
+
+export function firstDifferents<T>(list1: T[], list2: T[]): [number, number] | undefined {
+    for (let i = 0; i < list1.length; i++)
+        if (list1[i] !== list2[i]) return [i, i];
+    return;
+}
+
+export function lastDifferents<T>(list1: T[], list2: T[]): [number, number] | undefined {
+    const d = list2.length - list1.length;
+    for (let i = list1.length; i >= 0; i--)
+        if (list1[i] !== list2[i + d]) return [i, i + d];
+    return;
+}
