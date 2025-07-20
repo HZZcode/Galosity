@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, OpenDialogOptions, SaveDialogOptions, shell } from 'electron';
-import { logger } from './utils/logger.js';
+import { logger } from '../utils/logger.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -75,7 +75,7 @@ app.whenReady().then(() => {
     ipcMain.handle('exists', (_, path: string) => fs.existsSync(path));
     ipcMain.handle('delete', (_, path: string) => fs.unlinkSync(path));
     ipcMain.handle('setTitle', (_, title: string) => win.setTitle(title));
-    ipcMain.handle('editor-data', (_, data: { content: string, filename: string, isDebug: boolean }) => {
+    ipcMain.handle('engine-data', (_, data: { content: string, filename: string, isDebug: boolean }) => {
         const newWindow = new BrowserWindow({
             width: 1200,
             height: 800,
@@ -90,7 +90,7 @@ app.whenReady().then(() => {
         });
         newWindow.loadFile('./html/engine.html');
         newWindow.webContents.on('did-finish-load', () => {
-            newWindow.webContents.send('editor-data', data);
+            newWindow.webContents.send('engine-data', data);
         });
         newWindow.setMenu(null);
         if (isDebug) newWindow.webContents.openDevTools();

@@ -13,7 +13,7 @@ import { loadPlugins } from "../plugin/loader.js";
 import { themes } from "../utils/color-theme.js";
 
 const initPromise = new Promise<void>((resolve, reject) => {
-    ipcRenderer.on('editor-data', async (_, data) => {
+    ipcRenderer.on('engine-data', async (_, data) => {
         try {
             await loadPlugins(e => {
                 logger.error(e);

@@ -96,7 +96,7 @@ function comment() {
 
 async function test(fileManager = file, content = textarea.value) {
     await file.autoSave();
-    await ipcRenderer.invoke('editor-data', {
+    await ipcRenderer.invoke('engine-data', {
         content,
         filename: fileManager.filename,
         isDebug: logger.isDebug,

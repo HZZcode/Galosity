@@ -1,3 +1,4 @@
+import { Comparism, falsy, greater, less, notEquals } from "../utils/comparing.js";
 import { logger } from "../utils/logger.js";
 
 export class MetaInfo {
@@ -31,20 +32,45 @@ export class Version {
         return typeof version === 'string' ? Version.fromString(version) : version;
     }
 
-    atLeast(other: VersionLike): boolean {
+    compare(other: VersionLike, falseIf: Comparism<number>, trueIf: Comparism<number>,
+        final: boolean): boolean {
         other = Version.from(other);
         for (let i = 0; i < Math.max(this.parts.length, other.parts.length); i++) {
             const thisPart = this.parts[i] || 0;
             const otherPart = other.parts[i] || 0;
 
-            if (thisPart < otherPart) return false;
-            if (thisPart > otherPart) return true;
+            if (falseIf(thisPart, otherPart)) return false;
+            if (trueIf(thisPart, otherPart)) return true;
         }
-        return true;
+        return final;
     }
 
-    requires(other: VersionLike) {
-        if (!this.atLeast(other)) throw `requires Galosity version >= ${other}; found version ${this}`;
+    greaterThan(other: VersionLike): boolean {
+        return this.compare(other, less, greater, false);
+    }
+
+    equals(other: VersionLike): boolean {
+        return this.compare(other, notEquals, falsy, true);
+    }
+
+    lessThan(other: VersionLike): boolean {
+        return this.compare(other, greater, less, false);
+    }
+
+    expect(other: VersionLike, condition: boolean, operator: string) {
+        if (!condition) throw `requires Galosity version ${operator} ${other}; found version ${this}`;
+    }
+
+    atLeast(other: VersionLike) {
+        this.expect(other, this.greaterThan(other) || this.equals(other), '>=');
+    }
+
+    atMost(other: VersionLike) {
+        this.expect(other, this.lessThan(other) || this.equals(other), '<=');
+    }
+
+    exactly(other: VersionLike) {
+        this.expect(other, this.equals(other), '==');
     }
 
     toString() {
