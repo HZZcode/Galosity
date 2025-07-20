@@ -15,10 +15,11 @@ import { loadPlugins } from "../plugin/loader.js";
 import { themes } from "../utils/color-theme.js";
 import { editTag } from "./history.js";
 import { recordInput } from "./input-record.js";
+import { Func } from "../utils/types.js";
 
 const keybind = new KeybindManager();
 
-const bindFunctions = (id: string, key: KeyType, func: () => void) => {
+const bindFunctions = (id: string, key: KeyType, func: Func<[], void>) => {
     bindFunction(id, func);
     keybind.bind(key, func);
 };
@@ -96,7 +97,7 @@ function comment() {
 async function test(fileManager = file, content = textarea.value) {
     await file.autoSave();
     await ipcRenderer.invoke('editor-data', {
-        content: content,
+        content,
         filename: fileManager.filename,
         isDebug: logger.isDebug,
         theme: themes.current

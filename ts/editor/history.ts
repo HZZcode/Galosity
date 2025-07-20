@@ -8,11 +8,14 @@ export class Lines {
     minLine;
     maxLine;
     lines;
+    get length() {
+        return this.maxLine - this.minLine + 1;
+    }
     constructor(minLine: number, maxLine: number, lines: string[]) {
-        assert(lines.length === maxLine - minLine + 1);
         this.minLine = minLine;
         this.maxLine = maxLine;
         this.lines = lines;
+        assert(lines.length === this.length);
     }
 }
 
@@ -31,17 +34,27 @@ export class EditData {
         return new EditData(new Lines(0, -1, []), []);
     }
     isEmpty() {
-        return this.befores.lines.length === 0 && this.afters.length === 0;
+        return this.befores.length === 0 && this.afters.length === 0;
+    }
+    isShort() {
+        if (!(this.befores.length === 1 && this.afters.length === 1)) return false;
+        const before = this.befores.lines[0], after = this.afters[0];
+        return Math.abs(before.length - after.length) <= 3;
     }
     reverse() {
         return new EditData(new Lines(this.befores.minLine, this.befores.minLine + this.afters.length - 1,
             this.afters), this.befores.lines, this.tag);
     }
+    isNearWith(other: EditData) {
+        return Math.abs(this.time.getTime() - other.time.getTime()) <= 1500;
+    }
     canCombineWith(other?: EditData) {
         if (other === undefined) return false;
-        if (this.tag !== undefined && other.tag !== undefined && this.tag === other.tag) return true;
+        if (this.tag !== undefined && this.tag === other.tag) return true;
+        if (this.isEmpty() || other.isEmpty()) return true;
+        if (this.isShort() && other.isShort() && this.isNearWith(other)) return true;
         return false;
-    }
+    } // FIXME: combine near edits
 }
 
 export class LineEditData extends EditData {

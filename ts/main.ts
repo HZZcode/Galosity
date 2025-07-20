@@ -38,7 +38,7 @@ function createWindow() {
     win.loadFile('./html/editor.html');
 
     win.webContents.on('did-finish-load', () => {
-        win.webContents.send('send-data', { isDebug: isDebug, file: getArgvFileName() });
+        win.webContents.send('send-data', { isDebug, file: getArgvFileName() });
     });
 
     win.on('close', event => {
