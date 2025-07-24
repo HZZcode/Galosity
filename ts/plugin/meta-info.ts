@@ -59,18 +59,19 @@ export class Version {
 
     expect(other: VersionLike, condition: boolean, operator: string) {
         if (!condition) throw `requires Galosity version ${operator} ${other}; found version ${this}`;
+        return this;
     }
 
     atLeast(other: VersionLike) {
-        this.expect(other, this.greaterThan(other) || this.equals(other), '>=');
+        return this.expect(other, this.greaterThan(other) || this.equals(other), '>=');
     }
 
     atMost(other: VersionLike) {
-        this.expect(other, this.lessThan(other) || this.equals(other), '<=');
+        return this.expect(other, this.lessThan(other) || this.equals(other), '<=');
     }
 
     exactly(other: VersionLike) {
-        this.expect(other, this.equals(other), '==');
+        return this.expect(other, this.equals(other), '==');
     }
 
     toString() {

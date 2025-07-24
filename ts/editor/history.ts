@@ -54,7 +54,7 @@ export class EditData {
         if (this.isEmpty() || other.isEmpty()) return true;
         if (this.isShort() && other.isShort() && this.isNearWith(other)) return true;
         return false;
-    } // FIXME: combine near edits
+    }
 }
 
 export class LineEditData extends EditData {
@@ -66,7 +66,7 @@ export class LineEditData extends EditData {
 class TextFrame {
     last;
     next;
-    edit; // What happens from this -> next
+    edit; // What happens from this => next
     constructor(last?: TextFrame, next?: TextFrame, edit?: EditData) {
         this.last = last;
         this.next = next;
@@ -76,6 +76,10 @@ class TextFrame {
 
 export class HistoryManager {
     frame = new TextFrame();
+
+    clear() {
+        this.frame = new TextFrame();
+    }
 
     record(edit: EditData) {
         if (edit.isEmpty()) return;
