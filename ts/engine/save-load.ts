@@ -49,6 +49,17 @@ export class SaveLoadManager extends Files {
     async isFilled(slot: number) {
         return await this.hasFile(await this.getSaveFilePath(slot));
     }
+    async maxSlot() {
+        const files = await ipcRenderer.invoke('readdir', await this.getSavePath());
+        let max = 0;
+        for (const file of files) {
+            const match = /save(.)\.gal/.exec(file);
+            if (match === null) continue;
+            const slot = Number.parseInt(match[1]);
+            if (slot > max) max = slot;
+        }
+        return max;
+    }
     async save(slot: number, frame: Frame, note = '') {
         await manager.resources.check();
         const str = new SaveInfo(manager.resources.filename!, note).toString() + '\n' + frame.toString();
@@ -96,10 +107,8 @@ export class SaveLoadScreen {
     }
 
     async getMax() {
-        let i = 1;
-        while (await manager.SLManager.isFilled(i)) i++;
-        return Math.min(i, this.slots);
-    } // FIXME: directly check all the files
+        return Math.min(await manager.SLManager.maxSlot(), this.slots);
+    }
 
     get slots() {
         return this.rows * this.columns;
