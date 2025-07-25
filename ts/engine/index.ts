@@ -21,8 +21,8 @@ const initPromise = new Promise<void>((resolve, reject) => {
             });
             await manager.set(data.content.splitLine());
             manager.resources.filename = data.filename;
-            logger.isDebug = data.isDebug;
-            themes.set(data.theme);
+            logger.isDebug = data.configs.isDebug;
+            themes.set(data.configs.theme);
             resolve();
         } catch (e) {
             logger.error(e);

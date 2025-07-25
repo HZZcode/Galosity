@@ -67,6 +67,6 @@ export class Files {
         return await ipcRenderer.invoke('resolve', path);
     }
     async hasFile(path: string) {
-        return await ipcRenderer.invoke('hasFile', path);
+        return await ipcRenderer.invoke('exists', path);
     }
 }

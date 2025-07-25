@@ -1,4 +1,4 @@
-import { GalIpcRenderer } from "../types";
+import { Configs, GalIpcRenderer } from "../types";
 const electron = require('electron');
 const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
@@ -18,6 +18,8 @@ import { recordInput } from "./input-record.js";
 import { Func } from "../utils/types.js";
 
 const keybind = new KeybindManager();
+
+let configs: Configs;
 
 const bindFunctions = (id: string, key: KeyType, func: Func<[], void>) => {
     bindFunction(id, func);
@@ -99,8 +101,7 @@ async function test(fileManager = file, content = textarea.value) {
     await ipcRenderer.invoke('engine-data', {
         content,
         filename: fileManager.filename,
-        isDebug: logger.isDebug,
-        theme: themes.current
+        configs
     });
 }
 async function help() {
@@ -121,16 +122,17 @@ ipcRenderer.on('before-close', async () => {
 const initPromise = new Promise<void>((resolve, reject) => {
     ipcRenderer.on('send-data', async (_, data) => {
         try {
-            logger.isDebug = data.isDebug;
+            configs = data.configs;
+            logger.isDebug = configs.isDebug;
             await loadPlugins(e => {
                 logger.error(e);
                 error.error(e);
             });
-            if (data.file !== undefined) await file.read(data.file);
-            else if (data.isDebug) await file.read('gal.txt');
+            if (data.filename !== undefined)
+                await file.read(data.filename);
             update();
 
-            themes.set();
+            themes.set(configs.theme);
             binds();
             resolve();
         } catch (e) {
