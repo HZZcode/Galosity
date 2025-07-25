@@ -53,7 +53,7 @@ export class SaveLoadManager extends Files {
         const files = await ipcRenderer.invoke('readdir', await this.getSavePath());
         let max = 0;
         for (const file of files) {
-            const match = /save(.)\.gal/.exec(file);
+            const match = /save(\d+)\.gal/.exec(file);
             if (match === null) continue;
             const slot = Number.parseInt(match[1]);
             if (slot > max) max = slot;
@@ -107,7 +107,7 @@ export class SaveLoadScreen {
     }
 
     async getMax() {
-        return Math.min(await manager.SLManager.maxSlot(), this.slots);
+        return Math.max(await manager.SLManager.maxSlot(), this.slots);
     }
 
     get slots() {
@@ -155,13 +155,14 @@ export class SaveLoadScreen {
     }
 
     async roll(delta: number) {
+        const previous = this.start;
         let start = this.start + delta * this.columns;
         if (start <= 0) start = 1;
         const maxStart = Math.ceil((await this.getMax() + 1) / this.columns)
             * this.columns + 1 - this.slots;
         if (start > maxStart) start = maxStart;
         this.start = start;
-        await this.flush();
+        if (this.start !== previous) await this.flush();
     }
 
     async show() {

@@ -14,8 +14,9 @@ export function recordInput() {
 
 function compare(before: string[], after: string[]) {
     const starts = firstDifferents(before, after);
-    const ends = lastDifferents(before, after);
-    if (starts === undefined || ends === undefined) return EditData.empty();
+    if (starts === undefined) return EditData.empty();
+    const ends = lastDifferents(before, after, starts[0]);
+    if (ends === undefined) return EditData.empty();
     return new EditData(new Lines(starts[0], ends[0], before.slice(starts[0], ends[0] + 1)),
         after.slice(starts[1], ends[1] + 1));
 } // Seems inefficient but fine in fact
