@@ -20,7 +20,7 @@ export class Searcher {
         textarea.value = textarea.value.replacePos(pos, str);
         textarea.setSelectionRange(pos[0], pos[0] + str.length);
         recordInput();
-    } // FIXME: remember for Ctrl+Z
+    }
 
     static replaceAll(sub: Searchable, str: string, start: number = textarea.selectionEnd) {
         const pos = textarea.value.searchAllPos(sub, start).toArray();
@@ -78,6 +78,6 @@ export class SearchScreen {
         this.element.show();
         document.getElementById('search-close')?.addEventListener('click', () => this.element.close());
         for (const op of SearchOperations) document.getElementById(`search-${op}`)
-            ?.addEventListener('click', () => this.operate(op as any, this.configs));
+            ?.addEventListener('click', () => this.operate(op, this.configs));
     }
 }

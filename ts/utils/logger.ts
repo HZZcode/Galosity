@@ -1,23 +1,55 @@
 /* eslint-disable no-console */
 
+import { GalIpcRenderer } from "../types";
+const electron = require('electron');
+const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
+
+type LogType = 'log' | 'warn' | 'error';
+
 class Logger {
     isDebug = true;
+
+    private logs: string[] = [];
+
+    get content() {
+        return this.logs.join('\n');
+    }
 
     getStack() {
         return new Error().stack!.split('\n').slice(3).join('\n');
     }
 
+    format(type: string, message: any, withStack: boolean) {
+        return `[${type}] (${new Date().toUTCString()}) ${message}${withStack ? '\n' + this.getStack() : ''}`;
+    }
+
+    print(type: LogType, message: any, withStack: boolean) {
+        message = this.format(type.toUpperCase(), message, withStack);
+        this.logs.push(message);
+        if (this.isDebug) console[type](message);
+    }
+
+    async export() {
+        const result = await ipcRenderer.invoke('showSaveDialog', {
+            defaultPath: `Galosity-log${new Date().getTime()}.txt`
+        });
+        if (result.canceled) return;
+        const path = result.filePath;
+        await ipcRenderer.invoke('writeFile', path, this.content);
+    }
+    async copy() {
+        await navigator.clipboard.writeText(this.content);
+    }
+
     log(message: any) {
-        if (this.isDebug) console.log(message);
+        this.print('log', message, false);
     }
     warn(message: any) {
-        message = message + '\n' + this.getStack();
-        if (this.isDebug) console.warn(message);
+        this.print('warn', message, true);
     }
     error(message: any) {
-        message = message + '\n' + this.getStack();
-        if (this.isDebug) console.error(message);
+        this.print('error', message, true);
     }
-}
+} // TODO: write into files
 
 export const logger = new Logger();

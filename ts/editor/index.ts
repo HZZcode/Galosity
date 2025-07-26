@@ -2,6 +2,8 @@ import { Configs, GalIpcRenderer } from "../types";
 const electron = require('electron');
 const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
+import "../utils/uncaught-errors.js";
+
 import { logger } from '../utils/logger.js';
 import { bindFunction } from "../utils/bind-events.js";
 import { FileManager } from "./file-manager.js";

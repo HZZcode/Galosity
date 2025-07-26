@@ -1,12 +1,9 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
-import { logger } from '../utils/logger.js';
 import * as fs from 'fs';
 import { EngineData } from '../types.js';
 import { Handlers } from './handlers.js';
 import { configs } from './configs.js';
 import { Files } from './files.js';
-
-logger.isDebug = configs.isDebug;
 
 let editorWindow: BrowserWindow | undefined;
 let engineWindow: BrowserWindow | undefined;

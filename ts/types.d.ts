@@ -28,7 +28,9 @@ export interface GalIpcRenderer extends IpcRenderer {
 
   invoke(channel: 'engine-data', data: EngineData): Promise<void>;
 
-  invoke(channel: 'log', str: string): Promise<void>;
+  invoke(channel: 'log', str: any): Promise<void>;
+
+  invoke(channel: 'exit', code?: number | string): Promise<void>;
 
   on(channel: 'send-data', handler: (_: unknown, data: EditorData) => void | Promise<void>): void;
   on(channel: 'engine-data', handler: (_: unknown, data: EngineData) => void | Promise<void>): void;

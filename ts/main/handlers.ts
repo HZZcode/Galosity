@@ -37,4 +37,6 @@ Handlers.add('delete', (_, pathname: string) => Files.delete(pathname));
 Handlers.add('openExternal', (_, url: string) => shell.openExternal(url));
 
 // eslint-disable-next-line no-console
-Handlers.add('log', (_, str) => console.log(str));
+Handlers.add('log', (_, str: any) => console.log(str));
+
+Handlers.add('exit', (_, code?: number | string) => process.exit(code));

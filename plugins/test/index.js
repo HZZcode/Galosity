@@ -16,7 +16,6 @@ class TestData extends galosity.parser.dataTypes.GalData {
 
 export async function setup(info) {
     info.version.atLeast('2.1');
-    galosity.utils.logger.logger.log(info);
 
     await test('plugin');
 
