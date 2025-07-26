@@ -33,6 +33,10 @@ body {
     position: relative;
 }
 
+* {
+    color: var(--color-4);
+}
+
 textarea:active,
 input:active {
     outline-color: var(--outline);
@@ -68,8 +72,11 @@ input[type="number"] {
     border-radius: 50%;
     border-style: none;
     cursor: pointer;
-    color: var(--color-1);
     background-color: var(--function);
+}
+
+.function i {
+    color: var(--color-1);
 }
 
 .function:hover {
@@ -95,7 +102,7 @@ input[type="number"] {
     pointer-events: none;
 }
 
-#confirm {
+dialog {
     background-color: var(--color-alpha-2);
     margin: 15% auto;
     padding-top: 5%;
@@ -104,6 +111,15 @@ input[type="number"] {
     width: 30%;
     text-align: center;
     pointer-events: all;
+}
+
+button, input {
+    background-color: var(--color-alpha-1) ;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px var(--shadow-alpha);
+    margin: auto;
+    font-family: Consolas, sans-serif;
+    font-size: small;
 }
 
 #confirm-buttons {

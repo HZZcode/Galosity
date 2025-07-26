@@ -16,14 +16,22 @@ import { themes } from "../utils/color-theme.js";
 import { editTag } from "./history.js";
 import { recordInput } from "./input-record.js";
 import { Func } from "../utils/types.js";
+import { isConfirming } from "../utils/confirm.js";
+import { SearchScreen } from "./search-replace.js";
 
 const keybind = new KeybindManager();
+const textKeybind = new KeybindManager();
 
 let configs: Configs;
 
 const bindFunctions = (id: string, key: KeyType, func: Func<[], void>) => {
     bindFunction(id, func);
     keybind.bind(key, func);
+};
+
+const bindTextFunctions = (id: string, key: KeyType, func: Func<[], void>) => {
+    bindFunction(id, func);
+    textKeybind.bind(key, func);
 };
 
 function binds() {
@@ -40,17 +48,18 @@ function binds() {
     bindFunctions('test', KeyType.of('F5'), test);
     bindFunctions('help', KeyType.of('h', KeyConfig.Ctrl), help);
 
-    bindFunctions('tab', KeyType.of('Tab'), autoComplete);
-    bindFunctions('comment', KeyType.of('/', KeyConfig.Ctrl), comment);
+    bindTextFunctions('undo', KeyType.of('z', KeyConfig.Ctrl), () => getManager().undo());
+    bindTextFunctions('redo', KeyType.of('y', KeyConfig.Ctrl), () => getManager().redo());
+    bindTextFunctions('tab', KeyType.of('Tab'), autoComplete);
+    bindTextFunctions('searcher', KeyType.of('f', KeyConfig.Ctrl), () => SearchScreen.show());
     bindFunction('jump', jumpTo); textarea.addEventListener('mouseup', jump);
-    bindFunctions('back', KeyType.of('b', KeyConfig.Ctrl), file.back.bind(file));
-    bindFunctions('undo', KeyType.of('z', KeyConfig.Ctrl), () => getManager().undo());
-    bindFunctions('redo', KeyType.of('y', KeyConfig.Ctrl), () => getManager().redo());
+    bindTextFunctions('back', KeyType.of('b', KeyConfig.Ctrl), file.back.bind(file));
 
-    keybind.bind(KeyType.of('('), surround('(', ')'));
-    keybind.bind(KeyType.of('{'), surround('{', '}'));
-    keybind.bind(KeyType.of('l', KeyConfig.Ctrl), surround('\\(', '\\)'));
-    keybind.bind(KeyType.of('l', KeyConfig.Ctrl | KeyConfig.Shift), surround('$$', '$$'));
+    textKeybind.bind(KeyType.of('/', KeyConfig.Ctrl), comment);
+    textKeybind.bind(KeyType.of('('), surround('(', ')'));
+    textKeybind.bind(KeyType.of('{'), surround('{', '}'));
+    textKeybind.bind(KeyType.of('l', KeyConfig.Ctrl), surround('\\(', '\\)'));
+    textKeybind.bind(KeyType.of('l', KeyConfig.Ctrl | KeyConfig.Shift), surround('$$', '$$'));
     keybind.bind(KeyType.of('t', KeyConfig.Alt), themes.next.bind(themes));
 }
 
@@ -60,7 +69,10 @@ function update(event?: Event) {
 }
 
 async function processKeyDown(event: KeyboardEvent) {
-    if (await keybind.apply(event)) event.preventDefault();
+    if (isConfirming) return;
+    else if (event.target instanceof HTMLTextAreaElement
+        && await textKeybind.apply(event)) event.preventDefault();
+    else if (await keybind.apply(event)) event.preventDefault();
 }
 
 async function autoComplete() {
@@ -131,7 +143,7 @@ const initPromise = new Promise<void>((resolve, reject) => {
             if (data.filename !== undefined)
                 await file.read(data.filename);
             update();
-
+            recordInput();
             themes.set(configs.theme);
             binds();
             resolve();

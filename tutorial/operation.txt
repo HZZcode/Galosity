@@ -12,9 +12,12 @@ Ichiku: Button *{fa-question}, or Ctrl+H, is for showing this tutorial.
 ZZ: Button *{fa-undo}, or Ctrl+Z, is for undo.
 Ichiku: Button *{fa-redo}, or Ctrl+Y, is for redo.
 ZZ: Button *{fa-angles-right}, or Tab, is for auto completing.
-Ichiku: Button *{fa-text-slash}, or Ctrl+/, is for commenting.
+Ichiku: Button *{fa-search}, or Ctrl+F, is for searching or replacing.
 ZZ: Button *{fa-turn-down}, or Ctrl+Click, is for jumping.
-Ichiku: Alt+T switches the theme (light or dark).
+Ichiku: Button *{fa-turn-up}, or Ctrl+B, is for jumping back.
+
+ZZ: Alt+T switches the theme (light or dark).
+Ichiku: Ctrl+/ is for commenting.
 ZZ: Ctrl+L and Ctrl+Shift+L are for inserting inline or multi-line latex.
 Ichiku: Alt+T switches the theme (light or dark).
 ZZ: When inserting ( or {, the other part is completed.

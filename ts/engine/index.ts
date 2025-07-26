@@ -11,6 +11,7 @@ import { manager } from "./manager.js";
 import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
 import { loadPlugins } from "../plugin/loader.js";
 import { themes } from "../utils/color-theme.js";
+import { isConfirming } from "../utils/confirm.js";
 
 const initPromise = new Promise<void>((resolve, reject) => {
     ipcRenderer.on('engine-data', async (_, data) => {
@@ -42,8 +43,8 @@ async function main() {
     keybind.bind(KeyType.of('t', KeyConfig.Alt), themes.next.bind(themes));
 
     window.addEventListener('keydown', errorHandled(async event => {
-        if ((event.target as HTMLElement).tagName.toLowerCase() === 'input') return;
-        if (manager.SLScreen.shown) await manager.SLScreen.keybind.apply(event);
+        if ((event.target as HTMLElement).tagName.toLowerCase() === 'input' || isConfirming) return;
+        else if (manager.SLScreen.shown) await manager.SLScreen.keybind.apply(event);
         else if (await keybind.apply(event) || await manager.keybind.apply(event))
             event.preventDefault();
     }));

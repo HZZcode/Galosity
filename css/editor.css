@@ -48,3 +48,31 @@ textarea {
     --columns: 6;
     --rows: 2;
 }
+
+#search {
+    line-height: 1.5em;
+}
+
+#search-close {
+    position: absolute;
+    top: 5%;
+    right: 5%;
+}
+
+#search-from,
+#search-to {
+    width: 80%;
+}
+
+#search-checks,
+#search-buttons {
+    display: flex;
+    justify-content: center;
+}
+
+#search-checks *,
+#search-buttons * {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

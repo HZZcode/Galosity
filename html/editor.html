@@ -20,6 +20,29 @@
             </div>
         </dialog>
     </div>
+    <div id="search-part" class="whole-screen">
+        <dialog id="search">
+            <b id="search-header">Search & Replace</b>
+            <i id="search-close" class="fa-solid fa-times-circle"></i>
+            <input id="search-from" type="text" placeholder="From" name="search-from">
+            <input id="search-to" type="text" placeholder="To" name="search-to">
+            <div id="search-checks">
+                <div id="search-from-cursor-div">
+                    <input id="search-from-cursor" type="checkbox" name="search-from-cursor">
+                    From Cursor
+                </div>
+                <div id="search-with-regex-div">
+                    <input id="search-with-regex" type="checkbox" name="search-with-regex">
+                    Using Regex
+                </div>
+            </div>
+            <div id="search-buttons">
+                <button id="search-search">Search</button>
+                <button id="search-replace">Replace</button>
+                <button id="search-replace-all">Replace All</button>
+            </div>
+        </dialog>
+    </div>
     <div id="header">
         <h1>Galosity</h1>
         <div id="functions">
@@ -33,7 +56,7 @@
             <button class="function" id="undo"><i class="fa-solid fa-undo"></i></button>
             <button class="function" id="redo"><i class="fa-solid fa-redo"></i></button>
             <button class="function" id="tab"><i class="fa-solid fa-angles-right"></i></button>
-            <button class="function" id="comment"><i class="fa-solid fa-text-slash"></i></button>
+            <button class="function" id="searcher"><i class="fa-solid fa-search"></i></button>
             <button class="function" id="jump"><i class="fa-solid fa-turn-down"></i></button>
             <button class="function" id="back"><i class="fa-solid fa-turn-up"></i></button>
         </div>

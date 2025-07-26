@@ -35,16 +35,6 @@
     background-color: var(--color-alpha-3);
 }
 
-.debug-input,
-.debug-button {
-    background-color: var(--color-alpha-1) ;
-    border-radius: 5px;
-    box-shadow: 0 4px 8px var(--shadow-alpha);
-    margin: auto;
-    font-family: Consolas, sans-serif;
-    font-size: small;
-}
-
 #main {
     height: 25%;
     bottom: 20px;

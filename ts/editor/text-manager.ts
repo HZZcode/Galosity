@@ -15,10 +15,12 @@ export class TextAreaManager {
         this.end = textarea.selectionEnd;
         this.lines = this.content.splitLine();
     }
+    syncPos() {
+        this.jumpTo(this.currentLineCount());
+    }
     sync() {
-        const line = this.currentLineCount();
         this.textarea.value = this.lines.join('\n');
-        this.jumpTo(line);
+        this.syncPos();
     }
     currentLineCount() {
         return this.content.substring(0, this.start).splitLine().length - 1;
@@ -84,6 +86,7 @@ export class TextAreaManager {
         if (line < 0 || line >= this.lines.length) return false;
         this.textarea.focus(); // does so fixes bugs.
         // don't know why but just works. it doesn't make things worse though.
+        const pos = [this.textarea.selectionStart, this.textarea.selectionEnd];
         const endOfLine = this.lines.slice(0, line + 1).join('\n').length;
         this.textarea.selectionStart = this.textarea.selectionEnd = endOfLine;
         const tempElement = document.createElement('div');
@@ -99,6 +102,7 @@ export class TextAreaManager {
         document.body.removeChild(tempElement);
         this.textarea.scrollTop = scrollTop;
         this.textarea.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        [this.textarea.selectionStart, this.textarea.selectionEnd] = pos;
         return true;
     }
 }
