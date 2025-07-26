@@ -1,6 +1,7 @@
 import { updateInfo, info, error, textarea, getManager } from "./elements.js";
 import { Files } from "../utils/files.js";
 import { logger } from "../utils/logger.js";
+import { textHistory } from "./text-manager.js";
 
 export class FileManager extends Files {
     previousFiles: string[] = [];
@@ -31,6 +32,7 @@ export class FileManager extends Files {
             if (memorize) await this.remember();
             const content = await this.readFile(path);
             textarea.value = content;
+            textHistory.clear();
             this.setFile(await this.resolve(path));
             updateInfo();
             return content;
@@ -77,6 +79,7 @@ export class FileManager extends Files {
         if (event !== undefined) event.preventDefault();
         await this.save();
         textarea.value = '';
+        textHistory.clear();
         this.setFile(undefined);
     }
 }

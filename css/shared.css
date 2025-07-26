@@ -1,0 +1,143 @@
+:root {
+    --page-background: transparent;
+
+    --color-4: transparent;
+    --color-3: transparent;
+    --color-2: transparent;
+    --color-1: transparent;
+
+    --color-alpha-4: transparent;
+    --color-alpha-3: transparent;
+    --color-alpha-2: transparent;
+    --color-alpha-1: transparent;
+
+    --shadow-alpha: transparent;
+
+    --error: transparent;
+    --warning: transparent;
+    --outline: transparent;
+    --function: transparent;
+    --function-hover: transparent;
+
+    --function-size: 30px;
+    --functions-gap: 3px;
+}
+
+body {
+    font-family: Consolas, sans-serif;
+    background-color: var(--page-background);
+    color: var(--color-4);
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+* {
+    color: var(--color-4);
+}
+
+textarea:active,
+input:active {
+    outline-color: var(--outline);
+}
+
+/* WebKit browsers */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+#error {
+    color: var(--error);
+}
+
+#warning {
+    color: var(--warning);
+}
+
+.function {
+    position: relative;
+    width: var(--function-size);
+    height: var(--function-size);
+    line-height: 20px;
+    text-align: center;
+    border-radius: 50%;
+    border-style: none;
+    cursor: pointer;
+    background-color: var(--function);
+}
+
+.function i {
+    color: var(--color-1);
+}
+
+.function:hover {
+    background-color: var(--function-hover);
+}
+
+#functions {
+    display: grid;
+    gap: var(--functions-gap);
+
+    width: calc(var(--columns) * (var(--function-size) + var(--functions-gap)) - var(--functions-gap));
+    height: calc(var(--rows) * (var(--function-size) + var(--functions-gap)) - var(--functions-gap));
+    grid-template-columns: repeat(var(--columns), 1fr);
+    grid-template-rows: repeat(var(--rows), 1fr);
+}
+
+.whole-screen {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+
+dialog {
+    background-color: var(--color-alpha-2);
+    margin: 15% auto;
+    padding-top: 5%;
+    padding-bottom: 5%;
+    border: none;
+    width: 30%;
+    text-align: center;
+    pointer-events: all;
+}
+
+button,
+input {
+    background-color: var(--color-alpha-1);
+    border-radius: 5px;
+    box-shadow: 0 4px 8px var(--shadow-alpha);
+    margin: auto;
+    font-family: Consolas, sans-serif;
+    font-size: small;
+}
+
+#confirm-buttons {
+    display: flex;
+    justify-content: center;
+}
+
+#confirm-text,
+#confirm-yes,
+#confirm-no {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#confirm button {
+    margin: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+}

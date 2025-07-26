@@ -74,12 +74,19 @@ Primary
     / value:Enum { return value; }
     / value:Identifier { return value; }
 
-Number = _ intPart:Digits decimalPart: ("." Digits)? _ {
-    return {
-            type: 'num',
-            value: intPart.join('') + (decimalPart === null ? '' : '.' + decimalPart[1].join(''))
-        };
-}
+Number 
+    = _ intPart:Digits decimalPart: ("." Digits)? _ {
+        return {
+                type: 'num',
+                value: intPart.join('') + (decimalPart === null ? '' : '.' + decimalPart[1].join(''))
+            };
+    } 
+    / _ '#' intPart:HexDigits _ {
+        return {
+                type: 'hexNum',
+                value: intPart.join('').toLowerCase()
+            };
+    }
 
 Enum = _ enumType:Identifier "." value:Identifier _ {
         return { type: 'enum', enumType: enumType, value: value };
@@ -90,6 +97,8 @@ Identifier = _ identifier:([a-zA-Z_][a-zA-Z0-9_]*) _ {
 }
 
 Digits = [0-9]+
+
+HexDigits = [0-9A-Fa-f]+
 
 _ = [ \t\n\r]* {
     return null;

@@ -215,4 +215,19 @@ export class ImportData extends GalData {
         this.names = names;
     }
 }
-
+export class TextData extends GalData {
+    texts;
+    constructor(text: string) {
+        super();
+        this.texts = text;
+    }
+}
+export class CodeData extends GalData {
+    language;
+    code;
+    constructor(language: string, code: string) {
+        super();
+        this.language = language;
+        this.code = code;
+    }
+}

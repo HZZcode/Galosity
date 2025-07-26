@@ -1,18 +1,18 @@
 {
   "name": "galosity",
   "version": "1.0.0",
-  "main": "./js/main.js",
+  "main": "./js/main/main.js",
   "type": "module",
   "scripts": {
     "start": "cross-env NODE_ENV=development electron .",
     "build": "cross-env NODE_ENV=production electron-builder",
-    "grammar": "npx pegjs -o ./js/vars/grammar.js ./js/vars/grammar.pegjs",
+    "grammar": "npx pegjs -o ./ts/vars/grammar/grammar.js ./ts/vars/grammar/grammar.pegjs",
     "tsc": "tsc"
   },
   "keywords": [],
   "author": "ZZ_404",
   "license": "MIT",
-  "description": "Lite Pure-Text Galgame Editor",
+  "description": "Lite Hypertext Galgame Script Editor & Engine",
   "devDependencies": {
     "@eslint/js": "^9.30.1",
     "@eslint/json": "^0.12.0",
@@ -41,23 +41,22 @@
     },
     "files": [
       "**/*",
-      "!example.txt",
+      "!tutorial",
       "!gal.txt",
       "!README.md",
       "!LICENSE.txt",
       "!sum.txt",
       "!eslint.config.js",
-      "!src",
       "!save",
       "!import-test.txt",
       "!ts",
       "!exports.txt",
-      "!get-exports.py"
-      ,"!plugins"
+      "!get-exports.py",
+      "!plugins",
+      "!merge.ps1"
     ],
     "extraFiles": [
-      "example.txt",
-      "src",
+      "tutorial",
       "save",
       "exports.txt",
       "plugins"
@@ -73,6 +72,7 @@
     }
   },
   "dependencies": {
+    "highlight.js": "^11.11.1",
     "lodash": "^4.17.21",
     "mathjax": "^3.2.2",
     "pegjs": "^0.10.0",

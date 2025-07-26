@@ -1,4 +1,6 @@
-export const bindFunction = (id: string, func: ((_: Event) => void) | (() => void)) =>
+import { Func } from "./types.js";
+
+export const bindFunction = (id: string, func: Func<[], void>) =>
     document.getElementById(id)?.addEventListener('click', func);
 
 export const bindInput = (button: HTMLButtonElement, input: HTMLInputElement,

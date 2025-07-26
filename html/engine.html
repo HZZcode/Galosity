@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/shared.css">
+    <link rel="stylesheet" href="../css/engine.css">
+    <link rel="stylesheet" href="../font-awesome/css/all.min.css">
+    <link rel="stylesheet" href="../highlight/styles/default.min.css">
+    <script id="MathJax-script" async src="../mathjax/es5/tex-mml-chtml.js"></script>
+    <title>Galosity Engine</title>
+</head>
+
+<body>
+    <div id="confirm-part" class="whole-screen">
+        <dialog id="confirm">
+            <p id="confirm-text"></p>
+            <div id="confirm-buttons">
+                <button id="confirm-yes"><i class="fa-solid fa-check"></i></button>
+                <button id="confirm-no"><i class="fa-solid fa-ban"></i></button>
+            </div>
+        </dialog>
+    </div>
+    <div class="whole-screen image" id="background-image"></div>
+    <div class="whole-screen" id="texts-part">
+        <div id="texts"></div>
+    </div>
+    <div class="info">
+        <div id="current-line"></div>
+        <div>
+            Jump to Line:
+            <input type="number" id="line" class="debug-input" name="line" min="0">
+            <button id="jump" class="debug-button">Go</button>
+        </div>
+        <div>
+            Eval:
+            <input type="text" id="code" class="debug-input" name="code">
+            <button id="eval" class="debug-button">Go</button>
+        </div>
+        <div id="error"></div>
+        <div id="warning"></div>
+    </div>
+    <div id="buttons" class="whole-screen"></div>
+    <div id="part"></div>
+    <div class="container" id="main">
+        <div id="character"></div>
+        <div id="speech"></div>
+        <div id="functions">
+            <button class="function" id="previous"><i class="fa-solid fa-backward"></i></button>
+            <button class="function" id="next"><i class="fa-solid fa-play"></i></button>
+        </div>
+    </div>
+    <div id="images" class="whole-screen">
+        <div class="image" id="left-image"></div>
+        <div class="image" id="center-image"></div>
+        <div class="image" id="right-image"></div>
+    </div>
+    <div id="save-load"></div>
+    <script src="../js/engine/index.js" type="module"></script>
+</body>
+
+</html>

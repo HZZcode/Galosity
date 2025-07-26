@@ -4,26 +4,36 @@ import {
 } from "electron";
 import { Dirent } from "fs";
 
+type Configs = { files: boolean, edit: boolean, isDebug: boolean, theme: number }
+type EditorData = { configs: Configs, filename?: string };
+type EngineData = { configs: Configs, content: string, filename?: string };
+
 export interface GalIpcRenderer extends IpcRenderer {
   invoke(channel: 'showSaveDialog', options: SaveDialogOptions): Promise<SaveDialogReturnValue>;
   invoke(channel: 'showOpenDialog', options: OpenDialogOptions): Promise<OpenDialogReturnValue>;
+
   invoke(channel: 'writeFile', path: string, content: string): Promise<void>;
   invoke(channel: 'readFile', path: string): Promise<string>;
   invoke(channel: 'resolve', pathname: string): Promise<string>;
-  invoke(channel: 'hasFile', path: string): Promise<boolean>;
   invoke(channel: 'directory'): Promise<string>;
   invoke(channel: 'readdir', path: string, withFileTypes: false = false): Promise<string[]>;
   invoke(channel: 'readdir', path: string, withFileTypes: true): Promise<Dirent[]>;
   invoke(channel: 'exists', path: string): Promise<boolean>;
-  invoke(channel: 'openExternal', url: string): Promise<void>;
-  invoke(channel: 'setTitle', title: string): Promise<void>;
-  invoke(channel: 'test', data: { content: string, filename?: string, isDebug: boolean }): Promise<void>;
-  invoke(channel: 'log', str: string): Promise<void>;
+  invoke(channel: 'delete', path: string): Promise<boolean>;
 
-  on(channel: 'send-data', handler: (_: unknown, data:
-    { isDebug: boolean, file: string }) => void | Promise<void>): void;
-  on(channel: 'test-data', handler: (_: unknown, data:
-    { content: string, filename: string, isDebug: boolean }) => void | Promise<void>): void;
+  invoke(channel: 'openExternal', url: string): Promise<void>;
+
+  invoke(channel: 'editorTitle', title: string): Promise<void>;
+  invoke(channel: 'engineTitle', title: string): Promise<void>;
+
+  invoke(channel: 'engine-data', data: EngineData): Promise<void>;
+
+  invoke(channel: 'log', str: any): Promise<void>;
+
+  invoke(channel: 'exit', code?: number | string): Promise<void>;
+
+  on(channel: 'send-data', handler: (_: unknown, data: EditorData) => void | Promise<void>): void;
+  on(channel: 'engine-data', handler: (_: unknown, data: EngineData) => void | Promise<void>): void;
   on(channel: 'before-close', handler: (_: unknown) => void | Promise<void>): void;
 }
 

@@ -87,7 +87,6 @@ export class TabCompleters {
 }
 
 export const getTags = () => Parsers.tags().map(tag => `[${tag}]`);
-export const getColonTags = () => ['[Case]', '[Var]', '[Enum]', '[Image]', '[Transform]', '[Import]'];
 export const imageTypes = ['background', 'left', 'center', 'right'];
 export const transformTypes = new dataTypes.TransformData('').getAllArgs();
 
@@ -115,7 +114,7 @@ TabCompleters.register(new TabCompleter(
     context => context.front.trim().startsWith('[')
         && (!context.front.includes(']') || context.front.trim().endsWith(']')),
     context => context.front,
-    _ => getTags().map(tag => getColonTags().includes(tag) ? (tag + ':') : tag)
+    getTags
 )); // Tags
 TabCompleters.register(new TabCompleter(
     new AutoComplete(),

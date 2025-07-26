@@ -5,6 +5,16 @@ import { splitWith } from '../utils/split.js';
 import { GalVar, GalNum, GalEnum, GalEnumType, BoolType, isBool, isEnum, isNum } from './types.js';
 import { isDiscarded, isIdentifier } from '../utils/string.js';
 import { BuiltinVar, BuiltinFunc, builtinNumFunc } from './builtins.js';
+import { sum } from '../utils/array.js';
+import { logger } from '../utils/logger.js';
+
+function parseHex(str: string) {
+    const digits: { [_: string]: number } = {
+        '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
+        '8': 8, '9': 9, 'a': 10, 'b': 11, 'c': 12, 'd': 13, 'e': 14, 'f': 15
+    };
+    return sum([...str].reverse().map((digit, index) => digits[digit] * 16 ** index));
+}
 
 export class GalVars {
     enumTypes: GalEnumType[] = [BoolType];
@@ -28,10 +38,11 @@ export class GalVars {
         try {
             const [enumPart, varsPart] = splitWith(';')(str);
             const vars = new GalVars();
-            vars.vars = Object.fromEntries(varsPart.split(',').map(entry => {
-                const [name, value] = splitWith('=')(entry);
-                return [name, vars.evaluate(value)];
-            }));
+            if (varsPart !== '')
+                vars.vars = Object.fromEntries(varsPart.split(',').map(entry => {
+                    const [name, value] = splitWith('=')(entry);
+                    return [name, vars.evaluate(value)];
+                }));
             vars.enumTypes = enumPart.split(',').map(type => GalEnumType.fromString(type));
             return vars;
         } catch (e) {
@@ -42,6 +53,7 @@ export class GalVars {
     setVar(name: string, value: GalVar) {
         if (isDiscarded(name)) return;
         if (!isIdentifier(name)) throw `Invalid variable name: ${name}`;
+        if (name in this.builtins) this.builtins[name].set(value);
         this.vars[name] = value;
     }
 
@@ -61,8 +73,8 @@ export class GalVars {
         return clone;
     }
 
-    registerBuiltin(name: string, func: () => GalVar) {
-        this.builtins[name] = new BuiltinVar(func);
+    registerBuiltin(name: string, getter: () => GalVar, setter?: (value: GalVar) => void) {
+        this.builtins[name] = new BuiltinVar(getter, setter);
     }
     registerBuiltinFunc(name: string, func: (_: GalVar) => GalVar) {
         this.builtinFuncs[name] = new BuiltinFunc(func);
@@ -82,6 +94,9 @@ export class GalVars {
 
         this.registerBuiltin('E', () => new GalNum(Math.E));
         this.registerBuiltin('PI', () => new GalNum(Math.PI));
+
+        if (logger.isDebug)
+            this.registerBuiltin('LOGGER', () => new GalNum(0), value => logger.log(value));
 
         this.registerBuiltinFunc('sin', builtinNumFunc(Math.sin));
         this.registerBuiltinFunc('cos', builtinNumFunc(Math.cos));
@@ -157,6 +172,9 @@ export class GalVars {
                 const value = Number.parseFloat(node.value);
                 assert(!isNaN(value));
                 return new GalNum(value);
+            }
+            case 'hexNum': {
+                return new GalNum(parseHex(node.value));
             }
             case 'enum': {
                 const enumType = this.getEnumType(node.enumType.value);

@@ -16,7 +16,8 @@ export default defineConfig([
       "package-lock.json",
       "eslint.config.js",
       "mathjax/*",
-      "font-awesome/*"
+      "font-awesome/*",
+      "highlight/*"
     ]
   },
   {

@@ -38,7 +38,7 @@ export class Files {
         return await this.getRelative('src/' + file);
     }
 
-    async requestSavePath(): Promise<string | undefined> {
+    async requestSavePath() {
         return await ipcRenderer.invoke('showSaveDialog', {
             defaultPath: 'gal.txt',
             filters: [
@@ -48,7 +48,7 @@ export class Files {
         }).then((result: SaveDialogReturnValue) =>
             result.canceled ? undefined : result.filePath);
     }
-    async requestOpenPath(): Promise<string | undefined> {
+    async requestOpenPath() {
         return await ipcRenderer.invoke('showOpenDialog', {
             filters: [
                 { name: 'Text Files', extensions: ['txt'] },
@@ -67,6 +67,6 @@ export class Files {
         return await ipcRenderer.invoke('resolve', path);
     }
     async hasFile(path: string) {
-        return await ipcRenderer.invoke('hasFile', path);
+        return await ipcRenderer.invoke('exists', path);
     }
 }

@@ -16,10 +16,10 @@ import { ButtonsManager } from "./buttons.js";
 import { CustomData } from "./custom-data.js";
 import { Frame } from "./frame.js";
 import { ResourceManager } from "./resources.js";
-import { SaveLoadManager } from "./save-load.js";
 import { getType } from "../utils/types.js";
-import { part, currentLine, character, speech } from "./elements.js";
+import { part, currentLine, character, speech, texts } from "./elements.js";
 import { Processors } from "./processors.js";
+import { SaveLoadManager, SaveLoadScreen } from "./save-load.js";
 
 export class Manager {
     varsFrame;
@@ -29,12 +29,12 @@ export class Manager {
     callStack: Frame[] = []; //frames of [Call]s
     customData = new CustomData(); //might be used by [Eval] custom data
     info = new InfoManager(part, currentLine);
-    texts = new TextManager(character, speech);
+    texts = new TextManager(character, speech, texts);
     buttons = new ButtonsManager();
     resources = new ResourceManager();
-    saveLoad = new SaveLoadManager(this.resources.filename!);
     timeout = new TimeoutManager();
     keybind = new KeybindManager();
+    SLScreen = new SaveLoadScreen();
     isMain;
     constructor(isMain: boolean) {
         this.isMain = isMain;
@@ -42,6 +42,9 @@ export class Manager {
             = this.timeout.set = this.timeout.clear = (): any => 0;
         this.varsFrame = new vars.GalVars();
         this.varsFrame.initBuiltins();
+    }
+    get SLManager() {
+        return new SaveLoadManager(this.resources.filename!);
     }
     unsupportedForImported() {
         if (this.isMain) return;
@@ -68,7 +71,10 @@ export class Manager {
     async jumpFile(path: string) {
         path = await this.resources.getRelative(path);
         await ipcRenderer.invoke('readFile', path)
-            .then(async content => await this.set(content.splitLine()))
+            .then(async content => {
+                await this.set(content.splitLine());
+                this.resources.setFile(path);
+            })
             .catch(e => {
                 logger.error(e);
                 error.error(e);
@@ -131,14 +137,6 @@ export class Manager {
             lodash.clone(this.customData)
         );
     }
-    save() {
-        // Here we need some GUI but I don't know how should it be yet
-        // After that we simply get a slot and some optional notes
-        // Then use `this.saveLoad.save(slot, this.getFrame(), note)`
-    }
-    load() {
-        // Similar to `save()`.
-        // Get `lines` and `frame` with `this.saveLoad.load(slot)`, and `set(lines)` and `jump(frame)`.
-        // I just hate designing GUI.
-    }
 }
+
+export const manager = new Manager(true);

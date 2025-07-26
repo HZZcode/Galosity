@@ -50,7 +50,8 @@ export async function loadPlugins(onError?: Func<[error: string], void>) {
 }
 
 async function setInfo(loaded: string[]) {
-    await ipcRenderer.invoke('setTitle', `Galosity (${info(loaded)})`);
+    await ipcRenderer.invoke('editorTitle', `Galosity (${info(loaded)})`);
+    await ipcRenderer.invoke('engineTitle', `Galosity Engine (${info(loaded)})`);
 }
 
 function info(loaded: string[]) {

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/shared.css">
+    <link rel="stylesheet" href="../css/editor.css">
+    <link rel="stylesheet" href="../font-awesome/css/all.min.css">
+    <title>Galosity</title>
+</head>
+
+<body>
+    <div id="confirm-part" class="whole-screen">
+        <dialog id="confirm">
+            <p id="confirm-text"></p>
+            <div id="confirm-buttons">
+                <button id="confirm-yes"><i class="fa-solid fa-check"></i></button>
+                <button id="confirm-no"><i class="fa-solid fa-ban"></i></button>
+            </div>
+        </dialog>
+    </div>
+    <div id="search-part" class="whole-screen">
+        <dialog id="search">
+            <b id="search-header">Search & Replace</b>
+            <i id="search-close" class="fa-solid fa-times-circle"></i>
+            <input id="search-from" type="text" placeholder="From" name="search-from">
+            <input id="search-to" type="text" placeholder="To" name="search-to">
+            <div id="search-checks">
+                <div id="search-from-cursor-div">
+                    <input id="search-from-cursor" type="checkbox" name="search-from-cursor">
+                    From&nbsp;Cursor&nbsp;
+                </div>
+                <div id="search-with-regex-div">
+                    <input id="search-with-regex" type="checkbox" name="search-with-regex">
+                    Using&nbsp;Regex
+                </div>
+            </div>
+            <div id="search-buttons">
+                <button id="search-search">Search</button>
+                <button id="search-replace">Replace</button>
+                <button id="search-replace-all">Replace All</button>
+            </div>
+        </dialog>
+    </div>
+    <div id="header">
+        <h1>Galosity</h1>
+        <div id="functions">
+            <button class="function" id="new"><i class="fa-solid fa-file-circle-plus"></i></button>
+            <button class="function" id="open"><i class="fa-solid fa-file-import"></i></button>
+            <button class="function" id="save"><i class="fa-solid fa-floppy-disk"></i></button>
+            <button class="function" id="save-as"><i class="fa-solid fa-file-export"></i></button>
+            <button class="function" id="test"><i class="fa-solid fa-terminal"></i></button>
+            <button class="function" id="help"><i class="fa-solid fa-question"></i></button>
+
+            <button class="function" id="undo"><i class="fa-solid fa-undo"></i></button>
+            <button class="function" id="redo"><i class="fa-solid fa-redo"></i></button>
+            <button class="function" id="tab"><i class="fa-solid fa-angles-right"></i></button>
+            <button class="function" id="searcher"><i class="fa-solid fa-search"></i></button>
+            <button class="function" id="jump"><i class="fa-solid fa-turn-down"></i></button>
+            <button class="function" id="back"><i class="fa-solid fa-turn-up"></i></button>
+        </div>
+    </div>
+    <textarea id="input" spellcheck="false"></textarea>
+    <div id="info"></div>
+    <div id="error"></div>
+    <script src="../js/editor/index.js" type="module"></script>
+</body>
+
+</html>

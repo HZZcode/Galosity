@@ -10,7 +10,7 @@ export const getManager = () => new TextAreaManager(textarea);
 export const info = document.getElementById('info') as HTMLDivElement;
 export const error = new ErrorManager(document.getElementById('error') as HTMLDivElement);
 
-export function updateInfo(_?: Event) {
+export function updateInfo() {
     error.clear();
     const manager = getManager();
     const filename = file.valid ? file.filename : 'Unnamed';

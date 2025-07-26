@@ -8,6 +8,7 @@ import { Constructor, Func } from "../utils/types.js";
 import { file } from "./file-manager.js";
 import { TextAreaManager } from "./text-manager.js";
 import { scanControlBlocks } from "./elements.js";
+import { confirm } from "../utils/confirm.js";
 
 export class Jumper {
     lineGetter;
@@ -84,10 +85,13 @@ export class JumpResult {
         else {
             if (this.lineCount !== undefined) return manager.jumpTo(this.lineCount);
             else if (this.file !== undefined) await file.openFile(this.file);
-            else if (this.link !== undefined) await ipcRenderer.invoke('openExternal', this.link);
+            else if (this.link !== undefined) {
+                if (await confirm(`Open '${this.link}'?`))
+                    await ipcRenderer.invoke('openExternal', this.link);
+            }
             else return false;
-            return true;
         }
+        return true;
     }
 }
 
