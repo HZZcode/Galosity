@@ -35,9 +35,7 @@ export class Manager {
     timeout = new TimeoutManager();
     keybind = new KeybindManager();
     SLScreen = new SaveLoadScreen();
-    isMain;
-    constructor(isMain: boolean) {
-        this.isMain = isMain;
+    constructor(public isMain: boolean) {
         if (!isMain) this.info.setLine = this.info.setPart
             = this.timeout.set = this.timeout.clear = (): any => 0;
         this.varsFrame = new vars.GalVars();

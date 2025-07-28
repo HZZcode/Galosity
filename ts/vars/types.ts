@@ -3,10 +3,7 @@ import { findDuplicates } from '../utils/array.js';
 import { isIdentifier } from '../utils/string.js';
 
 export class GalVar {
-    type: string;
-    constructor(type: string) {
-        this.type = type;
-    }
+    constructor(public type: string) { }
     getType() {
         return 'GalVar';
     }
@@ -21,11 +18,9 @@ export class GalVar {
 }
 
 export class GalNum extends GalVar {
-    value;
-    constructor(value: number) {
+    constructor(public value: number) {
         super('num');
         if (isNaN(value)) throw 'Num cannot be NaN';
-        this.value = value;
     }
 
     getType() {
@@ -47,12 +42,7 @@ export class GalNum extends GalVar {
 }
 
 export class GalEnumType {
-    name;
-    values;
-    constructor(name: string, values: string[]) {
-        this.name = name;
-        this.values = values;
-
+    constructor(public name: string, public values: string[]) {
         const duplicates = findDuplicates(values);
         if (duplicates.length !== 0)
             throw `Found duplicate enum value: ${name}.${duplicates[0]}`;
@@ -91,13 +81,8 @@ export class GalEnumType {
 }
 
 export class GalEnum extends GalVar {
-    enumType;
-    valueIndex;
-
-    constructor(enumType: GalEnumType, index: number) {
+    constructor(public enumType: GalEnumType, public valueIndex: number) {
         super('enum');
-        this.enumType = enumType;
-        this.valueIndex = index;
     }
 
     static fromString(enumType: GalEnumType, value: string) {
@@ -142,4 +127,3 @@ export function isEnum(value: GalVar): value is GalEnum {
 export function isBool(value: GalVar): value is GalEnum {
     return isEnum(value) && value.enumType.name === 'bool';
 }
-

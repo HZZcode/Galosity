@@ -2,10 +2,10 @@ import { GalIpcRenderer } from "../types";
 const electron = require('electron');
 const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
-import { logger } from "../utils/logger.js";
 import { Func } from "../utils/types.js";
 import { exportAll, exports } from "./exports.js";
 import { MetaInfo } from "./meta-info.js";
+import { Runtime } from "../utils/configs.js";
 
 async function getPlugins() {
     const plugins = await ipcRenderer.invoke('readdir', 'plugins');
@@ -13,7 +13,7 @@ async function getPlugins() {
 }
 
 function getPath(plugin: string) {
-    const count = logger.isDebug ? 2 : 4; // Strange but just works
+    const count = Runtime.configs.packed ? 4 : 2; // Strange but just works
     return `${'../'.repeat(count)}plugins/${plugin}/index.js`;
 }
 
@@ -42,11 +42,16 @@ export async function tryLoadPlugin(plugin: string) {
 }
 
 export async function loadPlugins(onError?: Func<[error: string], void>) {
-    const results = await Promise.all((await getPlugins()).map(async plugin => await tryLoadPlugin(plugin)));
-    await setInfo(results.filter(result => result.loaded).map(result => result.plugin));
-    const errors = results.filter(result => !result.loaded && result.error !== undefined)
-        .map(result => `Failed to load plugin '${result.plugin}': ${result.error}`);
-    if (onError !== undefined && errors.length !== 0) await onError(errors.join('\n'));
+    try {
+        const results = await Promise.all((await getPlugins())
+            .map(async plugin => await tryLoadPlugin(plugin)));
+        await setInfo(results.filter(result => result.loaded).map(result => result.plugin));
+        const errors = results.filter(result => !result.loaded && result.error !== undefined)
+            .map(result => `Failed to load plugin '${result.plugin}': ${result.error}`);
+        if (onError !== undefined && errors.length !== 0) await onError(errors.join('\n'));
+    } catch (e) {
+        if (onError !== undefined) await onError((e as any).toString());
+    }
 }
 
 async function setInfo(loaded: string[]) {

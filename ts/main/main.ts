@@ -1,18 +1,28 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
-import * as fs from 'fs';
 import { EngineData } from '../types.js';
 import { Handlers } from './handlers.js';
 import { configs } from './configs.js';
 import { Files } from './files.js';
+import { argParser } from './arg-parser.js';
 
 let editorWindow: BrowserWindow | undefined;
 let engineWindow: BrowserWindow | undefined;
 
 function getArgvFileName() {
-    const filename = process.argv.slice(1).filter(file => file !== '.' && fs.existsSync(file)).at(0);
+    let filename = undefined;
+    try {
+        // When unpackaged, `process.argv` is ['...electron...', '.', ...args]
+        // When packaged, `process.argv` is ['...Galosity...', ...args]
+        const args = process.argv.slice(configs.packed ? 1 : 2);
+        filename = argParser.parseTo(args, configs).at(0);
+    } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(e);
+    }
     if (configs.isDebug && filename === undefined) return 'gal.txt';
     return filename;
 }
+const filename = getArgvFileName();
 
 function handleLink(window: BrowserWindow) {
     window.webContents.on('will-navigate', (event, url) => {
@@ -38,7 +48,7 @@ function createEditorWindow() {
     editorWindow.loadFile('./html/editor.html');
 
     editorWindow.webContents.on('did-finish-load', () => {
-        editorWindow!.webContents.send('send-data', { filename: getArgvFileName(), configs });
+        editorWindow!.webContents.send('send-data', { filename, configs });
     });
 
     editorWindow.on('close', event => {
@@ -81,7 +91,6 @@ app.whenReady().then(async () => {
         Handlers.add('engine-data', (_, data: EngineData) => createEngineWindow(editorWindow!, data));
     }
     else {
-        const filename = getArgvFileName();
         const content = filename !== undefined ? await Files.read(filename) : '';
         createEngineWindow(undefined, { configs, content, filename });
     }

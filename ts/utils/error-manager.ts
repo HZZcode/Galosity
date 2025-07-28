@@ -1,10 +1,5 @@
 export class ErrorManager {
-    errorElement;
-    warnElement;
-    constructor(errorElement: HTMLDivElement, warnElement?: HTMLDivElement) {
-        this.errorElement = errorElement;
-        this.warnElement = warnElement;
-    }
+    constructor(public errorElement: HTMLDivElement, public warnElement?: HTMLDivElement) { }
     error(msg: any) {
         this.errorElement.innerText = msg.toString();
     }

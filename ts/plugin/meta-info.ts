@@ -15,11 +15,7 @@ export class MetaInfo {
 type VersionLike = string | Version;
 
 export class Version {
-    parts;
-
-    constructor(parts: number[]) {
-        this.parts = parts;
-    }
+    constructor(public parts: number[]) { }
 
     static fromString(str: string) {
         const parts = str.split('.').map(part => Number.parseInt(part));
@@ -84,6 +80,7 @@ class Versions {
         [Version.fromString('2.0'), 'Pre-version'],
         [Version.fromString('2.1'), 'Plugin Dev'],
         [Version.fromString('2.2'), 'UI+S&L!!'],
+        // [Version.fromString('2.3'), 'Translation'],
     ];
 
     private constructor() { }

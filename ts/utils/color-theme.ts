@@ -1,26 +1,15 @@
 export class ColorTheme {
-    background;
-    mainColors; //format: #RRGGBB
-    alpha; //format: CC
-    shadow;
-    error;
-    warning;
-    outline;
-    func;
-    funcHover;
-
-    constructor(background: string, mainColors: [string, string, string, string], alpha: string,
-        shadow: string, error: string, warning: string, outline: string, func: string, funcHover: string) {
-        this.background = background;
-        this.mainColors = mainColors;
-        this.alpha = alpha;
-        this.shadow = shadow;
-        this.error = error;
-        this.warning = warning;
-        this.outline = outline;
-        this.func = func;
-        this.funcHover = funcHover;
-    }
+    constructor(
+        public background: string,
+        public mainColors: [string, string, string, string], //format: #RRGGBB
+        public alpha: string, //format: CC
+        public shadow: string,
+        public error: string,
+        public warning: string,
+        public outline: string,
+        public func: string,
+        public funcHover: string
+    ) { }
 
     set() {
         const root = document.documentElement;
@@ -38,12 +27,9 @@ export class ColorTheme {
 }
 
 class ColorThemes {
-    themes;
     current = 0;
 
-    constructor(themes: ColorTheme[]) {
-        this.themes = themes;
-    }
+    constructor(public themes: ColorTheme[]) { }
 
     set(index?: number) {
         if (index !== undefined) this.current = index;

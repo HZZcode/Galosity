@@ -1,4 +1,4 @@
-import { Constructor, Func } from "./types.js";
+import type { Constructor, Func } from "./types.js";
 
 export function findDuplicates<T>(array: T[]): T[] {
     return array.filter((item, index) => array.indexOf(item) !== index);

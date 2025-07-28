@@ -2,16 +2,8 @@ import * as vars from "../vars/vars.js";
 import { CustomData } from "./custom-data.js";
 
 export class Frame {
-    pos;
-    varsFrame;
-    resources; // this is in string format
-    customData;
-    constructor(pos: number, varsFrame: vars.GalVars, resources: string, customData: CustomData) {
-        this.pos = pos;
-        this.varsFrame = varsFrame;
-        this.resources = resources;
-        this.customData = customData;
-    }
+    constructor(public pos: number, public varsFrame: vars.GalVars, 
+        public resources: string, public customData: CustomData) { }
 
     withPos(pos: number) {
         this.pos = pos;

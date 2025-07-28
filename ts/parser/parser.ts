@@ -21,14 +21,7 @@ export function parseLine(line: string): dataTypes.GalData {
 }
 
 export class ControlBlock {
-    startPos;
-    casesPosList;
-    endPos;
-    constructor(startPos: number, casesPosList: number[], endPos: number) {
-        this.startPos = startPos;
-        this.casesPosList = casesPosList;
-        this.endPos = endPos;
-    }
+    constructor(public startPos: number, public casesPosList: number[], public endPos: number) { }
     next(casePos: number) {
         for (const [i, pos] of this.casesPosList.entries())
             if (pos === casePos)
@@ -37,10 +30,7 @@ export class ControlBlock {
 }
 
 export class Paragraph {
-    lines;
-    constructor(lines: string[]) {
-        this.lines = lines;
-    }
+    constructor(public lines: string[]) { }
     get dataList() {
         return this.lines.map(parseLine);
     }

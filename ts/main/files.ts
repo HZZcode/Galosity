@@ -3,30 +3,34 @@ import * as path from 'path';
 import { configs } from './configs.js';
 
 class FilesClass {
-    private constructor() { }
+    static upper(pathname: string, layers: number): string {
+        if (layers <= 0) return pathname;
+        return this.upper(path.dirname(pathname), layers - 1);
+    }
 
     static get directory() {
         let pathname = new URL(import.meta.url).pathname.replaceAll('\\', '/');
         if (pathname.startsWith('/')) pathname = pathname.slice(1);
-        return path.dirname(path.dirname(path.dirname(pathname)));
+        return this.upper(pathname, configs.packed ? 5 : 3);
     }
 
     static resolve(pathname: string) {
         return path.resolve(this.directory, pathname).replaceAll('\\', '/');
     }
 
-    static write(pathname: string, content: string) {
+    static async write(pathname: string, content: string) {
         pathname = this.resolve(pathname);
-        fs.mkdirSync(path.dirname(pathname), { recursive: true });
-        fs.writeFileSync(pathname, content, 'utf-8');
+        await fs.promises.mkdir(path.dirname(pathname), { recursive: true });
+        await fs.promises.writeFile(pathname, content, 'utf-8');
     }
 
-    static read(pathname: string) {
-        return fs.promises.readFile(this.resolve(pathname), 'utf-8');
+    static async read(pathname: string) {
+        return await fs.promises.readFile(this.resolve(pathname), 'utf-8');
     }
 
-    static readDir(pathname: string, withFileTypes: boolean = false) {
-        return fs.promises.readdir(this.resolve(pathname), { withFileTypes: withFileTypes as any });
+    static async readDir(pathname: string, withFileTypes: boolean = false):
+        Promise<string[] | fs.Dirent[]> {
+        return await fs.promises.readdir(this.resolve(pathname), { withFileTypes: withFileTypes as any });
     }
 
     static exists(pathname: string) {
@@ -42,6 +46,11 @@ const NoFiles = new Proxy({}, {
     get: () => {
         throw `File Operation is Disabled`;
     }
-}) as typeof FilesClass;
+});
 
-export const Files = configs.files ? FilesClass : NoFiles;
+interface FilesInterface {
+    readDir(pathname: string, withFileTypes?: false): Promise<string[]>;
+    readDir(pathname: string, withFileTypes?: true): Promise<fs.Dirent[]>;
+}
+
+export const Files = (configs.files ? FilesClass : NoFiles) as (typeof FilesClass & FilesInterface);

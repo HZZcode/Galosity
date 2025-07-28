@@ -2,33 +2,23 @@ export class GalData { }
 
 export class EmptyData extends GalData { }
 export class CharacterData extends GalData {
-    name;
-    constructor(name: string) {
+    constructor(public name: string) {
         super();
-        this.name = name;
     }
 }
 export class SpeechData extends GalData {
-    character;
-    sentence;
-    constructor(character: string, sentence: string) {
+    constructor(public character: string, public sentence: string) {
         super();
-        this.character = character;
-        this.sentence = sentence;
     }
 }
 export class PartData extends GalData {
-    part;
-    constructor(part: string) {
+    constructor(public part: string) {
         super();
-        this.part = part;
     }
 }
 export class NoteData extends GalData {
-    note;
-    constructor(note: string) {
+    constructor(public note: string) {
         super();
-        this.note = note;
     }
 }
 export enum JumpType { Anchor, File, Link }
@@ -53,15 +43,12 @@ export class JumpData extends GalData {
     }
 }
 export class AnchorData extends GalData {
-    anchor;
-    constructor(anchor: string) {
+    constructor(public anchor: string) {
         super();
-        this.anchor = anchor;
     }
 }
 export class SelectData extends GalData { }
 export class CaseData extends GalData {
-    text;
     show = 'true'; // Whether the player can see this choice
     enable = 'true'; // Whether the player can select this choice
     key?: string; // This case can be chosen with a key
@@ -75,9 +62,8 @@ export class CaseData extends GalData {
     getPublicArgs() {
         return this.getArgs().filter(key => !['key', 'timeout'].includes(key));
     }
-    constructor(text: string, config: { [_: string]: string; }) {
+    constructor(public text: string, config: { [_: string]: string; }) {
         super();
-        this.text = text;
         for (const key of this.getArgs())
             if (key in config) this[key] = config[key].trim() as this[keyof this & string];
     }
@@ -85,50 +71,31 @@ export class CaseData extends GalData {
 export class BreakData extends GalData { }
 export class EndData extends GalData { }
 export class VarData extends GalData {
-    name;
-    expr;
-    constructor(name: string, expr: string) {
+    constructor(public name: string, public expr: string) {
         super();
-        this.name = name;
-        this.expr = expr;
     }
 }
 export class EnumData extends GalData {
-    name;
-    values;
-    constructor(name: string, values: string[]) {
+    constructor(public name: string, public values: string[]) {
         super();
-        this.name = name;
-        this.values = values;
     }
 }
 export class SwitchData extends GalData {
-    expr;
-    constructor(expr: string) {
+    constructor(public expr: string) {
         super();
-        this.expr = expr;
     }
 }
 export class InputData extends GalData {
-    valueVar;
-    errorVar;
-    constructor(valueVar: string, errorVar: string) {
+    constructor(public valueVar: string, public errorVar: string) {
         super();
-        this.valueVar = valueVar;
-        this.errorVar = errorVar;
     }
 }
 export class ImageData extends GalData {
-    imageType;
-    imageFile;
-    constructor(imageType: string, imageFile: string) {
+    constructor(public imageType: string, public imageFile: string) {
         super();
-        this.imageType = imageType;
-        this.imageFile = imageFile;
     }
 }
 export class TransformData extends GalData {
-    imageType;
     translateX = '0px';
     translateY = '0px';
     scaleX = 1;
@@ -146,9 +113,8 @@ export class TransformData extends GalData {
                 ? [key] : [key, key.slice(0, -1)])
         )].sort();
     }
-    constructor(imageType: string, transformations?: { [_: string]: any; }) {
+    constructor(public imageType: string, transformations?: { [_: string]: any; }) {
         super();
-        this.imageType = imageType;
         if (transformations === undefined) return;
         for (const key of this.getArgs()) {
             if (key in transformations)
@@ -165,54 +131,34 @@ export class TransformData extends GalData {
     }
 }
 export class DelayData extends GalData {
-    seconds = '0';
-    constructor(seconds: string) {
+    constructor(public seconds: string = '0') {
         super();
-        this.seconds = seconds;
     }
 }
 export class PauseData extends GalData { }
 export class EvalData extends GalData {
-    expr;
-    constructor(expr: string) {
+    constructor(public expr: string) {
         super();
-        this.expr = expr;
     }
 }
 export class FuncData extends GalData {
-    name;
-    args;
-    constructor(name: string, args: string[]) {
+    constructor(public name: string, public args: string[]) {
         super();
-        this.name = name;
-        this.args = args;
     }
 }
 export class ReturnData extends GalData {
-    value;
-    constructor(value: string) {
+    constructor(public value: string) {
         super();
-        this.value = value;
     }
 }
 export class CallData extends GalData {
-    name;
-    args;
-    returnVar;
-    constructor(name: string, args: string[], returnVar?: string) {
+    constructor(public name: string, public args: string[], public returnVar?: string) {
         super();
-        this.name = name;
-        this.args = args;
-        this.returnVar = returnVar;
     }
 }
 export class ImportData extends GalData {
-    file;
-    names;
-    constructor(file: string, names: string[]) {
+    constructor(public file: string, public names: string[]) {
         super();
-        this.file = file;
-        this.names = names;
     }
 }
 export class TextData extends GalData {
@@ -223,11 +169,7 @@ export class TextData extends GalData {
     }
 }
 export class CodeData extends GalData {
-    language;
-    code;
-    constructor(language: string, code: string) {
+    constructor(public language: string, public code: string) {
         super();
-        this.language = language;
-        this.code = code;
     }
 }

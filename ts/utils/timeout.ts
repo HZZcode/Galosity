@@ -1,11 +1,8 @@
 class TimeoutSchedule {
-    id: NodeJS.Timeout;
-    lifespan: number; // how many times of `clear` is required to really clear it
-
-    constructor(id: NodeJS.Timeout, lifespan: number) {
-        this.id = id;
-        this.lifespan = lifespan;
-    }
+    constructor(
+        public id: NodeJS.Timeout,
+        public lifespan: number // how many times of `clear` is required to really clear it
+    ) { }
 }
 
 export class TimeoutManager {

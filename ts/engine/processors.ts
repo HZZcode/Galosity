@@ -150,9 +150,9 @@ Processors.register(dataTypes.DelayData, (data, manager) => {
     return false;
 });
 Processors.register(dataTypes.PauseData, (_, __) => true);
-Processors.register(dataTypes.EvalData, (data, manager) => {
+Processors.register(dataTypes.EvalData, async (data, manager) => {
     const expr = interpolate(data.expr, manager.varsFrame);
-    errorHandledAsWarning(async () => await eval(expr))();
+    await errorHandledAsWarning(async () => await eval(expr))();
     return false;
 });
 Processors.register(dataTypes.FuncData, (_, manager) => {

@@ -1,16 +1,10 @@
 const hljs = require('highlight.js');
 
 export class TextManager {
-    character;
-    speech;
-    texts;
+    constructor(public character: HTMLDivElement,
+        public speech: HTMLDivElement,
+        public texts: HTMLDivElement) { }
 
-    constructor(character: HTMLDivElement, speech: HTMLDivElement, texts: HTMLDivElement) {
-        this.character = character;
-        this.speech = speech;
-        this.texts = texts;
-    }
-    
     outputSpeech(name: string, text: string, color = 'var(--color-4)') {
         this.character.innerHTML = name;
         this.speech.innerHTML = text;
@@ -30,13 +24,7 @@ export class TextManager {
 }
 
 export class InfoManager {
-    part;
-    currentLine;
-
-    constructor(part: HTMLDivElement, currentLine: HTMLDivElement) {
-        this.part = part;
-        this.currentLine = currentLine;
-    }
+    constructor(public part: HTMLDivElement, public currentLine: HTMLDivElement) { }
 
     setPart(name: string) {
         this.part.innerText = name;

@@ -9,13 +9,11 @@ import { file } from "./file-manager.js";
 import { TextAreaManager } from "./text-manager.js";
 
 export class TabCompleteContext {
-    manager;
     front;
     back;
     line;
 
-    constructor(manager: TextAreaManager) {
-        this.manager = manager;
+    constructor(public manager: TextAreaManager) {
         this.front = manager.currentLineFrontContent();
         this.back = manager.currentLineBackContent();
         this.line = manager.currentLine();
@@ -31,20 +29,10 @@ export class TabCompleteContext {
 }
 
 export class TabCompleter {
-    complete;
-    predicate;
-    partGetter;
-    scanner;
-
-    constructor(complete: AutoComplete,
-        predicate: (context: TabCompleteContext) => boolean,
-        partGetter: (context: TabCompleteContext) => string,
-        scanner?: Func<[context: TabCompleteContext], string[]>) {
-        this.complete = complete;
-        this.predicate = predicate;
-        this.partGetter = partGetter;
-        this.scanner = scanner;
-    }
+    constructor(public complete: AutoComplete,
+        public predicate: (context: TabCompleteContext) => boolean,
+        public partGetter: (context: TabCompleteContext) => string,
+        public scanner?: Func<[context: TabCompleteContext], string[]>) { }
 
     static ofCombined(complete: AutoComplete,
         predicateAndPartGetter: (context: TabCompleteContext) => string | undefined,

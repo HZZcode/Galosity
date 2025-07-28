@@ -3,13 +3,11 @@ import { EditData, LineEditData, HistoryManager } from "./history.js";
 export const textHistory = new HistoryManager();
 
 export class TextAreaManager {
-    textarea;
     content;
     start;
     end;
     lines;
-    constructor(textarea: HTMLTextAreaElement) {
-        this.textarea = textarea;
+    constructor(public textarea: HTMLTextAreaElement) {
         this.content = textarea.value;
         this.start = textarea.selectionStart;
         this.end = textarea.selectionEnd;

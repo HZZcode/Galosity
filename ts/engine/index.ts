@@ -14,18 +14,20 @@ import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
 import { loadPlugins } from "../plugin/loader.js";
 import { themes } from "../utils/color-theme.js";
 import { isConfirming } from "../utils/confirm.js";
+import { Runtime } from "../utils/configs.js";
 
 const initPromise = new Promise<void>((resolve, reject) => {
     ipcRenderer.on('engine-data', async (_, data) => {
         try {
+            Runtime.configs = data.configs;
             await loadPlugins(e => {
                 logger.error(e);
                 error.error(e);
             });
             await manager.set(data.content.splitLine());
             manager.resources.filename = data.filename;
-            logger.isDebug = data.configs.isDebug;
-            themes.set(data.configs.theme);
+            logger.isDebug = Runtime.configs.isDebug;
+            themes.set(Runtime.configs.theme);
             resolve();
         } catch (e) {
             logger.error(e);

@@ -1,15 +1,8 @@
 type Listener<K extends keyof HTMLElementEventMap> = (this: HTMLElement, ev: HTMLElementEventMap[K]) => any;
 
 class ListenerData {
-    type;
-    listener;
-    options;
-
-    private constructor(type: any, listener: Listener<any>, options?: boolean | AddEventListenerOptions) {
-        this.type = type;
-        this.listener = listener;
-        this.options = options;
-    }
+    private constructor(public type: any, public listener: Listener<any>,
+        public options?: boolean | AddEventListenerOptions) { }
 
     static of<K extends keyof HTMLElementEventMap>
         (type: K, listener: Listener<K>, options?: boolean | AddEventListenerOptions) {
@@ -18,12 +11,9 @@ class ListenerData {
 }
 
 export class EventListener<T extends HTMLElement> {
-    element;
     listeners: ListenerData[] = [];
 
-    constructor(element: T) {
-        this.element = element;
-    }
+    constructor(public element: T) { }
 
     add<K extends keyof HTMLElementEventMap>(type: K, listener: Listener<K>,
         options?: boolean | AddEventListenerOptions) {

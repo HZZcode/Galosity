@@ -20,11 +20,10 @@ import { recordInput } from "./input-record.js";
 import { Func } from "../utils/types.js";
 import { isConfirming } from "../utils/confirm.js";
 import { SearchScreen } from "./search-replace.js";
+import { Runtime } from "../utils/configs.js";
 
 const keybind = new KeybindManager();
 const textKeybind = new KeybindManager();
-
-let configs: Configs;
 
 const bindFunctions = (id: string, key: KeyType, func: Func<[], void>) => {
     bindFunction(id, func);
@@ -115,7 +114,7 @@ async function test(fileManager = file, content = textarea.value) {
     await ipcRenderer.invoke('engine-data', {
         content,
         filename: fileManager.filename,
-        configs
+        configs: Runtime.configs
     });
 }
 async function help() {
@@ -136,8 +135,8 @@ ipcRenderer.on('before-close', async () => {
 const initPromise = new Promise<void>((resolve, reject) => {
     ipcRenderer.on('send-data', async (_, data) => {
         try {
-            configs = data.configs;
-            logger.isDebug = configs.isDebug;
+            Runtime.configs = data.configs;
+            logger.isDebug = Runtime.configs.isDebug;
             await loadPlugins(e => {
                 logger.error(e);
                 error.error(e);
@@ -146,7 +145,7 @@ const initPromise = new Promise<void>((resolve, reject) => {
                 await file.read(data.filename);
             update();
             recordInput();
-            themes.set(configs.theme);
+            themes.set(Runtime.configs.theme);
             binds();
             resolve();
         } catch (e) {

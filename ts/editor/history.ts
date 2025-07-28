@@ -5,31 +5,17 @@ const { v4: uuid } = require('uuid');
 export const editTag = () => `Edit #${uuid()}`;
 
 export class Lines {
-    minLine;
-    maxLine;
-    lines;
     get length() {
         return this.maxLine - this.minLine + 1;
     }
-    constructor(minLine: number, maxLine: number, lines: string[]) {
-        this.minLine = minLine;
-        this.maxLine = maxLine;
-        this.lines = lines;
+    constructor(public minLine: number, public maxLine: number, public lines: string[]) {
         assert(lines.length === this.length);
     }
 }
 
 export class EditData {
-    befores;
-    afters;
-    time;
-    tag;
-    constructor(befores: Lines, afters: string[], tag?: string) {
-        this.befores = befores;
-        this.afters = afters;
-        this.time = new Date();
-        this.tag = tag;
-    }
+    time = new Date();
+    constructor(public befores: Lines, public afters: string[], public tag?: string) { }
     static empty() {
         return new EditData(new Lines(0, -1, []), []);
     }
@@ -64,14 +50,8 @@ export class LineEditData extends EditData {
 }
 
 class TextFrame {
-    last;
-    next;
-    edit; // What happens from this => next
-    constructor(last?: TextFrame, next?: TextFrame, edit?: EditData) {
-        this.last = last;
-        this.next = next;
-        this.edit = edit;
-    }
+    // `edit`: What happens from this => next
+    constructor(public last?: TextFrame, public next?: TextFrame, public edit?: EditData) { }
 }
 
 export class HistoryManager {

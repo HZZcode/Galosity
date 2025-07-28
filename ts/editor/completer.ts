@@ -3,12 +3,9 @@ const electron = require('electron');
 const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
 export class AutoComplete {
-    list;
     chosenFoundIndex = 0;
     found: string[] = [];
-    constructor(list: string[] = []) {
-        this.list = list;
-    }
+    constructor(public list: string[] = []) { }
     setList(list: string[]) {
         this.list = list;
     }
@@ -42,12 +39,8 @@ export class AutoComplete {
 }
 
 export class FileComplete extends AutoComplete {
-    pathGetter;
-    fileType;
-    constructor(pathGetter: () => string | Promise<string>, fileType?: string) {
+    constructor(public pathGetter: () => string | Promise<string>, public fileType?: string) {
         super([]);
-        this.pathGetter = pathGetter;
-        this.fileType = fileType;
     }
     async getList() {
         const path = await ipcRenderer.invoke('resolve', await this.pathGetter());

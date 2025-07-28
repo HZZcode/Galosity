@@ -29,13 +29,7 @@ export function parseFunc(func: string): [string, string[]] {
 } //e.g. 'f(a,b,c)' => ['f',['a','b','c']]
 
 export class ParserRegistry {
-    tag;
-    parser;
-
-    constructor(tag: string, parser: (part: string) => GalData) {
-        this.tag = tag;
-        this.parser = parser;
-    }
+    constructor(public tag: string, public parser: (part: string) => GalData) { }
 }
 
 export class Parsers {

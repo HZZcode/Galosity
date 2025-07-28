@@ -1,13 +1,8 @@
 import { errorHandled } from "./error-handler.js";
 
 export class ButtonData {
-    text;
-    func;
-    enable;
-    constructor(text: string, func: () => Promise<void>, enable = true) {
-        this.text = text;
+    constructor(public text: string, public func: () => Promise<void> | undefined, public enable = true) {
         this.func = errorHandled(func);
-        this.enable = enable;
     }
 }
 export class ButtonsManager {

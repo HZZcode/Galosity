@@ -15,11 +15,9 @@ import { confirm } from "../utils/confirm.js";
 
 class SaveInfo {
     time;
-    sourceFile;
     note;
-    constructor(sourceFile: string, note = '') {
+    constructor(public sourceFile: string, note = '') {
         this.time = new Date();
-        this.sourceFile = sourceFile;
         this.note = note.replaceAll('\n', '');
     }
     withTime(time: Date) {
@@ -39,9 +37,8 @@ class SaveInfo {
     }
 }
 export class SaveLoadManager extends Files {
-    constructor(filename: string) {
+    constructor(public filename: string) {
         super();
-        this.filename = filename;
     }
     async getSaveFilePath(slot: number) {
         return await this.getSavePath() + `/save${slot}.gal`;

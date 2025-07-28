@@ -1,12 +1,7 @@
 import { GalVar, isNum, GalNum } from './types.js';
 
 export class BuiltinVar {
-    getter;
-    setter;
-    constructor(getter: () => GalVar, setter?: (value: GalVar) => void) {
-        this.getter = getter;
-        this.setter = setter;
-    }
+    constructor(public getter: () => GalVar, public setter?: (value: GalVar) => void) { }
     get() {
         return this.getter();
     }
@@ -17,10 +12,7 @@ export class BuiltinVar {
     }
 }
 export class BuiltinFunc {
-    func;
-    constructor(func: (_: GalVar) => GalVar) {
-        this.func = func;
-    }
+    constructor(public func: (_: GalVar) => GalVar) { }
     apply(value: GalVar) {
         return this.func(value);
     }

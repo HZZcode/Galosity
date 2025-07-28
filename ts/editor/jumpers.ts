@@ -11,11 +11,7 @@ import { scanControlBlocks } from "./elements.js";
 import { confirm } from "../utils/confirm.js";
 
 export class Jumper {
-    lineGetter;
-
-    constructor(lineGetter: Func<[context: JumpContext], JumpResult | undefined>) {
-        this.lineGetter = lineGetter;
-    }
+    constructor(public lineGetter: Func<[context: JumpContext], JumpResult | undefined>) { }
 
     static of<TData extends dataTypes.GalData = dataTypes.GalData>(type: Constructor<TData>,
         lineGetter: Func<[context: JumpContext<TData>], JumpResult | undefined>) {
@@ -30,13 +26,11 @@ export class Jumper {
 }
 
 export class JumpContext<TData extends dataTypes.GalData = dataTypes.GalData> {
-    manager;
     lineCount;
     line;
     front;
 
-    constructor(manager: TextAreaManager) {
-        this.manager = manager;
+    constructor(public manager: TextAreaManager) {
         this.lineCount = manager.currentLineCount();
         this.line = manager.currentLine();
         this.front = manager.currentLineFrontContent();
@@ -52,17 +46,8 @@ export class JumpContext<TData extends dataTypes.GalData = dataTypes.GalData> {
 }
 
 export class JumpResult {
-    success;
-    lineCount;
-    file;
-    link;
-
-    private constructor(success: boolean, lineCount?: number, file?: string, link?: string) {
-        this.success = success;
-        this.lineCount = lineCount;
-        this.file = file;
-        this.link = link;
-    }
+    private constructor(public success: boolean, public lineCount?: number,
+        public file?: string, public link?: string) { }
 
     static fail() {
         return new JumpResult(false);

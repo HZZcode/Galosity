@@ -9,19 +9,8 @@ export enum KeyConfig {
 }
 
 export class KeyType {
-    ctrl;
-    shift;
-    alt;
-    meta;
-    key;
-
-    constructor(ctrl: boolean, shift: boolean, alt: boolean, meta: boolean, key: string) {
-        this.ctrl = ctrl;
-        this.shift = shift;
-        this.alt = alt;
-        this.meta = meta;
-        this.key = key;
-    }
+    constructor(public ctrl: boolean, public shift: boolean, public alt: boolean,
+        public meta: boolean, public key: string) { }
 
     static of(key: string, config: number = 0) {
         const ctrl = (config & KeyConfig.Ctrl) !== 0;
@@ -47,13 +36,7 @@ export class KeyType {
 }
 
 class KeybindData {
-    key: KeyType;
-    func: Func<[], void>;
-
-    constructor(key: KeyType, func: Func<[], void>) {
-        this.key = key;
-        this.func = func;
-    }
+    constructor(public key: KeyType, public func: Func<[], void>) { }
 
     match(event: KeyboardEvent) {
         return this.key.match(event);
