@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
-import { EngineData } from '../types.js';
+import type { EngineData } from '../types.js';
 import { Handlers } from './handlers.js';
 import { configs } from './configs.js';
 import { Files } from './files.js';
@@ -8,8 +8,9 @@ import { argParser } from './arg-parser.js';
 let editorWindow: BrowserWindow | undefined;
 let engineWindow: BrowserWindow | undefined;
 
-function getArgvFileName() {
-    let filename = undefined;
+let filename: string | undefined;
+
+function parseArgs() {
     try {
         // When unpackaged, `process.argv` is ['...electron...', '.', ...args]
         // When packaged, `process.argv` is ['...Galosity...', ...args]
@@ -18,11 +19,10 @@ function getArgvFileName() {
     } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
+        configs.help = true;
     }
-    if (configs.isDebug && filename === undefined) return 'gal.txt';
-    return filename;
+    if (configs.isDebug) filename ??= 'gal.txt';
 }
-const filename = getArgvFileName();
 
 function handleLink(window: BrowserWindow) {
     window.webContents.on('will-navigate', (event, url) => {
@@ -35,60 +35,45 @@ function handleLink(window: BrowserWindow) {
     });
 }
 
-function createEditorWindow() {
-    editorWindow = new BrowserWindow({
+function createWindow(file: string, dataChannel: string, data: any, parent?: BrowserWindow) {
+    const window = new BrowserWindow({
         width: 1200,
         height: 800,
+        parent,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
-        },
+        }
     });
-
-    editorWindow.loadFile('./html/editor.html');
-
-    editorWindow.webContents.on('did-finish-load', () => {
-        editorWindow!.webContents.send('send-data', { filename, configs });
+    window.loadFile(file);
+    window.webContents.on('did-finish-load', () => {
+        window.webContents.send(dataChannel, data);
     });
+    window.setMenu(null);
+    if (configs.isDebug) window.webContents.openDevTools();
+    handleLink(window);
+    return window;
+}
 
+function createEditorWindow() {
+    editorWindow = createWindow('./html/editor.html', 'send-data', { filename, configs });
     editorWindow.on('close', event => {
         event.preventDefault();
         editorWindow!.webContents.send('before-close');
         ipcMain.once('before-close-complete', () => editorWindow!.destroy());
     });
-
-    editorWindow.setMenu(null);
-    if (configs.isDebug) editorWindow.webContents.openDevTools();
-    handleLink(editorWindow);
 }
 
 function createEngineWindow(parent: BrowserWindow | undefined, data: EngineData) {
-    engineWindow = new BrowserWindow({
-        width: 1200,
-        height: 800,
-        parent: parent,
-        modal: true,
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false
-        },
-    });
-
-    engineWindow.loadFile('./html/engine.html');
-
-    engineWindow.webContents.on('did-finish-load', () => {
-        engineWindow!.webContents.send('engine-data', data);
-    });
-
-    engineWindow.setMenu(null);
-    if (configs.isDebug) engineWindow.webContents.openDevTools();
-    handleLink(engineWindow);
+    engineWindow = createWindow('./html/engine.html', 'engine-data', data, parent);
 }
 
 app.whenReady().then(async () => {
+    parseArgs();
+    if (configs.help) return argParser.printHelp();
     if (configs.edit) {
         createEditorWindow();
-        Handlers.add('engine-data', (_, data: EngineData) => createEngineWindow(editorWindow!, data));
+        Handlers.add('engine-data', (_, data: EngineData) => createEngineWindow(editorWindow, data));
     }
     else {
         const content = filename !== undefined ? await Files.read(filename) : '';
@@ -101,9 +86,4 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
-});
-
-app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0)
-        createEditorWindow();
 });

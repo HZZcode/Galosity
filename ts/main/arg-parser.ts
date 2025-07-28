@@ -1,12 +1,24 @@
 import { findDuplicates } from "../utils/array.js";
 
 abstract class Arg {
-    constructor(public key: string, public prefixes: string[]) { }
+    constructor(public key: string, public prefixes: string[],
+        public description: string = key, public defaultValue?: string) { }
 
     abstract parseValue(str: string): any;
+
+    abstract get type(): string;
+
+    get helpString() {
+        return `${this.prefixes.join(', ')} (${this.type}${this.defaultValue === undefined ? ''
+            : ', default=' + this.defaultValue}) - ${this.description}`;
+    }
 }
 
 class BoolArg extends Arg {
+    get type() {
+        return 'bool';
+    }
+
     parseValue(str: string) {
         switch (str) {
             case 'true': return true;
@@ -16,6 +28,10 @@ class BoolArg extends Arg {
     }
 }
 class IntArg extends Arg {
+    get type() {
+        return 'int';
+    }
+
     parseValue(str: string) {
         const num = parseInt(str);
         if (isNaN(num)) throw `Invalid Integer: '${str}'`;
@@ -25,6 +41,12 @@ class IntArg extends Arg {
 
 class ArgParser {
     private args: Arg[] = [];
+    public description = '';
+
+    withDescription(description: string) {
+        this.description = description;
+        return this;
+    }
 
     addEntry(arg: Arg) {
         this.args.push(arg);
@@ -56,12 +78,26 @@ class ArgParser {
         }
         return rests;
     }
+
+    get helpString() {
+        return [this.description, ...this.args.map(arg => '  ' + arg.helpString).sort()].join('\n');
+    }
+
+    printHelp() {
+        // eslint-disable-next-line no-console
+        console.log(this.helpString);
+    }
 }
 
 // e.g. Galosity -d=true x.txt --theme=1
 
 export const argParser = new ArgParser()
-    .addEntry(new BoolArg('files', ['-f', '--files']))
-    .addEntry(new BoolArg('edit', ['-e', '--edit']))
-    .addEntry(new BoolArg('isDebug', ['-d', '--debug']))
-    .addEntry(new IntArg('theme', ['-t', '--theme']));
+    .withDescription('Galosity [file] [args] -- open file with arguments.\nValid arguments:')
+    .addEntry(new BoolArg('files', ['-f', '--files'],
+        'Enable file operations (unstable feature -- setting to false cause problems)', 'true'))
+    .addEntry(new BoolArg('edit', ['-e', '--edit'],
+        'When set to false, directly opens the engine through command line args', 'true'))
+    .addEntry(new BoolArg('isDebug', ['-d', '--debug'],
+        'When set to true, opens dev tools and enables logger to print in it', 'false'))
+    .addEntry(new BoolArg('help', ['-h', '--help'], 'Show this message', 'false'))
+    .addEntry(new IntArg('theme', ['-t', '--theme'], 'The index of color theme', '0'));

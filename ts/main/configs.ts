@@ -9,5 +9,6 @@ export const configs: Configs = {
     edit: true,
     isDebug: isDebug(), // this is editable
     packed: !isDebug(), // this one is not
-    theme: 0
+    theme: 0,
+    help: false
 };
