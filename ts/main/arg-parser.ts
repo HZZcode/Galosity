@@ -92,7 +92,7 @@ class ArgParser {
 // e.g. Galosity -d=true x.txt --theme=1
 
 export const argParser = new ArgParser()
-    .withDescription('Galosity [file] [args] -- open file with arguments.\nValid arguments:')
+    .withDescription('Galosity [file] [prefix=value]... -- open file with arguments.\nValid arguments:')
     .addEntry(new BoolArg('files', ['-f', '--files'],
         'Enable file operations (unstable feature -- setting to false cause problems)', 'true'))
     .addEntry(new BoolArg('edit', ['-e', '--edit'],

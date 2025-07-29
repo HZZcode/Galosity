@@ -21,7 +21,7 @@ function parseArgs() {
         console.error(e);
         configs.help = true;
     }
-    if (configs.isDebug) filename ??= 'gal.txt';
+    if (!configs.packed) filename ??= 'gal.txt';
 }
 
 function handleLink(window: BrowserWindow) {
@@ -56,7 +56,7 @@ function createWindow(file: string, dataChannel: string, data: any, parent?: Bro
 }
 
 function createEditorWindow() {
-    editorWindow = createWindow('./html/editor.html', 'send-data', { filename, configs });
+    editorWindow = createWindow('./html/editor.html', 'editor-data', { filename, configs });
     editorWindow.on('close', event => {
         event.preventDefault();
         editorWindow!.webContents.send('before-close');

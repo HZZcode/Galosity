@@ -33,7 +33,7 @@ export interface GalIpcRenderer extends IpcRenderer {
 
   invoke(channel: 'exit', code?: number | string): Promise<void>;
 
-  on(channel: 'send-data', handler: (_: unknown, data: EditorData) => void | Promise<void>): void;
+  on(channel: 'editor-data', handler: (_: unknown, data: EditorData) => void | Promise<void>): void;
   on(channel: 'engine-data', handler: (_: unknown, data: EngineData) => void | Promise<void>): void;
   on(channel: 'before-close', handler: (_: unknown) => void | Promise<void>): void;
 }

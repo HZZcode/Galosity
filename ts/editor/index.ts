@@ -133,7 +133,7 @@ ipcRenderer.on('before-close', async () => {
 });
 
 const initPromise = new Promise<void>((resolve, reject) => {
-    ipcRenderer.on('send-data', async (_, data) => {
+    ipcRenderer.on('editor-data', async (_, data) => {
         try {
             Runtime.configs = data.configs;
             logger.isDebug = Runtime.configs.isDebug;
