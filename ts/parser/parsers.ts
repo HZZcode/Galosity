@@ -28,24 +28,21 @@ export function parseFunc(func: string): [string, string[]] {
     return [name, args];
 } //e.g. 'f(a,b,c)' => ['f',['a','b','c']]
 
-export class ParserRegistry {
-    constructor(public tag: string, public parser: (part: string) => GalData) { }
-}
-
 export class Parsers {
-    private static parsers: ParserRegistry[] = [];
+    private static parsers: { [tag: string]: ((part: string) => GalData) | undefined } = {};
 
     static register(tag: string, parser: (part: string) => GalData) {
-        this.parsers.push(new ParserRegistry(tag, parser));
+        this.parsers[tag] = parser;
     }
 
     static parse(tag: string, nonTagPart: string) {
-        const parsers = this.parsers.filter(parser => parser.tag === tag);
-        return parsers.first()?.parser(nonTagPart);
+        const parsers = this.parsers[tag];
+        if (parsers === undefined) return undefined;
+        return parsers(nonTagPart);
     }
 
     static tags() {
-        return this.parsers.map(parser => parser.tag);
+        return Object.keys(this.parsers);
     }
 }
 

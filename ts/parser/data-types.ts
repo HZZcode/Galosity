@@ -162,10 +162,8 @@ export class ImportData extends GalData {
     }
 }
 export class TextData extends GalData {
-    texts;
-    constructor(text: string) {
+    constructor(public texts: string) {
         super();
-        this.texts = text;
     }
 }
 export class CodeData extends GalData {

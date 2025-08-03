@@ -75,7 +75,7 @@ export class TabCompleters {
 }
 
 export const getTags = () => Parsers.tags().map(tag => `[${tag}]`);
-export const imageTypes = ['background', 'left', 'center', 'right'];
+export const imageTypes = ['background', 'foreground', 'left', 'center', 'right'];
 export const transformTypes = new dataTypes.TransformData('').getAllArgs();
 
 const isConfigKey = (front: string) => front.replaceAll(/=.*?,/g, '').includes('=');

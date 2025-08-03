@@ -53,7 +53,8 @@
       "!exports.txt",
       "!get-exports.py",
       "!plugins",
-      "!merge.ps1"
+      "!merge.ps1",
+      "!src"
     ],
     "extraFiles": [
       "tutorial",

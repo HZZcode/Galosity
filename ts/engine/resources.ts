@@ -10,7 +10,11 @@ export class ResourceManager extends Files {
         return [...this.parent.querySelectorAll('.image')] as HTMLDivElement[];
     }
     getElements() {
-        return [...this.getImageElements(), this.getElement('background')] as HTMLDivElement[];
+        return [
+            ...this.getImageElements(),
+            this.getElement('background'),
+            this.getElement('foreground')
+        ] as HTMLDivElement[];
     }
     getElement(pos: string) {
         const element = document.getElementById(`${pos}-image`);
@@ -18,8 +22,8 @@ export class ResourceManager extends Files {
     }
 
     async clear() {
-        this.getImageElements().forEach(async (element) => await this.setElementImage(element, 'clear'));
-        await this.setImage('background', 'clear');
+        await Promise.all(this.getElements().map(async element => 
+            await this.setElementImage(element, 'clear')));
     }
 
     defImagePos(pos: string, left: string, bottom: string) {

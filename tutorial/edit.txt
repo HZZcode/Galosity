@@ -204,8 +204,8 @@ Ichiku: Then input `[Image] background: image.png` and see what happens.
 [Image] background: bg1.png
 Ichiku: Clear the background with `[Image] background: clear`.
 [Image] background: clear
-ZZ: There are also 3 positions for characters: left, center and right.
-Ichiku: To use these positions, simply replace `background` with `left`, `center` or `right`.
+ZZ: There are also 3 positions for characters: left, center and right, and a front-most position 'foreground'.
+Ichiku: To use these positions, simply replace `background` with `left`, `center`, `right` or `foreground`.
 [Image] background: bg2.png
 [Image] left: Ichiku.png
 Ichiku: Hi! I'm Ichiku! Am I cute?

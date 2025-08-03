@@ -12,3 +12,4 @@ get-exports.py
 exports.txt
 merge.ps1
 highlight
+src

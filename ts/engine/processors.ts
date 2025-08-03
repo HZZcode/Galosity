@@ -149,7 +149,7 @@ Processors.register(dataTypes.DelayData, (data, manager) => {
         manager.varsFrame.evaluate(data.seconds).toNum() * 1000, 2);
     return false;
 });
-Processors.register(dataTypes.PauseData, (_, __) => true);
+Processors.register(dataTypes.PauseData, () => true);
 Processors.register(dataTypes.EvalData, async (data, manager) => {
     const expr = interpolate(data.expr, manager.varsFrame);
     await errorHandledAsWarning(async () => await eval(expr))();
@@ -209,6 +209,11 @@ Processors.register(dataTypes.TextData, (data, manager) => {
     return true;
 });
 Processors.register(dataTypes.CodeData, (data, manager) => {
-    manager.texts.outputCode(data.language, escape(data.code));
+    try {
+        manager.texts.outputCode(data.language, escape(data.code));
+    } catch (e) {
+        logger.warn(e);
+        error.warn(e);
+    }
     return true;
 });

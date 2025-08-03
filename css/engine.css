@@ -107,6 +107,12 @@
     z-index: -404;
 }
 
+#foreground-image {
+    margin-left: 0;
+    background-size: cover;
+    z-index: 404;
+}
+
 .image {
     margin-left: -50%;
     background-size: contain;
