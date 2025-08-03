@@ -4,8 +4,16 @@ import {
 } from "electron";
 import { Dirent } from "fs";
 
-type Configs = { files: boolean, edit: boolean, isDebug: boolean, 
-  readonly packed: boolean, theme: number, help: boolean }
+type Configs = {
+  files: boolean,
+  edit: boolean,
+  autoSave: number, // seconds
+  scriptTest: boolean,
+  isDebug: boolean,
+  readonly packed: boolean,
+  theme: number,
+  help: boolean
+};
 type EditorData = { configs: Configs, filename?: string };
 type EngineData = { configs: Configs, content: string, filename?: string };
 

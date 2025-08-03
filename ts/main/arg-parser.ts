@@ -97,6 +97,10 @@ export const argParser = new ArgParser()
         'Enable file operations (unstable feature -- setting to false cause problems)', 'true'))
     .addEntry(new BoolArg('edit', ['-e', '--edit'],
         'When set to false, directly opens the engine through command line args', 'true'))
+    .addEntry(new IntArg('autoSave', ['-a', '--auto-save'],
+        'Auto save interval in seconds; when set to 0 or negative, disables auto-save.', '60'))
+    .addEntry(new BoolArg('scriptTest', ['-s', '--script-test'],
+        `When set to false, hide 'Current Line', 'Jump to Line' and 'Eval' functions in engine`, 'true'))
     .addEntry(new BoolArg('isDebug', ['-d', '--debug'],
         'When set to true, opens dev tools and enables logger to print in it', 'false'))
     .addEntry(new BoolArg('help', ['-h', '--help'], 'Show this message', 'false'))

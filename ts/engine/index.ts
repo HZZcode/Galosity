@@ -1,4 +1,4 @@
-import { GalIpcRenderer } from "../types";
+import type { GalIpcRenderer } from "../types";
 const electron = require('electron');
 const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
@@ -26,7 +26,6 @@ const initPromise = new Promise<void>((resolve, reject) => {
             });
             await manager.set(data.content.splitLine());
             manager.resources.filename = data.filename;
-            logger.isDebug = Runtime.configs.isDebug;
             themes.set(Runtime.configs.theme);
             resolve();
         } catch (e) {
@@ -56,15 +55,23 @@ async function main() {
     bindFunction('previous', errorHandled(manager.previous.bind(manager)));
     bindFunction('next', errorHandled(manager.next.bind(manager)));
 
-    bindInput(jump, lineInput, async () => {
-        const index = lineInput.value;
-        if (isNum(index)) await manager.jump(Number.parseInt(index));
-    });
+    if (Runtime.configs.scriptTest) {
+        bindInput(jump, lineInput, async () => {
+            const index = lineInput.value;
+            if (isNum(index)) await manager.jump(Number.parseInt(index));
+        });
 
-    bindInput(evalButton, codeInput, async () => {
-        const code = codeInput.value;
-        await manager.eval(code);
-    });
+        bindInput(evalButton, codeInput, async () => {
+            const code = codeInput.value;
+            await manager.eval(code);
+        });
+    }
+    else hideElements('script-test');
+}
+
+function hideElements(classNames: string) {
+    [...document.getElementsByClassName(classNames)]
+        .forEach(element => (element as HTMLElement).style.visibility = 'hidden');
 }
 
 // eslint-disable-next-line floatingPromise/no-floating-promise

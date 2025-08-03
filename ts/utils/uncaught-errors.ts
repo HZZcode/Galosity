@@ -1,8 +1,9 @@
-import { GalIpcRenderer } from "../types";
+import type { GalIpcRenderer } from "../types";
 const electron = require('electron');
 const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
 import { logger } from "./logger.js";
+import { Runtime } from "./configs.js";
 
 function noExcept(func: () => void) {
     try {
@@ -14,7 +15,7 @@ async function handler(error: any) {
     let exit = true, popup = true;
     noExcept(() => {
         logger.error(error);
-        popup = exit = !logger.isDebug;
+        popup = exit = !Runtime.configs.isDebug;
     });
     noExcept(() => {
         if (!popup) return;

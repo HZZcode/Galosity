@@ -1,14 +1,14 @@
 /* eslint-disable no-console */
 
-import { GalIpcRenderer } from "../types";
+import type { GalIpcRenderer } from "../types";
 const electron = require('electron');
 const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
+
+import { Runtime } from "./configs.js";
 
 type LogType = 'log' | 'warn' | 'error';
 
 class Logger {
-    isDebug = true;
-
     private logs: string[] = [];
 
     get content() {
@@ -26,7 +26,7 @@ class Logger {
     print(type: LogType, message: any, withStack: boolean) {
         message = this.format(type.toUpperCase(), message, withStack);
         this.logs.push(message);
-        if (this.isDebug) console[type](message);
+        if (Runtime.configs.isDebug) console[type](message);
     }
 
     async export() {
@@ -50,6 +50,6 @@ class Logger {
     error(message: any) {
         this.print('error', message, true);
     }
-} // TODO: write into files
+}
 
 export const logger = new Logger();

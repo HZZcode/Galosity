@@ -1,4 +1,4 @@
-import { Configs, GalIpcRenderer } from "../types";
+import { GalIpcRenderer } from "../types";
 const electron = require('electron');
 const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
 
@@ -40,7 +40,8 @@ function binds() {
     textarea.addEventListener('input', update);
     textarea.addEventListener('selectionchange', update);
 
-    setInterval(async () => await file.autoSave(), 60000);
+    if (Runtime.configs.autoSave > 0)
+        setInterval(async () => await file.autoSave(), Runtime.configs.autoSave * 1000);
 
     bindFunctions('new', KeyType.of('n', KeyConfig.Ctrl), file.new.bind(file));
     bindFunctions('open', KeyType.of('o', KeyConfig.Ctrl), file.open.bind(file));
@@ -136,7 +137,6 @@ const initPromise = new Promise<void>((resolve, reject) => {
     ipcRenderer.on('editor-data', async (_, data) => {
         try {
             Runtime.configs = data.configs;
-            logger.isDebug = Runtime.configs.isDebug;
             await loadPlugins(e => {
                 logger.error(e);
                 error.error(e);

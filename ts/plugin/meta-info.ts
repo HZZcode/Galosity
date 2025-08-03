@@ -1,5 +1,5 @@
 import { Comparism, falsy, greater, less, notEquals } from "../utils/comparing.js";
-import { logger } from "../utils/logger.js";
+import { Runtime } from "../utils/configs.js";
 
 export class MetaInfo {
     isDebug;
@@ -7,7 +7,7 @@ export class MetaInfo {
     versionName;
 
     constructor() {
-        this.isDebug = logger.isDebug;
+        this.isDebug = Runtime.configs.isDebug;
         [this.version, this.versionName] = Versions.latest();
     }
 }
@@ -80,7 +80,7 @@ class Versions {
         [Version.fromString('2.0'), 'Pre-version'],
         [Version.fromString('2.1'), 'Plugin Dev'],
         [Version.fromString('2.2'), 'UI+S&L!!'],
-        // [Version.fromString('2.3'), 'Translation'],
+        [Version.fromString('2.3'), 'Colorful Voices'],
     ];
 
     private constructor() { }

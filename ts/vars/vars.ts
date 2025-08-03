@@ -95,8 +95,7 @@ export class GalVars {
         this.registerBuiltin('E', () => new GalNum(Math.E));
         this.registerBuiltin('PI', () => new GalNum(Math.PI));
 
-        if (logger.isDebug)
-            this.registerBuiltin('LOGGER', () => new GalNum(0), value => logger.log(value));
+        this.registerBuiltin('LOGGER', () => new GalNum(0), value => logger.log(value));
 
         this.registerBuiltinFunc('sin', builtinNumFunc(Math.sin));
         this.registerBuiltinFunc('cos', builtinNumFunc(Math.cos));
