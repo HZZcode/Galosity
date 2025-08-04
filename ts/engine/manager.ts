@@ -86,7 +86,6 @@ export class Manager {
         if (this.buttons !== undefined) this.buttons.clear();
         this.timeout.clear();
         this.keybind.clear();
-        this.resources.clearMediaWeak();
         this.setEnums();
         return await Processors.apply(data, this);
     }
@@ -103,6 +102,7 @@ export class Manager {
         if (this.isBlocked()) return;
         if (this.currentPos >= this.paragraph.dataList.length) return;
         this.push(this.getFrame());
+        this.resources.clearMediaWeak();
         do {
             this.currentPos++;
             this.info.setLine(this.currentPos);

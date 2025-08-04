@@ -63,7 +63,10 @@ class MediaRecord {
     }
 
     clear() {
+        this.element?.pause();
         this.element?.remove();
+        this.ended = true;
+        this.element = undefined;
     }
 }
 

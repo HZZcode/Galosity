@@ -6,7 +6,7 @@ import { logger } from "../utils/logger.js";
 import { ButtonData } from "./buttons.js";
 import { error, errorHandled, errorHandledAsWarning } from "./error-handler.js";
 import { escape, interpolate } from "./interpolation.js";
-import { ipcRenderer, manager, Manager } from "./manager.js";
+import { ipcRenderer, Manager } from "./manager.js";
 import { TypeDispatch, DispatchFunc } from "../utils/type-dispatch.js";
 import { Constructor } from '../utils/types.js';
 import { KeyType } from '../utils/keybind.js';
@@ -218,13 +218,14 @@ Processors.register(dataTypes.CodeData, (data, manager) => {
     }
     return true;
 });
-Processors.register(dataTypes.MediaData, (data, manager) => {
+Processors.register(dataTypes.MediaData, async (data, manager) => {
+    manager.unsupportedForImported();
     const interpolated = lodash.cloneDeep(data);
     for (const [key, value] of Object.entries(data))
         interpolated[key] = interpolate(value, manager.varsFrame);
     interpolated.block = parseBool(interpolated.block);
     interpolated.volume = parseFloat(interpolated.volume);
     interpolated.resisting = parseBool(interpolated.resisting);
-    manager.resources.playMedia(interpolated.file, interpolated);
+    await manager.resources.playMedia(interpolated.file, interpolated);
     return interpolated.block;
 });
