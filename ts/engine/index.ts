@@ -71,7 +71,7 @@ async function main() {
 
 function hideElements(classNames: string) {
     [...document.getElementsByClassName(classNames)]
-        .forEach(element => (element as HTMLElement).style.visibility = 'hidden');
+        .forEach(element => (element as HTMLElement).style.display = 'none');
 }
 
 // eslint-disable-next-line floatingPromise/no-floating-promise

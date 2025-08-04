@@ -1,3 +1,6 @@
+[Character] ZZ
+[Character] Ichiku
+
 --Basic Editing Functions--
 ZZ: \(\LaTeX\) is supported in Galosity.
 Ichiku: Just put your formula between two $$s or \​( and \​).
@@ -244,7 +247,18 @@ Ichiku: For instance, let me invite Minato here...
 [Image] right: clear
 Ichiku: Isn't it very cool?
 
-[Part] evil evals
+[Part] Media
+ZZ: Of course, a hyper-text galgame engine doesn't only require images.
+ZZ: Audio and video are also important.
+Ichiku: Try: input `[Media] audio.mp3`.
+[Media] audio.mp3:volume=0.3
+[Pause]
+Ichiku: Or: `[Media] video.mp4`
+[Media] video.mp4:volume=0.3,pos=foreground
+[Pause]
+ZZ: Media also allows a set of arguments: `volume` in decimal, `pos` including `background` and `foreground`, `block` as boolean controlling whether to allow skipping through, and `resisting` controlling whether the media keep playing after going to the next line.
+
+[Part] Evil Evals
 ZZ: [Eval] enables you to evaluate javascript code in-place.
 ZZ: This can be used for debugging or doing something the engine doesn't support yet.
 Ichiku: Try: type `[Eval] alert('Hello eval!')`.

@@ -104,3 +104,7 @@ Parsers.register('Code', part => {
     const [language, code] = splitWith(':')(part);
     return new dataTypes.CodeData(language, code);
 });
+Parsers.register('Media', part => {
+    const [file, configs] = part.includes(':') ? splitWith(':')(part) : [part, ''];
+    return new dataTypes.MediaData(file, parseConfig(configs));
+});

@@ -1,8 +1,10 @@
 import { Files } from "../utils/files.js";
 import { splitWith } from "../utils/split.js";
+import { MediaDataType, MediaManager } from "./media.js";
 
 export class ResourceManager extends Files {
     parent = document.getElementById('images') as HTMLDivElement;
+    media = new MediaManager();
     constructor(filename = undefined) {
         super(filename);
     }
@@ -22,7 +24,7 @@ export class ResourceManager extends Files {
     }
 
     async clear() {
-        await Promise.all(this.getElements().map(async element => 
+        await Promise.all(this.getElements().map(async element =>
             await this.setElementImage(element, 'clear')));
     }
 
@@ -38,7 +40,7 @@ export class ResourceManager extends Files {
             return;
         }
         const element = document.createElement('div');
-        element.className = 'image';
+        element.className = 'image normal-image';
         element.id = id;
         setPos(element);
         this.parent.appendChild(element);
@@ -98,5 +100,22 @@ export class ResourceManager extends Files {
             manager.transformImage(pos, transform);
         }
         return manager;
+    }
+
+    async playMedia(source: string, data: MediaDataType) {
+        if (source === 'clear') this.media.clear();
+        else await this.media.play(await this.getSource(source), data);
+    }
+
+    clearMedia() {
+        this.media.clear();
+    }
+
+    clearMediaWeak() {
+        this.media.clearWeak();
+    }
+
+    isBlocked() {
+        return this.media.isBlocked();
     }
 }

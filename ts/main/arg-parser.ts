@@ -1,4 +1,5 @@
 import { findDuplicates } from "../utils/array.js";
+import { parseBool } from "../utils/bool.js";
 
 abstract class Arg {
     constructor(public key: string, public prefixes: string[],
@@ -20,11 +21,7 @@ class BoolArg extends Arg {
     }
 
     parseValue(str: string) {
-        switch (str) {
-            case 'true': return true;
-            case 'false': return false;
-            default: throw `Invalid Boolean: '${str}'`;
-        }
+        return parseBool(str);
     }
 }
 class IntArg extends Arg {

@@ -1,3 +1,5 @@
+import { MediaDataType } from "../engine/media";
+
 export class GalData { }
 
 export class EmptyData extends GalData { }
@@ -56,7 +58,7 @@ export class CaseData extends GalData {
 
     // Note that arguments `timeout` and `key` are secretly undocumented.
     // They apply even if the choice is neither shown nor enabled.
-    getArgs(): (keyof this & string)[] {
+    getArgs() {
         return Object.keys(this).filter(key => key !== 'text') as (keyof this & string)[];
     }
     getPublicArgs() {
@@ -103,7 +105,7 @@ export class TransformData extends GalData {
     skewX = 0;
     skewY = 0;
     rotate = 0;
-    getArgs(): (keyof this & string)[] {
+    getArgs() {
         return Object.keys(this).filter(key => !['type', 'imageType']
             .includes(key)) as (keyof this & string)[];
     }
@@ -169,5 +171,21 @@ export class TextData extends GalData {
 export class CodeData extends GalData {
     constructor(public language: string, public code: string) {
         super();
+    }
+}
+export class MediaData extends GalData implements MediaDataType {
+    volume = 1;
+    pos: 'background' | 'foreground' = 'background';
+    block = false;
+    resisting = false;
+
+    getArgs() {
+        return Object.keys(this).filter(key => key !== 'file') as (keyof this & string)[];
+    }
+    constructor(public file: string, config?: { [_: string]: string; }) {
+        super();
+        if (config === undefined) return;
+        for (const key of this.getArgs())
+            if (key in config) this[key] = config[key].trim() as this[keyof this & string];
     }
 }

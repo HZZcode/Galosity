@@ -77,8 +77,9 @@ export class TabCompleters {
 export const getTags = () => Parsers.tags().map(tag => `[${tag}]`);
 export const imageTypes = ['background', 'foreground', 'left', 'center', 'right'];
 export const transformTypes = new dataTypes.TransformData('').getAllArgs();
+export const mediaArgs = new dataTypes.MediaData('', {}).getArgs();
 
-const isConfigKey = (front: string) => front.replaceAll(/=.*?,/g, '').includes('=');
+const isConfigKey = (front: string) => !front.replaceAll(/=.*?,/g, '').includes('=');
 const getConfigKey = (front: string) => front.substring(Math.max(front.indexOf(':'),
     front.lastIndexOf(',')) + 1).replace(/\[.*?\]/, '').trim();
 
@@ -109,7 +110,7 @@ TabCompleters.register(new TabCompleter(
     context => !context.front.includes('[')
         && (!context.front.includes(':') || context.front.search(':') === context.front.length - 1),
     context => context.front.replace(':', ''),
-    context => context.dataList.filterType(dataTypes.CharacterData).map(data => data.name)
+    context => context.dataList.filterType(dataTypes.CharacterData).map(data => data.name + ':')
 ));  // Character names
 TabCompleters.register(TabCompleter.ofCombined(
     new AutoComplete(),
@@ -151,11 +152,10 @@ TabCompleters.register(TabCompleter.ofCombined(
         .concat(imageTypes)
 )); // Image types
 TabCompleters.register(TabCompleter.ofCombined(
-    new FileComplete(() => file.getSourcePath()),
+    new FileComplete(() => file.getSourcePath()).withExtra('clear'),
     context => {
         const data = parseLine(context.front);
-        if (data instanceof dataTypes.ImageData && !context.front.includes(':'))
-            return data.imageFile;
+        if (context.front.includes(':') && data instanceof dataTypes.ImageData) return data.imageFile;
     }
 )); // Image files
 TabCompleters.register(new TabCompleter(
@@ -191,3 +191,15 @@ TabCompleters.register(TabCompleter.ofCombined(
         return scanSymbols(lines.map(parseLine));
     }
 )); // Import symbol
+TabCompleters.register(TabCompleter.ofCombined(
+    new FileComplete(() => file.getSourcePath()).withExtra('clear'),
+    context => {
+        const data = parseLine(context.front);
+        if (!context.front.includes(':') && data instanceof dataTypes.MediaData) return data.file;
+    }
+)); // Media files
+TabCompleters.register(new TabCompleter(
+    new AutoComplete(mediaArgs),
+    context => isConfigKey(context.front) && parseLine(context.front) instanceof dataTypes.MediaData,
+    context => getConfigKey(context.front)
+)); // Media args

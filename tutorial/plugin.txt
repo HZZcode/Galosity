@@ -1,1 +1,4 @@
+[Character] ZZ
+[Character] Ichiku
+
 In progress...

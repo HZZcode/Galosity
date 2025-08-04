@@ -64,7 +64,7 @@ export class FileManager extends Files {
     }
     async openFile(path?: string, memorize = true) {
         if (path === undefined) return;
-        this.save();
+        await this.save();
         await this.read(path, memorize);
     }
     async back(event?: Event) {

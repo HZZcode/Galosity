@@ -37,8 +37,8 @@ class SaveInfo {
     }
 }
 export class SaveLoadManager extends Files {
-    constructor(public filename: string) {
-        super();
+    constructor(filename: string) {
+        super(filename);
     }
     async getSaveFilePath(slot: number) {
         return await this.getSavePath() + `/save${slot}.gal`;

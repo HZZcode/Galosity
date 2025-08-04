@@ -6,11 +6,12 @@ import { logger } from "../utils/logger.js";
 import { ButtonData } from "./buttons.js";
 import { error, errorHandled, errorHandledAsWarning } from "./error-handler.js";
 import { escape, interpolate } from "./interpolation.js";
-import { ipcRenderer, Manager } from "./manager.js";
+import { ipcRenderer, manager, Manager } from "./manager.js";
 import { TypeDispatch, DispatchFunc } from "../utils/type-dispatch.js";
 import { Constructor } from '../utils/types.js';
 import { KeyType } from '../utils/keybind.js';
 import { confirm } from '../utils/confirm.js';
+import { parseBool } from '../utils/bool.js';
 
 export class Processors {
     private static dispatch = new TypeDispatch<[manager: Manager], boolean, dataTypes.GalData>(false);
@@ -190,10 +191,8 @@ Processors.register(dataTypes.ImportData, async (data, manager) => {
     const content = await manager.resources.readFile(data.file);
     const subManager = new Manager(false);
     await subManager.set(content.splitLine());
-    for (; subManager.currentPos < subManager.paragraph.dataList.length;
-        subManager.currentPos++) {
-        await subManager.process(subManager.currentData());
-    }
+    for (; subManager.currentPos < subManager.paragraph.dataList.length; subManager.currentPos++)
+        await subManager.process(subManager.currentData);
     for (const name of data.names) {
         if (manager.varsFrame.isDefinedSymbol(name)) continue;
         else if (subManager.varsFrame.isDefinedVar(name))
@@ -205,10 +204,12 @@ Processors.register(dataTypes.ImportData, async (data, manager) => {
     return false;
 });
 Processors.register(dataTypes.TextData, (data, manager) => {
+    manager.unsupportedForImported();
     manager.texts.outputTexts(interpolate(data.texts, manager.varsFrame));
     return true;
 });
 Processors.register(dataTypes.CodeData, (data, manager) => {
+    manager.unsupportedForImported();
     try {
         manager.texts.outputCode(data.language, escape(data.code));
     } catch (e) {
@@ -216,4 +217,14 @@ Processors.register(dataTypes.CodeData, (data, manager) => {
         error.warn(e);
     }
     return true;
+});
+Processors.register(dataTypes.MediaData, (data, manager) => {
+    const interpolated = lodash.cloneDeep(data);
+    for (const [key, value] of Object.entries(data))
+        interpolated[key] = interpolate(value, manager.varsFrame);
+    interpolated.block = parseBool(interpolated.block);
+    interpolated.volume = parseFloat(interpolated.volume);
+    interpolated.resisting = parseBool(interpolated.resisting);
+    manager.resources.playMedia(interpolated.file, interpolated);
+    return interpolated.block;
 });

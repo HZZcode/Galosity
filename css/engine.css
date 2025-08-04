@@ -100,22 +100,17 @@
     white-space: pre-wrap;
 }
 
-#background-image {
+.full-image {
     margin-left: 0;
-    background-color: var(--page-background);
     background-size: cover;
-    z-index: -404;
 }
 
-#foreground-image {
-    margin-left: 0;
-    background-size: cover;
-    z-index: 404;
+.normal-image {
+    margin-left: -50%;
+    background-size: contain;
 }
 
 .image {
-    margin-left: -50%;
-    background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
     transition: transform 0.3s ease;

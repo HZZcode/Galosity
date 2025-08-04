@@ -141,3 +141,15 @@ input {
     padding: 10px 20px;
     cursor: pointer;
 }
+
+.background {
+    z-index: -404;
+}
+
+.foreground {
+    z-index: 404;
+}
+
+video {
+    object-fit: cover;
+}

@@ -47,7 +47,7 @@ export class Manager {
     unsupportedForImported() {
         if (this.isMain) return;
         throw `Operation not supported in imported files: `
-        + `at line ${this.currentPos}, data type is '${getType(this.currentData())}'`;
+        + `at line ${this.currentPos}, data type is '${getType(this.currentData)}'`;
     }
     async set(lines: string[]) {
         this.paragraph = new parser.Paragraph(lines);
@@ -55,9 +55,10 @@ export class Manager {
         await this.resources.clear();
         await this.next();
     }
-    isSelecting() {
-        const data = this.paragraph.dataList[this.currentPos];
-        return data !== undefined && data instanceof dataTypes.SelectData;
+    isBlocked() {
+        if (this.resources.isBlocked()) return true;
+        return this.currentData !== undefined
+            && this.currentData instanceof dataTypes.SelectData;
     }
     setEnums() {
         for (const data of this.paragraph.scanEnumsAt(this.currentPos)) {
@@ -85,6 +86,7 @@ export class Manager {
         if (this.buttons !== undefined) this.buttons.clear();
         this.timeout.clear();
         this.keybind.clear();
+        this.resources.clearMediaWeak();
         this.setEnums();
         return await Processors.apply(data, this);
     }
@@ -94,18 +96,18 @@ export class Manager {
     async previous() {
         await this.jump(this.history.pop(), false);
     }
-    currentData() {
+    get currentData() {
         return this.paragraph.dataList[this.currentPos];
     }
     async next() {
-        if (this.isSelecting()) return;
+        if (this.isBlocked()) return;
         if (this.currentPos >= this.paragraph.dataList.length) return;
         this.push(this.getFrame());
         do {
             this.currentPos++;
             this.info.setLine(this.currentPos);
             this.info.setPart(this.paragraph.getPartAt(this.currentPos));
-        } while (!await this.process(this.currentData()));
+        } while (!await this.process(this.currentData));
     }
     async jump(frame?: number | Frame, memorize = true) {
         if (frame === undefined) return;
@@ -122,7 +124,7 @@ export class Manager {
         }
         this.info.setLine(this.currentPos);
         this.info.setPart(this.paragraph.getPartAt(this.currentPos));
-        while (!await this.process(this.paragraph.dataList[this.currentPos])) this.currentPos++;
+        while (!await this.process(this.currentData)) this.currentPos++;
     } // DO NOT call `jump` directly in `process`!!!
     async eval(line: string) {
         await this.process(parser.parseLine(line));

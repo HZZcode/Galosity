@@ -39,13 +39,19 @@ export class AutoComplete {
 }
 
 export class FileComplete extends AutoComplete {
+    extra: string[] = [];
     constructor(public pathGetter: () => string | Promise<string>, public fileType?: string) {
         super([]);
+    }
+    withExtra(extra: string[] | string) {
+        if (typeof extra === 'string') this.extra = [extra];
+        else this.extra = extra;
+        return this;
     }
     async getList() {
         const path = await ipcRenderer.invoke('resolve', await this.pathGetter());
         const dir = await ipcRenderer.invoke('readdir', path);
-        if (this.fileType === undefined) return dir;
-        return dir.filter(file => file.endsWith('.' + this.fileType));
+        return dir.filter(file => this.fileType === undefined
+            || file.endsWith('.' + this.fileType)).concat(this.extra);
     }
 }

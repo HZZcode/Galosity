@@ -1,3 +1,6 @@
+[Character] ZZ
+[Character] Ichiku
+
 [Part] Editor operations
 ZZ: Let us introduce some operations of Galosity editor and engine.
 ZZ: You can see an area for editing and some buttons on the editor screen.
