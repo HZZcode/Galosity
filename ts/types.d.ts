@@ -12,10 +12,11 @@ type Configs = {
   isDebug: boolean,
   readonly packed: boolean,
   theme: number,
+  encrypt: boolean,
   help: boolean
 };
 type EditorData = { configs: Configs, filename?: string };
-type EngineData = { configs: Configs, content: string, filename?: string };
+type EngineData = { configs: Configs, filename?: string };
 
 export interface GalIpcRenderer extends IpcRenderer {
   invoke(channel: 'showSaveDialog', options: SaveDialogOptions): Promise<SaveDialogReturnValue>;
@@ -23,6 +24,7 @@ export interface GalIpcRenderer extends IpcRenderer {
 
   invoke(channel: 'writeFile', path: string, content: string): Promise<void>;
   invoke(channel: 'readFile', path: string): Promise<string>;
+  invoke(channel: 'readFileDecrypted', path: string): Promise<string>;
   invoke(channel: 'resolve', pathname: string): Promise<string>;
   invoke(channel: 'directory'): Promise<string>;
   invoke(channel: 'readdir', path: string, withFileTypes: false = false): Promise<string[]>;

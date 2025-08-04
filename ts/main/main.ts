@@ -4,6 +4,7 @@ import { Handlers } from './handlers.js';
 import { configs } from './configs.js';
 import { Files } from './files.js';
 import { argParser } from './arg-parser.js';
+import { Crypto } from './crypto.js';
 
 let editorWindow: BrowserWindow | undefined;
 let engineWindow: BrowserWindow | undefined;
@@ -71,14 +72,16 @@ function createEngineWindow(parent: BrowserWindow | undefined, data: EngineData)
 app.whenReady().then(async () => {
     parseArgs();
     if (configs.help) return argParser.printHelp();
+    if (configs.encrypt) {
+        if (filename === undefined)
+            throw new Error('Encrypt needs input file');
+        return await Crypto.encrypt(filename);
+    }
     if (configs.edit) {
         createEditorWindow();
         Handlers.add('engine-data', (_, data: EngineData) => createEngineWindow(editorWindow, data));
     }
-    else {
-        const content = filename !== undefined ? await Files.read(filename) : '';
-        createEngineWindow(undefined, { configs, content, filename });
-    }
+    else createEngineWindow(undefined, { configs, filename });
     Handlers.add('editorTitle', (_, title: string) => editorWindow?.setTitle(title));
     Handlers.add('engineTitle', (_, title: string) => engineWindow?.setTitle(title));
     Handlers.handle();

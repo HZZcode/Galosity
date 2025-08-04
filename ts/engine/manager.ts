@@ -74,7 +74,7 @@ export class Manager {
     }
     async jumpFile(path: string) {
         path = await this.resources.getRelative(path);
-        await ipcRenderer.invoke('readFile', path)
+        await this.resources.readFileDecrypted(path)
             .then(async content => {
                 await this.set(content.splitLine());
                 this.resources.setFile(path);

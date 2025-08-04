@@ -63,6 +63,9 @@ export class Files {
     async readFile(path: string) {
         return await ipcRenderer.invoke('readFile', path);
     }
+    async readFileDecrypted(path: string) {
+        return await ipcRenderer.invoke('readFileDecrypted', path);
+    }
     async resolve(path: string) {
         return await ipcRenderer.invoke('resolve', path);
     }

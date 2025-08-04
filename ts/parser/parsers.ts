@@ -1,18 +1,7 @@
 import { splitWith } from "../utils/split.js";
-import { isIdentifier } from "../utils/string.js";
+import { isIdentifier, parseConfig } from "../utils/string.js";
 import * as dataTypes from "./data-types.js";
 import { GalData } from "./data-types.js";
-
-export function parseConfig(configs: string) {
-    const object: { [_: string]: any; } = {};
-    for (const config of configs.split(',')) {
-        if (!config.includes('=')) continue;
-        const key = config.substring(0, config.indexOf('=')).trim();
-        const value = config.substring(config.indexOf('=') + 1).trim();
-        object[key] = value;
-    }
-    return object;
-}
 
 export function parseFunc(func: string): [string, string[]] {
     const left = func.search(/\(/), right = func.search(/\)/);

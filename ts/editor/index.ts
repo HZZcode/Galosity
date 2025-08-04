@@ -110,22 +110,16 @@ function comment() {
         manager.edit(start + index, line, true, tag);
 }
 
-async function test(fileManager = file, content = textarea.value) {
+async function test(fileManager = file) {
     await file.autoSave();
     await ipcRenderer.invoke('engine-data', {
-        content,
         filename: fileManager.filename,
         configs: Runtime.configs
     });
 }
 async function help() {
     const tutorial = 'tutorial/main.txt';
-    await file.readFile(tutorial)
-        .then(async content => await test(await new FileManager().ofFile(tutorial), content))
-        .catch(e => {
-            logger.error(e);
-            error.error(`Cannot find ${tutorial}`);
-        });
+    await test(await new FileManager().ofFile(tutorial));
 }
 
 ipcRenderer.on('before-close', async () => {

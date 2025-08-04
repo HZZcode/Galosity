@@ -12,6 +12,7 @@ import { Constructor } from '../utils/types.js';
 import { KeyType } from '../utils/keybind.js';
 import { confirm } from '../utils/confirm.js';
 import { parseBool } from '../utils/bool.js';
+import { Files } from '../utils/files.js';
 
 export class Processors {
     private static dispatch = new TypeDispatch<[manager: Manager], boolean, dataTypes.GalData>(false);
@@ -196,7 +197,7 @@ Processors.register(dataTypes.ImportData, async (data, manager) => {
     // If they weren't defined in this environment yet, define them; otherwise nothing is done
     // It seems to be difficult to call funcs across files 
     // So I guess we would implement this a bit later
-    const content = await manager.resources.readFile(data.file);
+    const content = await new Files().readFileDecrypted(data.file);
     const subManager = new Manager(false);
     await subManager.set(content.splitLine());
     for (; subManager.currentPos < subManager.paragraph.dataList.length; subManager.currentPos++)

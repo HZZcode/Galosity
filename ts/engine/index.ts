@@ -15,6 +15,7 @@ import { loadPlugins } from "../plugin/loader.js";
 import { themes } from "../utils/color-theme.js";
 import { isConfirming } from "../utils/confirm.js";
 import { Runtime } from "../utils/configs.js";
+import { Files } from "../utils/files.js";
 
 const initPromise = new Promise<void>((resolve, reject) => {
     ipcRenderer.on('engine-data', async (_, data) => {
@@ -24,7 +25,9 @@ const initPromise = new Promise<void>((resolve, reject) => {
                 logger.error(e);
                 error.error(e);
             });
-            await manager.set(data.content.splitLine());
+            const content = data.filename === undefined ? ''
+                : await new Files().readFileDecrypted(data.filename);
+            await manager.set(content.splitLine());
             manager.resources.filename = data.filename;
             themes.set(Runtime.configs.theme);
             resolve();

@@ -49,7 +49,8 @@ String.prototype.searchPos = function (sub: Searchable, startPos: number = 0) {
         return this.searchPos(sub.toRegex('g'), startPos);
     sub.lastIndex = startPos;
     const match = sub.exec(this.valueOf());
-    if (match !== null) return [match.index, match.index + match[0].length];
+    if (match !== null && match[0].length !== 0)
+        return [match.index, match.index + match[0].length];
 };
 
 String.prototype.searchAllPos = function* (sub: Searchable, startPos?: number) {
@@ -75,3 +76,23 @@ String.prototype.replaceAllPos = function (pos: SlicePos[], str: string) {
     result += this.substring(pos.at(-1)![1]);
     return result;
 };
+
+export function parseConfig(configs: string) {
+    const object: { [_: string]: any; } = {};
+    for (const config of configs.split(',')) {
+        if (!config.includes('=')) continue;
+        const key = config.substring(0, config.indexOf('=')).trim();
+        const value = config.substring(config.indexOf('=') + 1).trim();
+        object[key] = value;
+    }
+    return object;
+}
+
+export function isMetadata(line: string) {
+    return line.trim().startsWith('//!');
+}
+
+export function getMetadata(lines: string[]) {
+    return lines.filter(isMetadata).map(line => line.replace('//!', '').trim())
+        .map(parseConfig).reduce((a, b) => ({ ...b, ...a }), {});
+}

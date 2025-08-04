@@ -18,7 +18,7 @@ function exportObject(path: string[], object: any, root: Exports = exports) {
 
 function exportPack(pack: string) {
     try {
-        exports[pack] = require(pack);
+        exports[pack.toIdentifier()] = require(pack);
     } catch (e) {
         logger.error(`Error exporting ${pack}: ${e}`);
     }
@@ -33,7 +33,7 @@ async function exportFile(space: string) {
     }
 }
 
-const packs = ['electron', 'lodash', 'uuid'];
+const packs = ['electron', 'lodash', 'uuid', 'crypto-js'];
 
 async function getExportFiles() {
     return (await file.readFile('exports.txt')).splitLine().map(path => path.replace(/^\//, ''));

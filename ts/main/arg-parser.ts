@@ -100,5 +100,6 @@ export const argParser = new ArgParser()
         `When set to false, hide 'Current Line', 'Jump to Line' and 'Eval' functions in engine`, 'true'))
     .addEntry(new BoolArg('isDebug', ['-d', '--debug'],
         'When set to true, opens dev tools and enables logger to print in it', 'false'))
+    .addEntry(new BoolArg('encrypt', ['-c', '--encrypt'], 'Encrypt the input script', 'false'))
     .addEntry(new BoolArg('help', ['-h', '--help'], 'Show this message', 'false'))
     .addEntry(new IntArg('theme', ['-t', '--theme'], 'The index of color theme', '0'));

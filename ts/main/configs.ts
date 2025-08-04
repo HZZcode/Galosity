@@ -12,5 +12,6 @@ export const configs: Configs = {
     isDebug: isDebug(), // this is editable
     packed: !isDebug(), // this one is not
     theme: 0,
+    encrypt: false,
     help: false
 };
