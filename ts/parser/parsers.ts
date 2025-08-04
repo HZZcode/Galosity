@@ -1,5 +1,5 @@
 import { splitWith } from "../utils/split.js";
-import * as string from "../utils/string.js";
+import { isIdentifier } from "../utils/string.js";
 import * as dataTypes from "./data-types.js";
 import { GalData } from "./data-types.js";
 
@@ -18,13 +18,13 @@ export function parseFunc(func: string): [string, string[]] {
     const left = func.search(/\(/), right = func.search(/\)/);
     if (left === -1 || right === -1) {
         const name = func.trim();
-        if (!string.isIdentifier(name)) throw `Invalid func name: ${name}`;
+        if (!isIdentifier(name)) throw new Error(`Invalid func name: ${name}`);
         return [name, []];
     }
     const name = func.substring(0, left).trim();
     const argsPart = func.substring(left + 1, right);
     const args = argsPart.trim() === '' ? [] : argsPart.split(',').map(arg => arg.trim());
-    if (!string.isIdentifier(name)) throw `Invalid func name: ${name}`;
+    if (!isIdentifier(name)) throw new Error(`Invalid func name: ${name}`);
     return [name, args];
 } //e.g. 'f(a,b,c)' => ['f',['a','b','c']]
 
@@ -84,8 +84,8 @@ Parsers.register('Pause', _ => new dataTypes.PauseData());
 Parsers.register('Eval', part => new dataTypes.EvalData(part));
 Parsers.register('Func', part => {
     const [name, args] = parseFunc(part);
-    const invalids = args.filter(arg => !string.isIdentifier(arg));
-    if (invalids.length !== 0) throw `Invalid func arg: ${invalids.join(',')}`;
+    const invalids = args.filter(arg => !isIdentifier(arg));
+    if (invalids.length !== 0) throw new Error(`Invalid func arg: ${invalids.join(',')}`);
     return new dataTypes.FuncData(name, args);
 });
 Parsers.register('Return', part => new dataTypes.ReturnData(part));

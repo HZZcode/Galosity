@@ -3,6 +3,6 @@ export function parseBool(str: string) {
     switch (str) {
         case 'true': return true;
         case 'false': return false;
-        default: throw `Invalid Boolean: '${str}'`;
+        default: throw new Error(`Invalid Boolean: '${str}'`);
     }
 }

@@ -5,7 +5,7 @@ import { errorHandledAsWarning, error } from "./error-handler.js";
 class Interpolations {
     funcs: { [tag: string]: (_: string) => string; } = {};
     register(tagChar: string, func: (_: string) => string) {
-        if (tagChar in this.funcs) throw `Multiple registration of interpolation for ${tagChar}`;
+        if (tagChar in this.funcs) throw new Error(`Multiple registration of interpolation for ${tagChar}`);
         this.funcs[tagChar] = func;
     }
     getTagRegex() {

@@ -6,7 +6,7 @@ import { logger } from "../utils/logger.js";
 import { ButtonData } from "./buttons.js";
 import { error, errorHandled, errorHandledAsWarning } from "./error-handler.js";
 import { escape, interpolate } from "./interpolation.js";
-import { ipcRenderer, Manager } from "./manager.js";
+import { ipcRenderer, Manager, UnsupportedForImported } from "./manager.js";
 import { TypeDispatch, DispatchFunc } from "../utils/type-dispatch.js";
 import { Constructor } from '../utils/types.js';
 import { KeyType } from '../utils/keybind.js';
@@ -24,7 +24,15 @@ export class Processors {
     }
 
     static apply(data: dataTypes.GalData, manager: Manager) {
-        return this.dispatch.call(data, manager);
+        try {
+            return this.dispatch.call(data, manager);
+        } catch (e) {
+            if (e instanceof UnsupportedForImported) {
+                logger.warn(e);
+                error.warn(e);
+            }
+            else throw e;
+        }
     }
 }
 
@@ -55,7 +63,7 @@ Processors.register(dataTypes.JumpData, async (data, manager) => {
             break;
         default: {
             const pos = manager.paragraph.findAnchorPos(anchor);
-            if (pos === -1) throw `Anchor not found: ${anchor}`;
+            if (pos === -1) throw new Error(`Anchor not found: ${anchor}`);
             manager.currentPos = pos - 1;
         }
     }
@@ -89,7 +97,7 @@ Processors.register(dataTypes.CaseData, (data, manager) => {
             const value = manager.varsFrame.evaluate(switchData.expr);
             const matchValue = manager.varsFrame.evaluate(data.text);
             const next = block.next(manager.currentPos);
-            if (next === undefined) throw `Case error at line ${manager.currentPos}`;
+            if (next === undefined) throw new Error(`Case error at line ${manager.currentPos}`);
             if (!manager.varsFrame.equal(value, matchValue))
                 manager.currentPos = next;
         } catch (e) {
@@ -102,7 +110,7 @@ Processors.register(dataTypes.CaseData, (data, manager) => {
 Processors.register(dataTypes.BreakData, (_, manager) => {
     const casePos = manager.paragraph.getCasePosAt(manager.currentPos);
     const block = manager.paragraph.findCaseControlBlock(casePos);
-    if (block === undefined) throw `[Break] at line ${manager.currentPos} is not in control block`;
+    if (block === undefined) throw new Error(`[Break] at line ${manager.currentPos} is not in control block`);
     const endPos = block.endPos;
     manager.currentPos = endPos;
     return false;
@@ -165,7 +173,7 @@ Processors.register(dataTypes.CallData, (data, manager) => {
     const pos = manager.paragraph.findFuncPos(data.name);
     const funcData = manager.paragraph.dataList[pos] as dataTypes.FuncData;
     if (funcData.args.length !== data.args.length)
-        throw `Args doesn't match func ${funcData.name} at line ${manager.currentPos}`;
+        throw new Error(`Args doesn't match func ${funcData.name} at line ${manager.currentPos}`);
     for (const [i, expr] of data.args.entries())
         manager.varsFrame.setVar(funcData.args[i], manager.varsFrame.evaluate(expr));
     manager.currentPos = pos;
@@ -174,7 +182,7 @@ Processors.register(dataTypes.CallData, (data, manager) => {
 Processors.register(dataTypes.ReturnData, (data, manager) => {
     const value = data.value === '' ? new types.GalNum(0) : manager.varsFrame.evaluate(data.value);
     if (manager.callStack.length === 0)
-        throw `Call stack is empty`;
+        throw new Error(`Call stack is empty`);
     const frame = manager.callStack.pop()!;
     manager.currentPos = frame.pos;
     manager.varsFrame = frame.varsFrame;
@@ -199,7 +207,7 @@ Processors.register(dataTypes.ImportData, async (data, manager) => {
             manager.varsFrame.setVar(name, subManager.varsFrame.vars[name]);
         else if (subManager.varsFrame.isDefinedEnum(name))
             manager.varsFrame.defEnumType(subManager.varsFrame.getEnumType(name)!);
-        else throw `No such symbol in '${data.file}': '${name}'`;
+        else throw new Error(`No such symbol in '${data.file}': '${name}'`);
     }
     return false;
 });
@@ -220,12 +228,17 @@ Processors.register(dataTypes.CodeData, (data, manager) => {
 });
 Processors.register(dataTypes.MediaData, async (data, manager) => {
     manager.unsupportedForImported();
-    const interpolated = lodash.cloneDeep(data);
-    for (const [key, value] of Object.entries(data))
-        interpolated[key] = interpolate(value, manager.varsFrame);
-    interpolated.block = parseBool(interpolated.block);
-    interpolated.volume = parseFloat(interpolated.volume);
-    interpolated.resisting = parseBool(interpolated.resisting);
-    await manager.resources.playMedia(interpolated.file, interpolated);
-    return interpolated.block;
+    try {
+        const interpolated = lodash.cloneDeep(data);
+        for (const [key, value] of Object.entries(data))
+            interpolated[key] = interpolate(value, manager.varsFrame);
+        interpolated.block = parseBool(interpolated.block);
+        interpolated.volume = parseFloat(interpolated.volume);
+        interpolated.resisting = parseBool(interpolated.resisting);
+        await manager.resources.playMedia(interpolated.file, interpolated);
+        return interpolated.block;
+    } catch (e) {
+        logger.warn(e);
+        error.warn(e);
+    }
 });

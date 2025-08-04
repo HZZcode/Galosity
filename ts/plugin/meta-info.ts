@@ -20,7 +20,7 @@ export class Version {
     static fromString(str: string) {
         const parts = str.split('.').map(part => Number.parseInt(part));
         const nan = parts.findIndex(isNaN);
-        if (nan !== -1) throw `Not a num: '${str.split('.')[nan]}'`;
+        if (nan !== -1) throw new Error(`Not a num: '${str.split('.')[nan]}'`);
         return new Version(parts);
     }
 
@@ -54,7 +54,8 @@ export class Version {
     }
 
     expect(other: VersionLike, condition: boolean, operator: string) {
-        if (!condition) throw `requires Galosity version ${operator} ${other}; found version ${this}`;
+        if (!condition) 
+            throw new Error(`requires Galosity version ${operator} ${other}; found version ${this}`);
         return this;
     }
 

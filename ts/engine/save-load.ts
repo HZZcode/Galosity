@@ -46,6 +46,9 @@ export class SaveLoadManager extends Files {
     async isFilled(slot: number) {
         return await this.hasFile(await this.getSaveFilePath(slot));
     }
+    async checkFilled(slot: number) {
+        if (!await this.isFilled(slot)) throw new Error(`No save data in slot ${slot}`);
+    }
     async maxSlot() {
         const files = await ipcRenderer.invoke('readdir', await this.getSavePath());
         let max = 0;
@@ -63,12 +66,12 @@ export class SaveLoadManager extends Files {
         await this.writeFile(await this.getSaveFilePath(slot), str);
     }
     async getInfo(slot: number) {
-        if (!await this.isFilled(slot)) throw `No save data in slot ${slot}`;
+        this.checkFilled(slot);
         const str = await this.readFile(await this.getSaveFilePath(slot));
         return SaveInfo.fromString(splitWith('\n')(str)[0]);
     }
     async load(slot: number): Promise<[lines: string[] | undefined, frame: Frame]> {
-        if (!await this.isFilled(slot)) throw `No save data in slot ${slot}`;
+        this.checkFilled(slot);
         try {
             const str = await this.readFile(await this.getSaveFilePath(slot));
             const file = (await this.getInfo(slot)).sourceFile;
@@ -80,7 +83,7 @@ export class SaveLoadManager extends Files {
         catch (e) {
             logger.error(e);
             error.error(e);
-            throw `Cannot load from slot ${slot}: ${e}`;
+            throw new Error(`Cannot load from slot ${slot}`, { cause: e });
         }
     }
     async delete(slot: number) {

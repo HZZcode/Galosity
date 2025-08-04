@@ -48,19 +48,19 @@ export class Paragraph {
             if (isControlTag(data)) stack.push(new ControlBlock(index, [], -1));
             else if (data instanceof dataTypes.CaseData) {
                 if (stack.length === 0)
-                    throw `Error: [Case] tag out of control block at line ${index}`;
+                    throw new Error(`[Case] tag out of control block at line ${index}`);
                 stack[stack.length - 1].casesPosList.push(index);
             }
             else if (data instanceof dataTypes.EndData) {
                 if (stack.length === 0)
-                    throw `Error: Extra [End] found at line ${index}`;
+                    throw new Error(`Extra [End] found at line ${index}`);
                 const block = stack.pop()!;
                 block.endPos = index;
                 ans.push(block);
             }
         }
         if (stack.length !== 0)
-            throw `Error: Control block ([Select]-[End] or [Switch]-[End]) not closed`;
+            throw new Error(`Control block ([Select]-[End] or [Switch]-[End]) not closed`);
         return ans;
     }
     scanEnumsAt(pos: number) {
@@ -106,6 +106,6 @@ export class Paragraph {
             if (i <= pos) continue;
             if (data instanceof dataTypes.ReturnData) return i;
         }
-        throw `No return found after line ${pos}`;
+        throw new Error(`No return found after line ${pos}`);
     }
 }

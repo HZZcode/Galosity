@@ -31,7 +31,7 @@ class IntArg extends Arg {
 
     parseValue(str: string) {
         const num = parseInt(str);
-        if (isNaN(num)) throw `Invalid Integer: '${str}'`;
+        if (isNaN(num)) throw new Error(`Invalid Integer: '${str}'`);
         return num;
     }
 }
@@ -52,7 +52,7 @@ class ArgParser {
 
     check() {
         const duplicates = findDuplicates(this.args.flatMap(arg => arg.prefixes));
-        if (duplicates.length !== 0) throw `Duplicate Arg Prefix: ${duplicates[0]}`;
+        if (duplicates.length !== 0) throw new Error(`Duplicate Arg Prefix: ${duplicates[0]}`);
     }
 
     parseSingle(part: string): [key: string, value: any] | [undefined, string] {
@@ -62,7 +62,7 @@ class ArgParser {
         for (const arg of this.args)
             if (arg.prefixes.includes(prefix))
                 return [arg.key, arg.parseValue(str)];
-        throw `Invalid Prefix: '${prefix}'`;
+        throw new Error(`Invalid Prefix: '${prefix}'`);
     }
 
     parseTo(parts: string[], object: { [key: string]: any }) {

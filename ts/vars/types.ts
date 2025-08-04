@@ -9,18 +9,18 @@ export class GalVar {
     }
     toBool(): boolean {
         if (isBool(this)) return !!this.valueIndex;
-        throw `Cannot convert ${this.getType()} into bool`;
+        throw new Error(`Cannot convert ${this.getType()} into bool`);
     }
     toNum() {
         if (isNum(this)) return this.value;
-        throw `Cannot convert ${this.getType()} into num`;
+        throw new Error(`Cannot convert ${this.getType()} into num`);
     }
 }
 
 export class GalNum extends GalVar {
     constructor(public value: number) {
         super('num');
-        if (isNaN(value)) throw 'Num cannot be NaN';
+        if (isNaN(value)) throw new Error('Num cannot be NaN');
     }
 
     getType() {
@@ -45,12 +45,12 @@ export class GalEnumType {
     constructor(public name: string, public values: string[]) {
         const duplicates = findDuplicates(values);
         if (duplicates.length !== 0)
-            throw `Found duplicate enum value: ${name}.${duplicates[0]}`;
+            throw new Error(`Found duplicate enum value: ${name}.${duplicates[0]}`);
 
-        if (!isIdentifier(name)) throw `Name of enum ${name} is invalid`;
+        if (!isIdentifier(name)) throw new Error(`Name of enum ${name} is invalid`);
         const nonIdentifiers = values.filter(value => !isIdentifier(value));
         if (nonIdentifiers.length !== 0)
-            throw `Name of enum value ${name}.${nonIdentifiers[0]} is invalid`;
+            throw new Error(`Name of enum value ${name}.${nonIdentifiers[0]} is invalid`);
     }
 
     toString() {
@@ -67,16 +67,16 @@ export class GalEnumType {
     }
 
     ofIndex(index: number) {
-        if (index >= this.values.length) throw `Enum index out of bound: ${index}`;
+        if (index >= this.values.length) throw new Error(`Enum index out of bound: ${index}`);
         return GalEnum.fromString(this, this.values[index]);
     }
 
     apply(value: GalVar) {
-        if (!isNum(value)) throw `Cannot convert from ${value.getType()} to ${this.name}`;
+        if (!isNum(value)) throw new Error(`Cannot convert from ${value.getType()} to ${this.name}`);
         const num = value.value;
         const index = Math.round(num);
         if (Math.abs(num - index) < 1e-5) return this.ofIndex(index);
-        throw `Cannot convert non-integer into enum ${this.name}`;
+        throw new Error(`Cannot convert non-integer into enum ${this.name}`);
     }
 }
 
@@ -88,8 +88,8 @@ export class GalEnum extends GalVar {
     static fromString(enumType: GalEnumType, value: string) {
         const index = enumType.values.indexOf(value);
         if (index === -1)
-            throw `value ${value} is not a legal value for enum ${enumType.name}: `
-            + `must be a value in ${enumType.values}`;
+            throw new Error(`value ${value} is not a legal value for enum ${enumType.name}: `
+            + `must be a value in ${enumType.values}`);
         return new GalEnum(enumType, index);
     }
 

@@ -6,11 +6,13 @@ const confirmNo = document.getElementById('confirm-no') as HTMLButtonElement;
 export let isConfirming = false;
 
 export function confirm(text: string) {
-    return new Promise<boolean>((resolve, _) => {
+    return new Promise<boolean>(resolve => {
         confirmText.innerText = text;
         confirmDialog.showModal();
         isConfirming = true;
-        [confirmYes, confirmNo].forEach(button => button.blur());
+
+        confirmYes.blur();
+        confirmNo.blur();
 
         confirmYes.onclick = () => {
             confirmDialog.close();
@@ -22,6 +24,9 @@ export function confirm(text: string) {
             isConfirming = false;
             resolve(false);
         };
-        confirmDialog.addEventListener('close', () => resolve(false));
+        confirmDialog.addEventListener('close', () => {
+            isConfirming = false;
+            resolve(false);
+        });
     });
 }

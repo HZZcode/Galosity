@@ -38,6 +38,6 @@ document.addEventListener('keyup', async event => {
     switch (event.key.toUpperCase()) {
         case 'C': return await logger.copy();
         case 'E': return await logger.export();
-        case 'X': throw `Uncaught Exception Test`;
+        case 'X': throw new Error(`Uncaught Exception Test`, { cause: new Error('Just a Test') });
     }
 });

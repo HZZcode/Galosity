@@ -26,7 +26,7 @@ export class TypeDispatch<TArgs extends any[], TReturn, TThisBase = unknown> {
         const func = (thisArg as
             { [_: string]: DispatchFunc<TThisArg, TArgs, TReturn> | undefined })[this.funcName];
         if (func === undefined) {
-            if (this.defaultValue === undefined) throw `Dispatch Error!`;
+            if (this.defaultValue === undefined) throw new Error(`Dispatch Error!`);
             return this.defaultValue;
         }
         return await func(thisArg, ...args);

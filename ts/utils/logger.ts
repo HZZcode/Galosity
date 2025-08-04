@@ -19,12 +19,17 @@ class Logger {
         return new Error().stack!.split('\n').slice(3).join('\n');
     }
 
-    format(type: string, message: any, withStack: boolean) {
-        return `[${type}] (${new Date().toUTCString()}) ${message}${withStack ? '\n' + this.getStack() : ''}`;
+    fullString(object: any): string {
+        if (object instanceof Error) return object.stack!;
+        return object.toString();
     }
 
-    print(type: LogType, message: any, withStack: boolean) {
-        message = this.format(type.toUpperCase(), message, withStack);
+    format(type: string, message: any) {
+        return `[${type}] (${new Date().toUTCString()}) ${this.fullString(message)}`;
+    }
+
+    print(type: LogType, message: any) {
+        message = this.format(type.toUpperCase(), message);
         this.logs.push(message);
         if (Runtime.configs.isDebug) console[type](message);
     }
@@ -42,13 +47,13 @@ class Logger {
     }
 
     log(message: any) {
-        this.print('log', message, false);
+        this.print('log', message);
     }
     warn(message: any) {
-        this.print('warn', message, true);
+        this.print('warn', message);
     }
     error(message: any) {
-        this.print('error', message, true);
+        this.print('error', message);
     }
 }
 

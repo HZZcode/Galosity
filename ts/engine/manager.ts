@@ -21,6 +21,12 @@ import { part, currentLine, character, speech, texts } from "./elements.js";
 import { Processors } from "./processors.js";
 import { SaveLoadManager, SaveLoadScreen } from "./save-load.js";
 
+export class UnsupportedForImported extends Error {
+    constructor(pos: number, type: string) {
+        super(`Operation not supported in imported files: at line ${pos}, data type is '${type}'`);
+    }
+}
+
 export class Manager {
     varsFrame;
     paragraph = new parser.Paragraph([]);
@@ -46,8 +52,7 @@ export class Manager {
     }
     unsupportedForImported() {
         if (this.isMain) return;
-        throw `Operation not supported in imported files: `
-        + `at line ${this.currentPos}, data type is '${getType(this.currentData)}'`;
+        throw new UnsupportedForImported(this.currentPos, getType(this.currentData));
     }
     async set(lines: string[]) {
         this.paragraph = new parser.Paragraph(lines);
@@ -77,7 +82,7 @@ export class Manager {
             .catch(e => {
                 logger.error(e);
                 error.error(e);
-                throw `Cannot open file ${path}`;
+                throw new Error(`Cannot open file ${path}`, { cause: e });
             });
     }
     async process(data: dataTypes.GalData) {

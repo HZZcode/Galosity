@@ -44,7 +44,7 @@ class FilesClass {
 
 const NoFiles = new Proxy({}, {
     get: () => {
-        throw `File Operation is Disabled`;
+        throw new Error(`File Operation is Disabled`);
     }
 });
 

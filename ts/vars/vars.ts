@@ -46,13 +46,13 @@ export class GalVars {
             vars.enumTypes = enumPart.split(',').map(type => GalEnumType.fromString(type));
             return vars;
         } catch (e) {
-            throw 'Parse Error: ' + e;
+            throw new Error('Parse Error: ' + e);
         }
     }
 
     setVar(name: string, value: GalVar) {
         if (isDiscarded(name)) return;
-        if (!isIdentifier(name)) throw `Invalid variable name: ${name}`;
+        if (!isIdentifier(name)) throw new Error(`Invalid variable name: ${name}`);
         if (name in this.builtins) this.builtins[name].set(value);
         this.vars[name] = value;
     }
@@ -104,17 +104,17 @@ export class GalVars {
 
         this.registerBuiltinFunc('indexOf', value => {
             if (isEnum(value)) return new GalNum(value.valueIndex);
-            throw `Cannot get index of ${value.getType()}`;
+            throw new Error(`Cannot get index of ${value.getType()}`);
         });
         this.registerBuiltinFunc('sizeOfType', value => {
             if (isEnum(value)) return new GalNum(value.enumType.values.length);
-            throw `Cannot get size of ${value.getType()}`;
+            throw new Error(`Cannot get size of ${value.getType()}`);
         });
     }
 
     defEnumType(enumType: GalEnumType) {
         if (this.enumTypes.some(type => type.name === enumType.name))
-            throw `Multiple definition of enum type named ${enumType.name}`;
+            throw new Error(`Multiple definition of enum type named ${enumType.name}`);
         this.enumTypes.push(enumType);
     }
 
@@ -137,7 +137,7 @@ export class GalVars {
     getEnumValue(name: string) {
         const values = this.getEnumValues();
         const found = values.filter(e => e.getName() === name);
-        if (found.length > 1) throw `Found multiple enum value named ${name}`;
+        if (found.length > 1) throw new Error(`Found multiple enum value named ${name}`);
         if (found.length === 0) return undefined;
         return found[0];
     }
@@ -158,10 +158,10 @@ export class GalVars {
         try {
             const result = this.evaluateNode(grammar.parse(expr));
             if (result === undefined)
-                throw `Unexpected expression: ${expr}`;
+                throw new Error(`Unexpected expression: ${expr}`);
             return result;
         } catch (e) {
-            throw `Cannot evaluate '${expr}': ` + e;
+            throw new Error(`Cannot evaluate '${expr}'`, { cause: e });
         }
     }
 
@@ -178,7 +178,7 @@ export class GalVars {
             case 'enum': {
                 const enumType = this.getEnumType(node.enumType.value);
                 if (enumType === undefined)
-                    throw `No such enum: ${node.enumType.value}`;
+                    throw new Error(`No such enum: ${node.enumType.value}`);
                 return enumType.getValue(node.value.value);
             }
             case 'identifier': {
@@ -188,7 +188,7 @@ export class GalVars {
                 const func = node.func.value;
                 if (func === 'hasVar') {
                     if (node.value.type !== 'identifier')
-                        throw `Function 'hasVar' can only be applied on identifier`;
+                        throw new Error(`Function 'hasVar' can only be applied on identifier`);
                     try {
                         this.evaluateIdentifier(node.value);
                         return BoolType.ofBool(true);
@@ -200,7 +200,7 @@ export class GalVars {
                 if (func in this.builtinFuncs) return this.builtinFuncs[func].apply(value);
                 const enumType = this.getEnumType(func);
                 if (enumType !== undefined) return enumType.apply(value);
-                throw `No such function: ${func}`;
+                throw new Error(`No such function: ${func}`);
             }
             case 'factor':
                 return this.evaluateFactor(node);
@@ -212,23 +212,25 @@ export class GalVars {
                 return this.evaluateComparings(node);
             case 'matching':
                 return this.evaluateMatching(node);
-            default: throw `Error Node!`;
+            default: throw new Error(`Error Node!`);
         }
     }
 
     evaluateIdentifier(node: any): GalVar {
         const name = node.value;
-        if (isDiscarded(name)) throw `${name} is discarded`;
+        if (isDiscarded(name)) throw new Error(`${name} is discarded`);
         if (name in this.builtins) return this.builtins[name].get();
         if (name in this.vars) return this.vars[name];
         const enumValue = this.getEnumValue(name);
         if (enumValue !== undefined) return enumValue;
-        throw `No such identifier or enum value: ${name}`;
+        throw new Error(`No such identifier or enum value: ${name}`);
     }
 
     evaluateFactor(node: any): GalVar {
         const value = this.evaluateNode(node.value);
-        const noOp = () => { throw `Operator ${node.operator} cannot be applied on ${value.getType()}`; };
+        const noOp = () => {
+            throw new Error(`Operator ${node.operator} cannot be applied on ${value.getType()}`);
+        };
         switch (node.operator) {
             case '+':
                 if (!isNum(value)) return noOp();
@@ -254,7 +256,9 @@ export class GalVars {
     }
 
     evaluateSingleBinary(op: string, x: GalVar, y: GalVar): GalVar {
-        const noOp = () => { throw `Operator ${op} cannot be applied on ${x.getType()} and ${y.getType()}`; };
+        const noOp = () => {
+            throw new Error(`Operator ${op} cannot be applied on ${x.getType()} and ${y.getType()}`);
+        };
         switch (op) {
             case '+':
                 if (!isNum(x) || !isNum(y)) return noOp();
