@@ -1,25 +1,22 @@
-import type { GalIpcRenderer } from "../types";
-const electron = require('electron');
-export const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
-
 const lodash = require('lodash');
-import * as parser from '../parser/parser.js';
+
 import * as dataTypes from '../parser/data-types.js';
-import * as vars from '../vars/vars.js';
-import * as types from '../vars/types.js';
-import { logger } from '../utils/logger.js';
-import { error } from "./error-handler.js";
-import { TimeoutManager } from '../utils/timeout.js';
+import * as parser from '../parser/parser.js';
 import { KeybindManager } from '../utils/keybind.js';
-import { InfoManager, TextManager } from "./texts.js";
+import { logger } from '../utils/logger.js';
+import { TimeoutManager } from '../utils/timeout.js';
+import { getType } from "../utils/types.js";
+import * as types from '../vars/types.js';
+import * as vars from '../vars/vars.js';
 import { ButtonsManager } from "./buttons.js";
 import { CustomData } from "./custom-data.js";
+import { character, currentLine, part, speech, texts } from "./elements.js";
+import { error } from "./error-handler.js";
 import { Frame } from "./frame.js";
-import { ResourceManager } from "./resources.js";
-import { getType } from "../utils/types.js";
-import { part, currentLine, character, speech, texts } from "./elements.js";
 import { Processors } from "./processors.js";
+import { ResourceManager } from "./resources.js";
 import { SaveLoadManager, SaveLoadScreen } from "./save-load.js";
+import { InfoManager, TextManager } from "./texts.js";
 
 export class UnsupportedForImported extends Error {
     constructor(pos: number, type: string) {
@@ -61,9 +58,7 @@ export class Manager {
         await this.next();
     }
     isBlocked() {
-        if (this.resources.isBlocked()) return true;
-        return this.currentData !== undefined
-            && this.currentData instanceof dataTypes.SelectData;
+        return this.resources.isBlocked() || this.currentData instanceof dataTypes.SelectData;
     }
     setEnums() {
         for (const data of this.paragraph.scanEnumsAt(this.currentPos)) {
@@ -88,7 +83,7 @@ export class Manager {
     async process(data: dataTypes.GalData) {
         if (this.currentPos >= this.paragraph.dataList.length) return true;
         if (data === undefined) return false;
-        if (this.buttons !== undefined) this.buttons.clear();
+        this.buttons.clear();
         this.timeout.clear();
         this.keybind.clear();
         this.setEnums();

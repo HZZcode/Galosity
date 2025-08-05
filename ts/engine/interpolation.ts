@@ -1,9 +1,9 @@
 import { isLatex, splitWith } from "../utils/split.js";
-import * as vars from "../vars/vars.js";
-import { errorHandledAsWarning, error } from "./error-handler.js";
+import type * as vars from "../vars/vars.js";
+import { error,errorHandledAsWarning } from "./error-handler.js";
 
 class Interpolations {
-    funcs: { [tag: string]: (_: string) => string; } = {};
+    funcs: Record<string, (_: string) => string> = {};
     register(tagChar: string, func: (_: string) => string) {
         if (tagChar in this.funcs) throw new Error(`Multiple registration of interpolation for ${tagChar}`);
         this.funcs[tagChar] = func;

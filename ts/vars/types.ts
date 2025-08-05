@@ -1,5 +1,5 @@
-import { splitWith } from '../utils/split.js';
 import { findDuplicates } from '../utils/array.js';
+import { splitWith } from '../utils/split.js';
 import { isIdentifier } from '../utils/string.js';
 
 export class GalVar {
@@ -23,11 +23,11 @@ export class GalNum extends GalVar {
         if (isNaN(value)) throw new Error('Num cannot be NaN');
     }
 
-    getType() {
+    override getType() {
         return this.type;
     }
 
-    toString() {
+    override toString() {
         const str = this.value.toString();
         if (!/[0-9]+\./.test(str)) return str;
         let pow = 1;
@@ -93,7 +93,7 @@ export class GalEnum extends GalVar {
         return new GalEnum(enumType, index);
     }
 
-    getType() {
+    override getType() {
         return this.enumType.name;
     }
 
@@ -101,7 +101,7 @@ export class GalEnum extends GalVar {
         return this.enumType.values[this.valueIndex];
     }
 
-    toString() {
+    override toString() {
         return `${this.enumType.name}.${this.getName()}`;
     }
 }

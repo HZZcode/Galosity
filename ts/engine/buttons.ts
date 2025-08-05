@@ -10,8 +10,7 @@ export class ButtonsManager {
     inputFunc?: (_: string) => void;
     clear() {
         const inputs = this.getInput();
-        if (inputs.length !== 0 && this.inputFunc !== undefined)
-            this.inputFunc(inputs[0].value);
+        if (inputs.length !== 0) this.inputFunc?.(inputs[0].value);
         this.inputFunc = undefined;
         this.parent.innerHTML = '';
     }

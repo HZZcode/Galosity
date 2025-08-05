@@ -1,6 +1,7 @@
 import { Files } from "../utils/files.js";
 import { splitWith } from "../utils/split.js";
-import { MediaDataType, MediaManager } from "./media.js";
+import type { MediaDataType } from "./media.js";
+import { MediaManager } from "./media.js";
 
 export class ResourceManager extends Files {
     parent = document.getElementById('images') as HTMLDivElement;
@@ -78,7 +79,7 @@ export class ResourceManager extends Files {
         return id.endsWith('-image') ? id.slice(0, -6) : '';
     }
 
-    toString() {
+    override toString() {
         return [this.filename, this.getElements().map(element => [
             this.getPos(element.id),
             element.style.left,

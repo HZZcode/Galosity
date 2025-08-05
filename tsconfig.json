@@ -5,6 +5,9 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "useUnknownInCatchVariables": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
     "strict": true,
     "strictNullChecks": true,
     "skipLibCheck": true,
@@ -16,7 +19,6 @@
     "./ts/**/*"
   ],
   "exclude": [
-    "node_modules",
     "./ts/TODO.ts"
   ]
 }

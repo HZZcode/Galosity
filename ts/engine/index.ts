@@ -1,21 +1,17 @@
-import type { GalIpcRenderer } from "../types";
-const electron = require('electron');
-const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
-
 import "../utils/uncaught-errors.js";
 
-import { logger } from '../utils/logger.js';
-import { bindFunction, bindInput } from "../utils/bind-events.js";
-import { errorHandled, error } from "./error-handler.js";
-import { isNum } from "../utils/string.js";
-import { jump, lineInput, evalButton, codeInput } from "./elements.js";
-import { manager } from "./manager.js";
-import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
 import { loadPlugins } from "../plugin/loader.js";
+import { bindFunction, bindInput } from "../utils/bind-events.js";
 import { themes } from "../utils/color-theme.js";
 import { isConfirming } from "../utils/confirm.js";
-import { Runtime } from "../utils/configs.js";
 import { Files } from "../utils/files.js";
+import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
+import { logger } from '../utils/logger.js';
+import { ipcRenderer, Runtime } from "../utils/runtime.js";
+import { isNum } from "../utils/string.js";
+import { codeInput,evalButton, jump, lineInput } from "./elements.js";
+import { error,errorHandled } from "./error-handler.js";
+import { manager } from "./manager.js";
 
 const initPromise = new Promise<void>((resolve, reject) => {
     ipcRenderer.on('engine-data', async (_, data) => {

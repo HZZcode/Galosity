@@ -1,11 +1,8 @@
-import type { GalIpcRenderer } from "../types";
-const electron = require('electron');
-const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
-
-import { Func } from "../utils/types.js";
+import { ipcRenderer } from "../utils/runtime.js";
+import { Runtime } from "../utils/runtime.js";
+import type { Func } from "../utils/types.js";
 import { exportAll, exports } from "./exports.js";
 import { MetaInfo } from "./meta-info.js";
-import { Runtime } from "../utils/configs.js";
 
 async function getPlugins() {
     const plugins = await ipcRenderer.invoke('readdir', 'plugins');
@@ -48,9 +45,9 @@ export async function loadPlugins(onError?: Func<[error: string], void>) {
         await setInfo(results.filter(result => result.loaded).map(result => result.plugin));
         const errors = results.filter(result => !result.loaded && result.error !== undefined)
             .map(result => `Failed to load plugin '${result.plugin}': ${result.error}`);
-        if (onError !== undefined && errors.length !== 0) await onError(errors.join('\n'));
+        if (errors.length !== 0) await onError?.(errors.join('\n'));
     } catch (e) {
-        if (onError !== undefined) await onError((e as any).toString());
+        await onError?.((e as any).toString());
     }
 }
 

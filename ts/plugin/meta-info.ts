@@ -1,5 +1,6 @@
-import { Comparism, falsy, greater, less, notEquals } from "../utils/comparing.js";
-import { Runtime } from "../utils/configs.js";
+import type { Comparism } from "../utils/comparing.js";
+import { falsy, greater, less, notEquals } from "../utils/comparing.js";
+import { Runtime } from "../utils/runtime.js";
 
 export class MetaInfo {
     isDebug;
@@ -54,7 +55,7 @@ export class Version {
     }
 
     expect(other: VersionLike, condition: boolean, operator: string) {
-        if (!condition) 
+        if (!condition)
             throw new Error(`requires Galosity version ${operator} ${other}; found version ${this}`);
         return this;
     }
@@ -86,7 +87,7 @@ class Versions {
 
     private constructor() { }
 
-    public static latest() {
+    static latest() {
         return this.versions.at(-1)!;
     }
 }

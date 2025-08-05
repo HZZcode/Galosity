@@ -1,4 +1,4 @@
-import { MediaDataType } from "../engine/media";
+import type { MediaDataType } from "../engine/media";
 
 export class GalData { }
 
@@ -64,7 +64,7 @@ export class CaseData extends GalData {
     getPublicArgs() {
         return this.getArgs().filter(key => !['key', 'timeout'].includes(key));
     }
-    constructor(public text: string, config: { [_: string]: string; }) {
+    constructor(public text: string, config: Record<string, string>) {
         super();
         for (const key of this.getArgs())
             if (key in config) this[key] = config[key].trim() as this[keyof this & string];
@@ -115,7 +115,7 @@ export class TransformData extends GalData {
                 ? [key] : [key, key.slice(0, -1)])
         )].sort();
     }
-    constructor(public imageType: string, transformations?: { [_: string]: any; }) {
+    constructor(public imageType: string, transformations?: Record<string, any>) {
         super();
         if (transformations === undefined) return;
         for (const key of this.getArgs()) {
@@ -128,12 +128,12 @@ export class TransformData extends GalData {
             }
         }
     }
-    toString() {
+    override toString() {
         return this.getArgs().map(arg => `${arg}(${this[arg]})`).map(s => s.replace(' ', '')).join(' ');
     }
 }
 export class DelayData extends GalData {
-    constructor(public seconds: string = '0') {
+    constructor(public seconds = '0') {
         super();
     }
 }
@@ -182,7 +182,7 @@ export class MediaData extends GalData implements MediaDataType {
     getArgs() {
         return Object.keys(this).filter(key => key !== 'file') as (keyof this & string)[];
     }
-    constructor(public file: string, config?: { [_: string]: string; }) {
+    constructor(public file: string, config?: Record<string, string>) {
         super();
         if (config === undefined) return;
         for (const key of this.getArgs())

@@ -1,10 +1,10 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
+
 import type { EngineData } from '../types.js';
-import { Handlers } from './handlers.js';
-import { configs } from './configs.js';
-import { Files } from './files.js';
 import { argParser } from './arg-parser.js';
+import { configs } from './configs.js';
 import { Crypto } from './crypto.js';
+import { Handlers } from './handlers.js';
 
 let editorWindow: BrowserWindow | undefined;
 let engineWindow: BrowserWindow | undefined;

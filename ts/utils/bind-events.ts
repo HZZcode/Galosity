@@ -1,4 +1,4 @@
-import { Func } from "./types.js";
+import type { Func } from "./types.js";
 
 export const bindFunction = (id: string, func: Func<[], void>) =>
     document.getElementById(id)?.addEventListener('click', func);

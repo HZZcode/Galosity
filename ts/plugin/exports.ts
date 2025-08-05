@@ -1,7 +1,7 @@
 import { file } from "../editor/file-manager.js";
 import { logger } from "../utils/logger.js";
 
-type Exports = { [name: string]: any };
+type Exports = Record<string, any>;
 
 export const exports: Exports = {};
 

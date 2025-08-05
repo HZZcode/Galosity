@@ -1,6 +1,6 @@
-import { updateInfo, info, error, textarea, getManager } from "./elements.js";
 import { Files } from "../utils/files.js";
 import { logger } from "../utils/logger.js";
+import { error, getManager,info, textarea, updateInfo } from "./elements.js";
 import { textHistory } from "./text-manager.js";
 
 export class FileManager extends Files {
@@ -51,14 +51,14 @@ export class FileManager extends Files {
         if (this.valid) await this.write(this.filename!);
     }
     async save(event?: Event) {
-        if (event !== undefined) event.preventDefault();
+        event?.preventDefault();
         let path = this.filename;
         if (!this.valid && textarea.value === '') return;
         if (!this.valid) path = await this.requestSavePath();
         if (path !== undefined) await this.write(path);
     }
     async saveAs(event?: Event) {
-        if (event !== undefined) event.preventDefault();
+        event?.preventDefault();
         const path = await this.requestSavePath();
         if (path !== undefined) await this.write(path);
     }
@@ -68,15 +68,15 @@ export class FileManager extends Files {
         await this.read(path, memorize);
     }
     async back(event?: Event) {
-        if (event !== undefined) event.preventDefault();
+        event?.preventDefault();
         await this.openFile(this.previousFiles.pop(), false);
     }
     async open(event?: Event) {
-        if (event !== undefined) event.preventDefault();
+        event?.preventDefault();
         await this.openFile(await this.requestOpenPath());
     }
     async new(event?: Event) {
-        if (event !== undefined) event.preventDefault();
+        event?.preventDefault();
         await this.save();
         textarea.value = '';
         textHistory.clear();

@@ -44,7 +44,7 @@ String.prototype.toIdentifier = function () {
     return parts[0] + parts.slice(1).map(part => part[0].toUpperCase() + part.slice(1)).join('');
 };
 
-String.prototype.searchPos = function (sub: Searchable, startPos: number = 0) {
+String.prototype.searchPos = function (sub: Searchable, startPos = 0) {
     if (typeof sub === 'string')
         return this.searchPos(sub.toRegex('g'), startPos);
     sub.lastIndex = startPos;
@@ -78,7 +78,7 @@ String.prototype.replaceAllPos = function (pos: SlicePos[], str: string) {
 };
 
 export function parseConfig(configs: string) {
-    const object: { [_: string]: any; } = {};
+    const object: Record<string, any> = {};
     for (const config of configs.split(',')) {
         if (!config.includes('=')) continue;
         const key = config.substring(0, config.indexOf('=')).trim();

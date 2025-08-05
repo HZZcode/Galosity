@@ -12,7 +12,7 @@ export class TimeoutManager {
         this.schedules = [];
     }
 
-    set(callback: () => void, delay: number, lifespan: number = 1): NodeJS.Timeout {
+    set(callback: () => void, delay: number, lifespan = 1): NodeJS.Timeout {
         const id = setTimeout(callback, delay);
         this.schedules.push(new TimeoutSchedule(id, lifespan));
         return id;

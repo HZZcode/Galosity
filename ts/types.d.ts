@@ -1,8 +1,8 @@
-import {
+import type {
   IpcRenderer, OpenDialogOptions, OpenDialogReturnValue,
   SaveDialogOptions, SaveDialogReturnValue
 } from "electron";
-import { Dirent } from "fs";
+import type { Dirent } from "fs";
 
 type Configs = {
   files: boolean,

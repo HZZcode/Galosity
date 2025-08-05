@@ -1,26 +1,22 @@
-import { GalIpcRenderer } from "../types";
-const electron = require('electron');
-const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
-
 import "../utils/uncaught-errors.js";
 
-import { logger } from '../utils/logger.js';
-import { bindFunction } from "../utils/bind-events.js";
-import { FileManager } from "./file-manager.js";
-import { error, getManager, textarea, updateInfo } from "./elements.js";
-import { file } from "./file-manager.js";
-import { TabCompleters } from "./tab-completers.js";
-import { Jumpers } from "./jumpers.js";
-import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
-import { surround } from "./surround.js";
 import { loadPlugins } from "../plugin/loader.js";
+import { bindFunction } from "../utils/bind-events.js";
 import { themes } from "../utils/color-theme.js";
+import { isConfirming } from "../utils/confirm.js";
+import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
+import { logger } from '../utils/logger.js';
+import { ipcRenderer, Runtime } from "../utils/runtime.js";
+import type { Func } from "../utils/types.js";
+import { error, getManager, textarea, updateInfo } from "./elements.js";
+import { FileManager } from "./file-manager.js";
+import { file } from "./file-manager.js";
 import { editTag } from "./history.js";
 import { recordInput } from "./input-record.js";
-import { Func } from "../utils/types.js";
-import { isConfirming } from "../utils/confirm.js";
+import { Jumpers } from "./jumpers.js";
 import { SearchScreen } from "./search-replace.js";
-import { Runtime } from "../utils/configs.js";
+import { surround } from "./surround.js";
+import { TabCompleters } from "./tab-completers.js";
 
 const keybind = new KeybindManager();
 const textKeybind = new KeybindManager();

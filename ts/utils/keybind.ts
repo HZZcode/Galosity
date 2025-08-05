@@ -1,5 +1,5 @@
 import { sum } from "./array.js";
-import { Func } from "./types.js";
+import type { Func } from "./types.js";
 
 export enum KeyConfig {
     Ctrl = 1 << 0,
@@ -12,7 +12,7 @@ export class KeyType {
     constructor(public ctrl: boolean, public shift: boolean, public alt: boolean,
         public meta: boolean, public key: string) { }
 
-    static of(key: string, config: number = 0) {
+    static of(key: string, config = 0) {
         const ctrl = (config & KeyConfig.Ctrl) !== 0;
         const shift = (config & KeyConfig.Shift) !== 0;
         const alt = (config & KeyConfig.Alt) !== 0;

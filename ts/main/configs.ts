@@ -1,7 +1,7 @@
 import type { Configs } from "../types";
 
 function isDebug() {
-    return process.env.NODE_ENV === 'development';
+    return process.env['NODE_ENV'] === 'development';
 }
 
 export const configs: Configs = {

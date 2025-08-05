@@ -1,8 +1,6 @@
-import { SaveDialogReturnValue, OpenDialogReturnValue } from "electron";
+import type { OpenDialogReturnValue,SaveDialogReturnValue } from "electron";
 
-import type { GalIpcRenderer } from "../types";
-const electron = require('electron');
-const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
+import { ipcRenderer } from "./runtime.js";
 
 export class Files {
     filename?: string;

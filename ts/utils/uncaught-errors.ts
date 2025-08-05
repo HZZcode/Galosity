@@ -1,9 +1,5 @@
-import type { GalIpcRenderer } from "../types";
-const electron = require('electron');
-const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
-
 import { logger } from "./logger.js";
-import { Runtime } from "./configs.js";
+import { ipcRenderer, Runtime } from "./runtime.js";
 
 function noExcept(func: () => void) {
     try {

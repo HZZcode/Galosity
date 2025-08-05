@@ -1,10 +1,6 @@
 /* eslint-disable no-console */
 
-import type { GalIpcRenderer } from "../types";
-const electron = require('electron');
-const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
-
-import { Runtime } from "./configs.js";
+import { ipcRenderer, Runtime } from "./runtime.js";
 
 type LogType = 'log' | 'warn' | 'error';
 
@@ -13,10 +9,6 @@ class Logger {
 
     get content() {
         return this.logs.join('\n');
-    }
-
-    getStack() {
-        return new Error().stack!.split('\n').slice(3).join('\n');
     }
 
     fullString(object: any): string {

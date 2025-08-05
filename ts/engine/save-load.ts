@@ -1,17 +1,14 @@
-import type { GalIpcRenderer } from "../types";
-const electron = require('electron');
-const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
-
+import { confirm } from "../utils/confirm.js";
 import { EventListener } from "../utils/event-listener.js";
 import { Files } from "../utils/files.js";
 import { KeybindManager, KeyType } from "../utils/keybind.js";
 import { logger } from "../utils/logger.js";
+import { ipcRenderer } from "../utils/runtime.js";
 import { splitWith } from "../utils/split.js";
 import { saveLoad } from "./elements.js";
 import { error, errorHandled } from "./error-handler.js";
 import { Frame } from "./frame.js";
 import { manager } from "./manager.js";
-import { confirm } from "../utils/confirm.js";
 
 class SaveInfo {
     time;

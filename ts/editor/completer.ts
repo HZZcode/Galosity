@@ -1,6 +1,4 @@
-import type { GalIpcRenderer } from "../types";
-const electron = require('electron');
-const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
+import { ipcRenderer } from "../utils/runtime.js";
 
 export class AutoComplete {
     chosenFoundIndex = 0;
@@ -48,7 +46,7 @@ export class FileComplete extends AutoComplete {
         else this.extra = extra;
         return this;
     }
-    async getList() {
+    override async getList() {
         const path = await ipcRenderer.invoke('resolve', await this.pathGetter());
         const dir = await ipcRenderer.invoke('readdir', path);
         return dir.filter(file => this.fileType === undefined

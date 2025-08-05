@@ -1,18 +1,20 @@
 const lodash = require('lodash');
 
 import * as dataTypes from '../parser/data-types.js';
-import * as types from "../vars/types.js";
+import { parseBool } from '../utils/bool.js';
+import { confirm } from '../utils/confirm.js';
+import { Files } from '../utils/files.js';
+import { KeyType } from '../utils/keybind.js';
 import { logger } from "../utils/logger.js";
+import { ipcRenderer } from '../utils/runtime.js';
+import type { DispatchFunc } from "../utils/type-dispatch.js";
+import { TypeDispatch } from "../utils/type-dispatch.js";
+import type { Constructor } from '../utils/types.js';
+import * as types from "../vars/types.js";
 import { ButtonData } from "./buttons.js";
 import { error, errorHandled, errorHandledAsWarning } from "./error-handler.js";
 import { escape, interpolate } from "./interpolation.js";
-import { ipcRenderer, Manager, UnsupportedForImported } from "./manager.js";
-import { TypeDispatch, DispatchFunc } from "../utils/type-dispatch.js";
-import { Constructor } from '../utils/types.js';
-import { KeyType } from '../utils/keybind.js';
-import { confirm } from '../utils/confirm.js';
-import { parseBool } from '../utils/bool.js';
-import { Files } from '../utils/files.js';
+import { Manager, UnsupportedForImported } from "./manager.js";
 
 export class Processors {
     private static dispatch = new TypeDispatch<[manager: Manager], boolean, dataTypes.GalData>(false);

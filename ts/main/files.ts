@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+
 import { configs } from './configs.js';
 
 class FilesClass {
@@ -28,7 +29,7 @@ class FilesClass {
         return await fs.promises.readFile(this.resolve(pathname), 'utf-8');
     }
 
-    static async readDir(pathname: string, withFileTypes: boolean = false):
+    static async readDir(pathname: string, withFileTypes = false):
         Promise<string[] | fs.Dirent[]> {
         return await fs.promises.readdir(this.resolve(pathname), { withFileTypes: withFileTypes as any });
     }

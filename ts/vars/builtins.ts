@@ -1,4 +1,5 @@
-import { GalVar, isNum, GalNum } from './types.js';
+import type { GalVar } from './types.js';
+import { GalNum,isNum } from './types.js';
 
 export class BuiltinVar {
     constructor(public getter: () => GalVar, public setter?: (value: GalVar) => void) { }

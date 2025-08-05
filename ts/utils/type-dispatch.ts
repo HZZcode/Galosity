@@ -1,6 +1,6 @@
-import { Constructor, Func } from "./types.js";
-
 const { v4: uuid } = require('uuid');
+
+import type { Constructor, Func } from "./types.js";
 
 export type DispatchFunc<TThisArg, TArgs extends any[], TReturn> = Func<[TThisArg, ...TArgs], TReturn>;
 
@@ -24,7 +24,7 @@ export class TypeDispatch<TArgs extends any[], TReturn, TThisBase = unknown> {
 
     async call<TThisArg extends TThisBase>(thisArg: TThisArg, ...args: TArgs) {
         const func = (thisArg as
-            { [_: string]: DispatchFunc<TThisArg, TArgs, TReturn> | undefined })[this.funcName];
+            Record<string, DispatchFunc<TThisArg, TArgs, TReturn> | undefined>)[this.funcName];
         if (func === undefined) {
             if (this.defaultValue === undefined) throw new Error(`Dispatch Error!`);
             return this.defaultValue;

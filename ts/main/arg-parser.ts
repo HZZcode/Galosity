@@ -16,18 +16,14 @@ abstract class Arg {
 }
 
 class BoolArg extends Arg {
-    get type() {
-        return 'bool';
-    }
+    readonly type = 'bool';
 
     parseValue(str: string) {
         return parseBool(str);
     }
 }
 class IntArg extends Arg {
-    get type() {
-        return 'int';
-    }
+    readonly type = 'int';
 
     parseValue(str: string) {
         const num = parseInt(str);
@@ -38,7 +34,7 @@ class IntArg extends Arg {
 
 class ArgParser {
     private args: Arg[] = [];
-    public description = '';
+    description = '';
 
     withDescription(description: string) {
         this.description = description;
@@ -65,7 +61,7 @@ class ArgParser {
         throw new Error(`Invalid Prefix: '${prefix}'`);
     }
 
-    parseTo(parts: string[], object: { [key: string]: any }) {
+    parseTo(parts: string[], object: Record<string, any>) {
         this.check();
         const rests: string[] = [];
         for (const part of parts) {

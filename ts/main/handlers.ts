@@ -1,15 +1,14 @@
-import {
-    BrowserWindow, dialog, ipcMain, IpcMainInvokeEvent,
-    OpenDialogOptions, SaveDialogOptions, shell
-} from 'electron';
-import { Files } from './files.js';
+import type { IpcMainInvokeEvent, OpenDialogOptions, SaveDialogOptions } from 'electron';
+import { BrowserWindow, dialog, ipcMain, shell } from 'electron';
+
 import { Crypto } from './crypto.js';
+import { Files } from './files.js';
 
 type Listener = (event: IpcMainInvokeEvent, ...args: any[]) => any;
 export class Handlers {
     private constructor() { }
 
-    static handlers: { [channel: string]: Listener } = {};
+    static handlers: Record<string, Listener> = {};
 
     static handle() {
         for (const [channel, listener] of Object.entries(this.handlers))
@@ -31,7 +30,7 @@ Handlers.add('readFile', (_, pathname: string) => Files.read(pathname));
 Handlers.add('readFileDecrypted', (_, pathname: string) => Crypto.decrypt(pathname));
 Handlers.add('resolve', (_, pathname: string) => Files.resolve(pathname));
 Handlers.add('directory', _ => Files.directory);
-Handlers.add('readdir', (_, pathname: string, withFileTypes: boolean = false) =>
+Handlers.add('readdir', (_, pathname: string, withFileTypes = false) =>
     Files.readDir(pathname, withFileTypes));
 Handlers.add('exists', (_, pathname: string) => Files.exists(pathname));
 Handlers.add('delete', (_, pathname: string) => Files.delete(pathname));

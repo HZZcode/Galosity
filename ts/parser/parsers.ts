@@ -1,7 +1,7 @@
 import { splitWith } from "../utils/split.js";
 import { isIdentifier, parseConfig } from "../utils/string.js";
+import type { GalData } from "./data-types.js";
 import * as dataTypes from "./data-types.js";
-import { GalData } from "./data-types.js";
 
 export function parseFunc(func: string): [string, string[]] {
     const left = func.search(/\(/), right = func.search(/\)/);
@@ -18,7 +18,7 @@ export function parseFunc(func: string): [string, string[]] {
 } //e.g. 'f(a,b,c)' => ['f',['a','b','c']]
 
 export class Parsers {
-    private static parsers: { [tag: string]: ((part: string) => GalData) | undefined } = {};
+    private static parsers: Record<string, ((part: string) => GalData) | undefined> = {};
 
     static register(tag: string, parser: (part: string) => GalData) {
         this.parsers[tag] = parser;

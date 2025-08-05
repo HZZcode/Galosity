@@ -1,7 +1,8 @@
 import { firstDifferents, lastDifferents } from "../utils/array.js";
 import { getManager } from "./elements.js";
 import { EditData, Lines } from "./history.js";
-import { TextAreaManager, textHistory } from "./text-manager.js";
+import type { TextAreaManager } from "./text-manager.js";
+import { textHistory } from "./text-manager.js";
 
 let previous: TextAreaManager | undefined = undefined;
 

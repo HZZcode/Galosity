@@ -1,4 +1,4 @@
-import { ErrorManager } from "./error-manager.js";
+import type { ErrorManager } from "./error-manager.js";
 import { logger } from "./logger.js";
 
 export const handleError = (error: ErrorManager, handle: boolean) =>

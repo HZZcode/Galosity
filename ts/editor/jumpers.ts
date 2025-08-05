@@ -1,14 +1,11 @@
-import type { GalIpcRenderer } from "../types";
-const electron = require('electron');
-const ipcRenderer = electron.ipcRenderer as GalIpcRenderer;
-
 import * as dataTypes from "../parser/data-types.js";
 import { parseLine } from "../parser/parser.js";
-import { Constructor, Func } from "../utils/types.js";
-import { file } from "./file-manager.js";
-import { TextAreaManager } from "./text-manager.js";
-import { scanControlBlocks } from "./elements.js";
 import { confirm } from "../utils/confirm.js";
+import { ipcRenderer } from "../utils/runtime.js";
+import type { Constructor, Func } from "../utils/types.js";
+import { scanControlBlocks } from "./elements.js";
+import { file } from "./file-manager.js";
+import type { TextAreaManager } from "./text-manager.js";
 
 export class Jumper {
     constructor(public lineGetter: Func<[context: JumpContext], JumpResult | undefined>) { }

@@ -2,11 +2,11 @@ import * as dataTypes from "../parser/data-types.js";
 import { parseLine } from "../parser/parser.js";
 import { Parsers } from "../parser/parsers.js";
 import { isInterpolate } from "../utils/split.js";
-import { Func } from "../utils/types.js";
+import type { Func } from "../utils/types.js";
 import { GalVars } from "../vars/vars.js";
 import { AutoComplete, FileComplete } from "./completer.js";
 import { file } from "./file-manager.js";
-import { TextAreaManager } from "./text-manager.js";
+import type { TextAreaManager } from "./text-manager.js";
 
 export class TabCompleteContext {
     front;

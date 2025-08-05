@@ -1,5 +1,5 @@
 import { sum } from "../utils/array.js";
-import { Searchable } from "../utils/string.js";
+import type { Searchable } from "../utils/string.js";
 import { getManager, textarea } from "./elements.js";
 import { recordInput } from "./input-record.js";
 

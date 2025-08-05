@@ -1,4 +1,4 @@
-const mediaTypes: { [extension: string]: string } = {
+const mediaTypes: Record<string, string> = {
     'mp3': 'audio/mpeg',
     'wav': 'audio/wav',
     'ogg': 'audio/ogg',

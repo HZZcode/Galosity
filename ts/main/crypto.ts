@@ -1,8 +1,7 @@
-import { Files } from "./files.js";
+import CryptoJS from 'crypto-js';
 
 import { getMetadata, isMetadata } from "../utils/string.js";
-
-import CryptoJS from 'crypto-js';
+import { Files } from "./files.js";
 
 class CryptoHandle {
     constructor(public secretKey: string) { }
@@ -31,7 +30,7 @@ export class ScriptCrypto {
     static decrypt(content: string) {
         const metadata = getMetadata(content.splitLine());
         if (!('secretKey' in metadata)) return content;
-        const handle = new CryptoHandle(metadata.secretKey);
+        const handle = new CryptoHandle(metadata['secretKey']);
         return content.splitLine().map(line => isMetadata(line) ? line : handle.decrypt(line)).join('\n');
     }
 }

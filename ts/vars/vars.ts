@@ -1,15 +1,17 @@
 const lodash = require('lodash');
-import * as grammar from './grammar/grammar.js';
-import { assert } from '../utils/assert.js';
-import { splitWith } from '../utils/split.js';
-import { GalVar, GalNum, GalEnum, GalEnumType, BoolType, isBool, isEnum, isNum } from './types.js';
-import { isDiscarded, isIdentifier } from '../utils/string.js';
-import { BuiltinVar, BuiltinFunc, builtinNumFunc } from './builtins.js';
+
 import { sum } from '../utils/array.js';
+import { assert } from '../utils/assert.js';
 import { logger } from '../utils/logger.js';
+import { splitWith } from '../utils/split.js';
+import { isDiscarded, isIdentifier } from '../utils/string.js';
+import { BuiltinFunc, builtinNumFunc,BuiltinVar } from './builtins.js';
+import * as grammar from './grammar/grammar.js';
+import type { GalEnum,GalVar } from './types.js';
+import { BoolType, GalEnumType, GalNum, isBool, isEnum, isNum } from './types.js';
 
 function parseHex(str: string) {
-    const digits: { [_: string]: number } = {
+    const digits: Record<string, number> = {
         '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
         '8': 8, '9': 9, 'a': 10, 'b': 11, 'c': 12, 'd': 13, 'e': 14, 'f': 15
     };
@@ -18,10 +20,10 @@ function parseHex(str: string) {
 
 export class GalVars {
     enumTypes: GalEnumType[] = [BoolType];
-    vars: { [name: string]: GalVar } = {};
-    builtins: { [name: string]: BuiltinVar } = {};
+    vars: Record<string, GalVar> = {};
+    builtins: Record<string, BuiltinVar> = {};
 
-    builtinFuncs: { [name: string]: BuiltinFunc } = {};
+    builtinFuncs: Record<string, BuiltinFunc> = {};
 
     warn = '';
 

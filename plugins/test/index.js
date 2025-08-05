@@ -1,4 +1,4 @@
-const enabled = galosity.utils.configs.Runtime.configs.isDebug;
+const enabled = galosity.utils.runtime.Runtime.configs.isDebug;
 
 async function test(name) {
     const message = `${name} test`;
