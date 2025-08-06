@@ -3,7 +3,7 @@ import { assert } from '../utils/assert.js';
 import { splitWith } from '../utils/split.js';
 import { isIdentifier } from '../utils/string.js';
 
-export class GalVar {
+export abstract class GalVar {
     constructor(public type: string) { }
 
     getType() {
@@ -19,9 +19,7 @@ export class GalVar {
         throw new Error(`Cannot convert ${this.getType()} into num`);
     }
 
-    toString(): string {
-        throw `'toString' is not implemented for ${this.getType()}`;
-    }
+    abstract toString(): string;
     /** Note: `reprString` must ensure that `GalVars.evaluate(var.reprString())` is same as `var`. */
     reprString() {
         return this.toString();

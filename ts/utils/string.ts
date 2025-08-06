@@ -42,7 +42,7 @@ String.prototype.toRegex = function (flags?: string) {
 };
 
 String.prototype.toIdentifier = function () {
-    const parts = this.split('-');
+    const parts = this.split(/[^a-zA-Z0-9]/);
     return parts[0] + parts.slice(1).map(part => part.uppercaseFirst()).join('');
 };
 

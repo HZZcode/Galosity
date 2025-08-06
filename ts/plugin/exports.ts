@@ -33,7 +33,7 @@ async function exportFile(space: string) {
     }
 }
 
-const packs = ['electron', 'lodash', 'uuid', 'crypto-js'];
+const packs = ['electron', 'lodash', 'uuid', 'crypto-js', 'highlight.js'];
 
 async function getExportFiles() {
     return (await file.readFile('exports.txt')).splitLine().map(path => path.replace(/^\//, ''));

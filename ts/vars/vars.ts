@@ -181,8 +181,8 @@ export class GalVars {
 
     evaluateNode(node: NodeType): GalVar {
         // Static check
-        type FuncNames = NodeTypes extends NodeTypes ? `evaluate${UppercaseFirst<NodeTypes>}` : never;
-        type _ = ExpectExtends<GalVars, Record<FuncNames, (node: NodeType) => GalVar>>;
+        type FuncNames = `evaluate${UppercaseFirst<NodeTypes>}`;
+        type _ = ExpectExtends<this, Record<FuncNames, (node: NodeType) => GalVar>>;
 
         const type = node.type;
         const funcName = 'evaluate' + type.uppercaseFirst();
