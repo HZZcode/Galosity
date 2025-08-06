@@ -26,7 +26,7 @@ class LoadResult {
     }
 }
 
-export async function tryLoadPlugin(plugin: string) {
+async function tryLoadPlugin(plugin: string) {
     await exportAll();
     window.galosity = exports;
     const path = getPath(plugin);

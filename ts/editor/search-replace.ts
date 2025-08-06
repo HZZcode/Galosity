@@ -3,7 +3,7 @@ import type { Searchable } from "../utils/string.js";
 import { getManager, textarea } from "./elements.js";
 import { recordInput } from "./input-record.js";
 
-export class Searcher {
+class Searcher {
     private constructor() { }
 
     static search(sub: Searchable, start: number = textarea.selectionEnd) {

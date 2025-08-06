@@ -42,7 +42,6 @@ export class Manager {
         if (!isMain) this.info.setLine = this.info.setPart
             = this.timeout.set = this.timeout.clear = (): any => 0;
         this.varsFrame = new vars.GalVars();
-        this.varsFrame.initBuiltins();
     }
     get SLManager() {
         return new SaveLoadManager(this.resources.filename!);

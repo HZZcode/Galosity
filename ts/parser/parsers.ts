@@ -3,7 +3,7 @@ import { isIdentifier, parseConfig } from "../utils/string.js";
 import type { GalData } from "./data-types.js";
 import * as dataTypes from "./data-types.js";
 
-export function parseFunc(func: string): [string, string[]] {
+function parseFunc(func: string): [string, string[]] {
     const left = func.search(/\(/), right = func.search(/\)/);
     if (left === -1 || right === -1) {
         const name = func.trim();

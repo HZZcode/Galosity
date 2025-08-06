@@ -74,10 +74,10 @@ export class TabCompleters {
     }
 }
 
-export const getTags = () => Parsers.tags().map(tag => `[${tag}]`);
-export const imageTypes = ['background', 'foreground', 'left', 'center', 'right'];
-export const transformTypes = new dataTypes.TransformData('').getAllArgs();
-export const mediaArgs = new dataTypes.MediaData('', {}).getArgs();
+const getTags = () => Parsers.tags().map(tag => `[${tag}]`);
+const imageTypes = ['background', 'foreground', 'left', 'center', 'right'];
+const transformTypes = new dataTypes.TransformData('').getAllArgs();
+const mediaArgs = new dataTypes.MediaData('', {}).getArgs();
 
 const isConfigKey = (front: string) => !front.replaceAll(/=.*?,/g, '').includes('=');
 const getConfigKey = (front: string) => front.substring(Math.max(front.indexOf(':'),
@@ -85,7 +85,6 @@ const getConfigKey = (front: string) => front.substring(Math.max(front.indexOf('
 
 function scanSymbols(dataList: dataTypes.GalData[]) {
     const frame = new GalVars();
-    frame.initBuiltins();
     const enums = dataList.filterType(dataTypes.EnumData);
 
     return [... new Set([

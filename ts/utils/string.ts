@@ -8,7 +8,7 @@ export function isNum(value: string) {
     return isFinite(Number(value)) && value !== '';
 }
 
-export type SlicePos = [number, number];
+type SlicePos = [number, number];
 
 export type Searchable = string | RegExp;
 

@@ -15,7 +15,7 @@ class CryptoHandle {
     }
 }
 
-export class ScriptCrypto {
+class ScriptCrypto {
     private constructor() { }
 
     static encrypt(filename: string, content: string) {

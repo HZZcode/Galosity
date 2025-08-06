@@ -1,40 +1,49 @@
 const lodash = require('lodash');
 
 import { assert } from '../utils/assert.js';
-import { logger } from '../utils/logger.js';
 import { splitWith } from '../utils/split.js';
 import { isDiscarded, isIdentifier } from '../utils/string.js';
 import type { ExpectExtends, UppercaseFirst } from "../utils/types.js";
-import { BuiltinFunc, builtinNumFunc, BuiltinVar } from './builtins.js';
+import { Builtins } from './builtins.js';
 import * as grammar from './grammar/grammar.js';
 import { operators } from './operators.js';
 import type { GalEnum, GalVar } from './types.js';
-import {
-    BoolType, GalArray, GalEnumType, GalNum, GalString, isArray, isEnum, isNum, isString
-} from './types.js';
+import { BoolType, GalArray, GalEnumType, GalNum, GalString, isEnum, isNum } from './types.js';
 
-type NodeTypes = 'leftBinary' | 'rightBinary' | 'comparing' | 'matching' | 'factor' |
-    'index' | 'function' | 'array' | 'string' | 'hexNum' | 'num' | 'enum' | 'identifier';
-type NodeType = {
-    type: NodeTypes,
+const NodeTypes = ['leftBinary', 'rightBinary', 'comparing', 'matching', 'factor', 'index',
+    'function', 'array', 'string', 'hexNum', 'num', 'enum', 'identifier'] as const;
+type NodeType = typeof NodeTypes[number];
+type Node = {
+    type: NodeType,
     [_: string]: any
-}
+};
 
 function notNaN(num: number) {
     assert(!isNaN(num));
     return num;
 }
 
-export class GalVars {
+function tried<TArgs extends unknown[], TReturn>(func: (..._: TArgs) => TReturn, ...args: TArgs) {
+    try {
+        func(...args);
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
+export class GalVars extends Builtins {
     enumTypes: GalEnumType[] = [BoolType];
     vars: Record<string, GalVar> = {};
-    builtins: Record<string, BuiltinVar> = {};
-
-    builtinFuncs: Record<string, BuiltinFunc> = {};
 
     warn = '';
 
-    toString() {
+    constructor() {
+        super();
+        this.initBuiltins();
+    }
+
+    override toString() {
         const varsPart = Object.entries(this.vars).map(entry => {
             const [name, value] = entry;
             return name + '=' + value.reprString();
@@ -76,54 +85,9 @@ export class GalVars {
 
     copy() {
         const clone = new GalVars();
-        clone.builtins = this.builtins;
-        clone.builtinFuncs = this.builtinFuncs;
+        clone.enumTypes = lodash.cloneDeep(this.enumTypes);
         clone.vars = lodash.cloneDeep(this.vars);
         return clone;
-    }
-
-    registerBuiltin(name: string, getter: () => GalVar, setter?: (value: GalVar) => void) {
-        this.builtins[name] = new BuiltinVar(getter, setter);
-    }
-    registerBuiltinFunc(name: string, func: (_: GalVar) => GalVar) {
-        this.builtinFuncs[name] = new BuiltinFunc(func);
-    }
-
-    initBuiltins() {
-        this.registerBuiltin('random', () => new GalNum(Math.random()));
-        this.registerBuiltin('randBool', () => BoolType.ofBool(Math.random() < 0.5));
-
-        this.registerBuiltin('yearNow', () => new GalNum(new Date().getFullYear()));
-        this.registerBuiltin('monthNow', () => new GalNum(new Date().getMonth() + 1));
-        this.registerBuiltin('dateNow', () => new GalNum(new Date().getDate()));
-        this.registerBuiltin('hourNow', () => new GalNum(new Date().getHours()));
-        this.registerBuiltin('minuteNow', () => new GalNum(new Date().getMinutes()));
-        this.registerBuiltin('secondNow', () => new GalNum(new Date().getSeconds()));
-        this.registerBuiltin('timeStamp', () => new GalNum(new Date().getTime()));
-
-        this.registerBuiltin('E', () => new GalNum(Math.E));
-        this.registerBuiltin('PI', () => new GalNum(Math.PI));
-
-        this.registerBuiltin('LOGGER', () => new GalNum(0), value => logger.log(value));
-
-        this.initBuiltinFuncs();
-    }
-
-    initBuiltinFuncs() {
-        this.registerBuiltinFunc('sin', builtinNumFunc(Math.sin));
-        this.registerBuiltinFunc('cos', builtinNumFunc(Math.cos));
-        this.registerBuiltinFunc('tan', builtinNumFunc(Math.tan));
-        this.registerBuiltinFunc('ln', builtinNumFunc(Math.log));
-
-        this.registerBuiltinFunc('indexOf', value => {
-            if (isEnum(value)) return new GalNum(value.valueIndex);
-            throw new Error(`Cannot get index of ${value.getType()}`);
-        });
-        this.registerBuiltinFunc('lengthOf', value => {
-            if (isEnum(value)) return new GalNum(value.enumType.values.length);
-            if (isString(value) || isArray(value)) return new GalNum(value.value.length);
-            throw new Error(`Cannot get length of ${value.getType()}`);
-        });
     }
 
     defEnumType(enumType: GalEnumType) {
@@ -179,33 +143,31 @@ export class GalVars {
         }
     }
 
-    evaluateNode(node: NodeType): GalVar {
+    evaluateNode(node: Node): GalVar {
         // Static check
-        type FuncNames = `evaluate${UppercaseFirst<NodeTypes>}`;
-        type _ = ExpectExtends<this, Record<FuncNames, (node: NodeType) => GalVar>>;
+        type FuncNames = `evaluate${UppercaseFirst<NodeType>}`;
+        type _ = ExpectExtends<this, Record<FuncNames, (node: Node) => GalVar>>;
 
-        const type = node.type;
-        const funcName = 'evaluate' + type.uppercaseFirst();
-        if (funcName in this) return (this as any)[funcName](node);
-        throw new Error(`Error Node!`);
+        if (!NodeTypes.includes(node.type)) throw new Error(`Error node type: ${node.type}`);
+        return (this as any)[`evaluate${node.type.uppercaseFirst()}`](node);
     }
 
-    evaluateNum(node: NodeType) {
+    evaluateNum(node: Node) {
         return new GalNum(notNaN(parseFloat(node.value)));
     }
 
-    evaluateHexNum(node: NodeType) {
+    evaluateHexNum(node: Node) {
         return new GalNum(notNaN(parseInt(node.value, 16)));
     }
 
-    evaluateEnum(node: NodeType) {
+    evaluateEnum(node: Node) {
         const enumType = this.getEnumType(node.enumType.value);
         if (enumType === undefined)
             throw new Error(`No such enum: ${node.enumType.value}`);
         return enumType.getValue(node.value.value);
     }
 
-    evaluateIdentifier(node: NodeType) {
+    evaluateIdentifier(node: Node) {
         const name = node.value;
         if (isDiscarded(name)) throw new Error(`${name} is discarded`);
         if (name in this.builtins) return this.builtins[name].get();
@@ -215,24 +177,19 @@ export class GalVars {
         throw new Error(`No such identifier or enum value: ${name}`);
     }
 
-    evaluateString(node: NodeType) {
+    evaluateString(node: Node) {
         return new GalString(JSON.parse(`"${node.value}"`).toString());
     }
 
-    evaluateArray(node: NodeType) {
-        return new GalArray((node.value as NodeType[]).map(value => this.evaluateNode(value)));
+    evaluateArray(node: Node) {
+        return new GalArray((node.value as Node[]).map(value => this.evaluateNode(value)));
     }
 
-    evaluateFunction(node: NodeType) {
+    evaluateFunction(node: Node) {
         const func = node.func.value;
         if (func === 'hasVar') {
             assert(node.value.type === 'identifier', `Function 'hasVar' can only be applied on identifier`);
-            try {
-                this.evaluateIdentifier(node.value);
-                return BoolType.ofBool(true);
-            } catch (_) {
-                return BoolType.ofBool(false);
-            }
+            return BoolType.ofBool(tried(() => this.evaluateIdentifier(node.value)));
         }
         const value = this.evaluateNode(node.value);
         if (func in this.builtinFuncs) return this.builtinFuncs[func].apply(value);
@@ -241,11 +198,11 @@ export class GalVars {
         throw new Error(`No such function: ${func}`);
     }
 
-    evaluateFactor(node: NodeType) {
+    evaluateFactor(node: Node) {
         return operators.applyUnary(node.operator, this.evaluateNode(node.value));
     }
 
-    evaluateIndex(node: NodeType) {
+    evaluateIndex(node: Node) {
         return operators.applyBinary('[]', [this.evaluateNode(node.value), this.evaluateNode(node.index)]);
     }
 
@@ -253,7 +210,7 @@ export class GalVars {
         return operators.applyBinary(op, [x, y]);
     }
 
-    evaluateLeftBinary(node: NodeType) {
+    evaluateLeftBinary(node: Node) {
         const ops = (node.value.length - 1) / 2;
         let result = this.evaluateNode(node.value[0]);
         for (let i = 0; i < ops; i++) {
@@ -264,7 +221,7 @@ export class GalVars {
         return result;
     }
 
-    evaluateRightBinary(node: NodeType) {
+    evaluateRightBinary(node: Node) {
         const ops = (node.value.length - 1) / 2;
         let result = this.evaluateNode(node.value.at(-1));
         for (let i = ops - 1; i >= 0; i--) {
@@ -275,7 +232,7 @@ export class GalVars {
         return result;
     }
 
-    evaluateComparing(node: NodeType) {
+    evaluateComparing(node: Node) {
         const ops = (node.value.length - 1) / 2;
         for (let i = 0; i < ops; i++) {
             const left = this.evaluateNode(node.value[2 * i]);
@@ -287,7 +244,7 @@ export class GalVars {
         return BoolType.ofBool(true);
     }
 
-    evaluateMatching(node: NodeType) {
+    evaluateMatching(node: Node) {
         const value = this.evaluateNode(node.value);
         const type = node.enumType;
         if (type === 'num') return BoolType.ofBool(isNum(value));

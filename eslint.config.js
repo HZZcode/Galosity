@@ -2,8 +2,6 @@ import js from "@eslint/js";
 import globals from "globals";
 import json from "@eslint/json";
 import tseslint from "typescript-eslint";
-import perfectionist from "eslint-plugin-perfectionist";
-import promise from "eslint-plugin-promise";
 import floatingPromise from "eslint-plugin-no-floating-promise";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 import { defineConfig } from "eslint/config";
@@ -23,7 +21,7 @@ export default defineConfig([
   },
   {
     files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
-    plugins: { js, perfectionist, promise, floatingPromise, simpleImportSort },
+    plugins: { js, floatingPromise, simpleImportSort },
     extends: ["js/recommended"],
     rules: {
       "@typescript-eslint/no-unused-vars": "off",
@@ -54,7 +52,7 @@ export default defineConfig([
       "prefer-const": "warn",
       "eqeqeq": "error",
       "no-undef": "off",
-      "no-redeclare": "error",
+      "no-redeclare": "off",
       "max-len": ["error", { "code": 110 }],
       "no-empty": "error",
       "no-var": "error",
