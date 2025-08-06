@@ -29,7 +29,7 @@ declare global {
          */
         replaceAllPos(pos: SlicePos[], str: string): string;
 
-        uppercaseFirst(): string;
+        capitalize(): string;
     }
 }
 
@@ -43,7 +43,7 @@ String.prototype.toRegex = function (flags?: string) {
 
 String.prototype.toIdentifier = function () {
     const parts = this.split(/[^a-zA-Z0-9]/);
-    return parts[0] + parts.slice(1).map(part => part.uppercaseFirst()).join('');
+    return parts[0] + parts.slice(1).map(part => part.capitalize()).join('');
 };
 
 String.prototype.searchPos = function (sub: Searchable, startPos = 0) {
@@ -79,7 +79,7 @@ String.prototype.replaceAllPos = function (pos: SlicePos[], str: string) {
     return result;
 };
 
-String.prototype.uppercaseFirst = function () {
+String.prototype.capitalize = function () {
     return this.length === 0 ? '' : this[0].toUpperCase() + this.slice(1);
 };
 

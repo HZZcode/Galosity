@@ -119,9 +119,7 @@ Processors.register(dataTypes.BreakData, (_, manager) => {
     return false;
 });
 Processors.register(dataTypes.VarData, (data, manager) => {
-    manager.varsFrame.warn = '';
     errorHandled(() => manager.varsFrame.setVar(data.name, manager.varsFrame.evaluate(data.expr)))();
-    if (manager.varsFrame.warn !== '') error.warn('Warning: ' + manager.varsFrame.warn);
     return false;
 });
 Processors.register(dataTypes.InputData, (data, manager) => {

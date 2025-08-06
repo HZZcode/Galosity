@@ -1,4 +1,10 @@
-Root = Logical
+Root = TriCondition
+
+TriCondition
+    = condition: Logical _ "?" _ left: Root _ ":" _ right: Root {
+        return { type: "triCondition", condition, left, right };
+    }
+    / value: Logical { return value; }
 
 Logical
     = head: Comparing tail: (_ ("&" / "|") _ Comparing)* {

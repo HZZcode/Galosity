@@ -3,15 +3,14 @@ const lodash = require('lodash');
 import { assert } from '../utils/assert.js';
 import { splitWith } from '../utils/split.js';
 import { isDiscarded, isIdentifier } from '../utils/string.js';
-import type { ExpectExtends, UppercaseFirst } from "../utils/types.js";
 import { Builtins } from './builtins.js';
 import * as grammar from './grammar/grammar.js';
 import { operators } from './operators.js';
 import type { GalEnum, GalVar } from './types.js';
 import { BoolType, GalArray, GalEnumType, GalNum, GalString, isEnum, isNum } from './types.js';
 
-const NodeTypes = ['leftBinary', 'rightBinary', 'comparing', 'matching', 'factor', 'index',
-    'function', 'array', 'string', 'hexNum', 'num', 'enum', 'identifier'] as const;
+const NodeTypes = ['triCondition', 'leftBinary', 'rightBinary', 'comparing', 'matching', 'factor',
+    'index', 'function', 'array', 'string', 'hexNum', 'num', 'enum', 'identifier'] as const;
 type NodeType = typeof NodeTypes[number];
 type Node = {
     type: NodeType,
@@ -35,8 +34,6 @@ function tried<TArgs extends unknown[], TReturn>(func: (..._: TArgs) => TReturn,
 export class GalVars extends Builtins {
     enumTypes: GalEnumType[] = [BoolType];
     vars: Record<string, GalVar> = {};
-
-    warn = '';
 
     constructor() {
         super();
@@ -73,14 +70,6 @@ export class GalVars extends Builtins {
         if (!isIdentifier(name)) throw new Error(`Invalid variable name: ${name}`);
         if (name in this.builtins) this.builtins[name].set(value);
         this.vars[name] = value;
-    }
-
-    clearEnumTypes() {
-        this.enumTypes = [BoolType];
-    }
-
-    clearVars() {
-        this.vars = {};
     }
 
     copy() {
@@ -134,22 +123,16 @@ export class GalVars extends Builtins {
 
     evaluate(expr: string) {
         try {
-            const result = this.evaluateNode(grammar.parse(expr));
-            if (result === undefined)
-                throw new Error(`Unexpected expression: ${expr}`);
-            return result;
+            return this.evaluateNode(grammar.parse(expr));
         } catch (e) {
             throw new Error(`Cannot evaluate '${expr}'`, { cause: e });
         }
     }
 
     evaluateNode(node: Node): GalVar {
-        // Static check
-        type FuncNames = `evaluate${UppercaseFirst<NodeType>}`;
-        type _ = ExpectExtends<this, Record<FuncNames, (node: Node) => GalVar>>;
-
+        this satisfies Record<`evaluate${Capitalize<NodeType>}`, (node: Node) => GalVar>;
         if (!NodeTypes.includes(node.type)) throw new Error(`Error node type: ${node.type}`);
-        return (this as any)[`evaluate${node.type.uppercaseFirst()}`](node);
+        return (this as any)[`evaluate${node.type.capitalize()}`](node);
     }
 
     evaluateNum(node: Node) {
@@ -249,5 +232,10 @@ export class GalVars extends Builtins {
         const type = node.enumType;
         if (type === 'num') return BoolType.ofBool(isNum(value));
         return BoolType.ofBool(isEnum(value) && value.enumType.name === type);
+    }
+
+    evaluateTriCondition(node: Node) {
+        return this.evaluateNode(node.condition).toBool()
+            ? this.evaluateNode(node.left) : this.evaluateNode(node.right);
     }
 }

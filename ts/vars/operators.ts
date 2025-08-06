@@ -1,6 +1,6 @@
 import { notUndefined } from "../utils/assert.js";
 import type { Constructor } from "../utils/types.js";
-import { BoolType, GalArray, GalEnum, GalNum, GalString, GalVar } from "./types.js";
+import { BoolType, GalArray, GalNum, GalString, GalVar } from "./types.js";
 
 class UnaryOp<TBase, TReturn> {
     constructor(public op: string, public type: Constructor<TBase>, public func: (_: any) => TReturn) { }
@@ -80,11 +80,5 @@ operators.registerBinary('>', [GalNum, GalNum], (x, y) => BoolType.ofBool(x.valu
 operators.registerBinary('<=', [GalNum, GalNum], (x, y) => BoolType.ofBool(x.value <= y.value));
 operators.registerBinary('>=', [GalNum, GalNum], (x, y) => BoolType.ofBool(x.value >= y.value));
 
-operators.registerBinary('==', [GalNum, GalNum], (x, y) =>
-    BoolType.ofBool(Math.abs(x.value - y.value) <= 1e-5));
-operators.registerBinary('==', [GalEnum, GalEnum], (x, y) =>
-    BoolType.ofBool(x.enumType.name === y.enumType.name && x.valueIndex === y.valueIndex));
-operators.registerBinary('==', [GalString, GalString], (x, y) => BoolType.ofBool(x.value === y.value));
-operators.registerBinary('==', [GalVar, GalVar], () => BoolType.ofBool(false));
-operators.registerBinary('!=', [GalVar, GalVar], (x, y) =>
-    operators.applyUnary('!', operators.applyBinary('==', [x, y])));
+operators.registerBinary('==', [GalVar, GalVar], (x, y) => BoolType.ofBool(x.equals(y)));
+operators.registerBinary('!=', [GalVar, GalVar], (x, y) => BoolType.ofBool(!x.equals(y)));

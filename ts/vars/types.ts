@@ -24,6 +24,10 @@ export abstract class GalVar {
     reprString() {
         return this.toString();
     }
+
+    equals(_: GalVar) {
+        return false;
+    }
 }
 
 export class GalNum extends GalVar {
@@ -47,6 +51,10 @@ export class GalNum extends GalVar {
             pow *= 10;
         }
         return str;
+    }
+
+    override equals(other: GalVar) {
+        return other instanceof GalNum && Math.abs(this.value - other.value) <= 1e-5;
     }
 }
 
@@ -113,6 +121,12 @@ export class GalEnum extends GalVar {
     override toString() {
         return `${this.enumType.name}.${this.getName()}`;
     }
+
+    override equals(other: GalVar) {
+        return other instanceof GalEnum
+            && this.enumType.name === other.enumType.name
+            && this.valueIndex === other.valueIndex;
+    }
 }
 class GalBoolEnumType extends GalEnumType {
     constructor() {
@@ -131,12 +145,16 @@ export class GalString extends GalVar {
         assert(typeof value === 'string', `Invalid string: ${value}`);
     }
 
-    override toString(): string {
+    override toString() {
         return this.value;
     }
 
-    override reprString(): string {
+    override reprString() {
         return `'${this.value}'`;
+    }
+
+    override equals(other: GalVar) {
+        return other instanceof GalString && this.value === other.value;
     }
 }
 
@@ -145,12 +163,17 @@ export class GalArray extends GalVar {
         super('array');
     }
 
-    override toString(): string {
+    override toString() {
         return '{' + this.value.map(value => value.toString()).join(',') + '}';
     }
 
-    override reprString(): string {
+    override reprString() {
         return '{' + this.value.map(value => value.reprString()).join(',') + '}';
+    }
+
+    override equals(other: GalVar) {
+        return other instanceof GalArray && this.value.length === other.value.length
+            && this.value.map((value, index) => value.equals(other.value[index])).all();
     }
 }
 

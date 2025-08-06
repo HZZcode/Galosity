@@ -1,6 +1,6 @@
 import { isLatex, splitWith } from "../utils/split.js";
 import type * as vars from "../vars/vars.js";
-import { error,errorHandledAsWarning } from "./error-handler.js";
+import { errorHandledAsWarning } from "./error-handler.js";
 
 class Interpolations {
     funcs: Record<string, (_: string) => string> = {};
@@ -39,9 +39,7 @@ export function interpolate(text: string, varsFrame: vars.GalVars) {
     const interpolation = new Interpolations();
     interpolation.register('$', sub => {
         let result = sub;
-        varsFrame.warn = '';
         errorHandledAsWarning(() => result = varsFrame.evaluate(sub).toString())();
-        if (varsFrame.warn !== '') error.warn('Warning' + varsFrame.warn);
         return result;
     });
     interpolation.register('^', sub => `<sup>${sub}</sup>`);

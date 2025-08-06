@@ -9,8 +9,8 @@ import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
 import { logger } from '../utils/logger.js';
 import { ipcRenderer, Runtime } from "../utils/runtime.js";
 import { isNum } from "../utils/string.js";
-import { codeInput,evalButton, jump, lineInput } from "./elements.js";
-import { error,errorHandled } from "./error-handler.js";
+import { codeInput, evalButton, jump, lineInput } from "./elements.js";
+import { error, errorHandled } from "./error-handler.js";
 import { manager } from "./manager.js";
 
 const initPromise = new Promise<void>((resolve, reject) => {
@@ -54,18 +54,20 @@ async function main() {
     bindFunction('previous', errorHandled(manager.previous.bind(manager)));
     bindFunction('next', errorHandled(manager.next.bind(manager)));
 
-    if (Runtime.configs.scriptTest) {
-        bindInput(jump, lineInput, async () => {
-            const index = lineInput.value;
-            if (isNum(index)) await manager.jump(parseInt(index));
-        });
-
-        bindInput(evalButton, codeInput, async () => {
-            const code = codeInput.value;
-            await manager.eval(code);
-        });
-    }
+    if (Runtime.configs.scriptTest) bindScriptTests();
     else hideElements('script-test');
+}
+
+function bindScriptTests() {
+    bindInput(jump, lineInput, async () => {
+        const index = lineInput.value;
+        if (isNum(index)) await manager.jump(parseInt(index));
+    });
+
+    bindInput(evalButton, codeInput, async () => {
+        const code = codeInput.value;
+        await manager.eval(code);
+    });
 }
 
 function hideElements(classNames: string) {
