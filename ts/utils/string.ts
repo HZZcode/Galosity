@@ -5,7 +5,7 @@ export function isDiscarded(str: string) {
     return /^_+$/.test(str);
 }
 export function isNum(value: string) {
-    return Number.isFinite(Number(value)) && value !== '';
+    return isFinite(Number(value)) && value !== '';
 }
 
 export type SlicePos = [number, number];
@@ -28,6 +28,8 @@ declare global {
          * Here we assume that `pos` are sorted and do not intersect.
          */
         replaceAllPos(pos: SlicePos[], str: string): string;
+
+        uppercaseFirst(): string;
     }
 }
 
@@ -41,7 +43,7 @@ String.prototype.toRegex = function (flags?: string) {
 
 String.prototype.toIdentifier = function () {
     const parts = this.split('-');
-    return parts[0] + parts.slice(1).map(part => part[0].toUpperCase() + part.slice(1)).join('');
+    return parts[0] + parts.slice(1).map(part => part.uppercaseFirst()).join('');
 };
 
 String.prototype.searchPos = function (sub: Searchable, startPos = 0) {
@@ -75,6 +77,10 @@ String.prototype.replaceAllPos = function (pos: SlicePos[], str: string) {
     result += str;
     result += this.substring(pos.at(-1)![1]);
     return result;
+};
+
+String.prototype.uppercaseFirst = function () {
+    return this.length === 0 ? '' : this[0].toUpperCase() + this.slice(1);
 };
 
 export function parseConfig(configs: string) {

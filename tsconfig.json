@@ -7,7 +7,6 @@
     "forceConsistentCasingInFileNames": true,
     "useUnknownInCatchVariables": true,
     "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
     "strict": true,
     "strictNullChecks": true,
     "skipLibCheck": true,

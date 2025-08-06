@@ -57,7 +57,7 @@ async function main() {
     if (Runtime.configs.scriptTest) {
         bindInput(jump, lineInput, async () => {
             const index = lineInput.value;
-            if (isNum(index)) await manager.jump(Number.parseInt(index));
+            if (isNum(index)) await manager.jump(parseInt(index));
         });
 
         bindInput(evalButton, codeInput, async () => {

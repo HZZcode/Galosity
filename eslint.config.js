@@ -46,6 +46,7 @@ export default defineConfig([
         }
       ],
       "@typescript-eslint/parameter-properties": ["warn", { "prefer": "parameter-property" }],
+      "@typescript-eslint/consistent-type-imports": "error",
 
       "require-await": "warn",
       "no-unused-vars": "off",

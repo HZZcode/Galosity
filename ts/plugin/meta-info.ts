@@ -19,7 +19,7 @@ export class Version {
     constructor(public parts: number[]) { }
 
     static fromString(str: string) {
-        const parts = str.split('.').map(part => Number.parseInt(part));
+        const parts = str.split('.').map(part => parseInt(part));
         const nan = parts.findIndex(isNaN);
         if (nan !== -1) throw new Error(`Not a num: '${str.split('.')[nan]}'`);
         return new Version(parts);

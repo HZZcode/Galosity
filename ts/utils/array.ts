@@ -17,6 +17,8 @@ declare global {
 
         mins(key?: (value: T) => number): T[];
         maxs(key?: (value: T) => number): T[];
+
+        repeat(count: number): T[];
     }
 }
 
@@ -48,6 +50,10 @@ Array.prototype.maxs = function (key?: (value: any) => number) {
     key ??= value => value;
     const maxKey = Math.max(...this.map(key));
     return this.filter(value => key(value) === maxKey);
+};
+
+Array.prototype.repeat = function (count: number) {
+    return Array.apply(0, Array(count)).flatMap(() => this);
 };
 
 export function sum(nums: number[]) {

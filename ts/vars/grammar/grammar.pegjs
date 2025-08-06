@@ -1,7 +1,7 @@
 Root = Logical
 
 Logical
-    = head:Comparing tail:(_ ("&" / "|") _ Comparing)* {
+    = head: Comparing tail: (_ ("&" / "|") _ Comparing)* {
         if (tail.length === 0) return head;
         let result = [head];
         for (let [_, op, __, value] of tail) {
@@ -12,7 +12,7 @@ Logical
     }
 
 Comparing
-    = head:Matching tail:(_ ("<=" / ">=" / "<" / ">" / "==" / "!=") _ Matching)* {
+    = head: Matching tail: (_ ("<=" / ">=" / "<" / ">" / "==" / "!=") _ Matching)* {
         if (tail.length === 0) return head;
         let result = [head];
         for (let [_, op, __, value] of tail) {
@@ -23,13 +23,13 @@ Comparing
     }
 
 Matching
-    = value:Addition _ ("is" / "~") _ enumType:Identifier {
-        return { type: "matching", value: value, enumType: enumType.value }
+    = value: Addition _ ("is" / "~") _ enumType: Identifier {
+        return { type: "matching", value, enumType: enumType.value }
     }
-    / value:Addition { return value; }
+    / value: Addition { return value; }
 
 Addition
-    = head:Multiplication tail:(_ ("+" / "-") _ Multiplication)* {
+    = head: Multiplication tail: (_ ("+" / "-") _ Multiplication)* {
         if (tail.length === 0) return head;
         let result = [head];
         for (let [_, op, __, value] of tail) {
@@ -40,7 +40,7 @@ Addition
     }
 
 Multiplication 
-    = head:Power tail:(_ ("//" / "%" / "*" / "/") _ Power)* {
+    = head: Power tail: (_ ("//" / "%" / "*" / "/") _ Power)* {
         if (tail.length === 0) return head;
         let result = [head];
         for (let [_, op, __, value] of tail) {
@@ -51,7 +51,7 @@ Multiplication
     }
 
 Power
-    = head:Factor tail:(_ "^" _ Factor)* {
+    = head: Factor tail: (_ "^" _ Factor)* {
         if (tail.length === 0) return head;
         let result = [head];
         for (let [_, op, __, value] of tail) {
@@ -62,37 +62,61 @@ Power
     }
 
 Factor
-    = op:("!" / "+" / "-") _ root:Root { return { type: "factor", operator: op, value: root }; }
-    / value:Primary { return value; }
+    = op: ("!" / "+" / "-") _ root: Root { return { type: "factor", operator: op, value: root }; }
+    / value: Primary _ "[" index: Root "]" { return { type: "index", value, index }; }
+    / value: Primary { return value; }
 
 Primary
-    = func:Identifier _ "(" _ root:Root _ ")" {
-        return { type: "function", func: func, value: root };
+    = func: Identifier _ "(" _ root: Root _ ")" {
+        return { type: "function", func, value: root };
     }
-    / "(" _ root:Root _ ")" { return root; }
-    / value:Number { return value; }
-    / value:Enum { return value; }
-    / value:Identifier { return value; }
+    / "(" _ root: Root _ ")" { return root; }
+    / value: (Array / String / Number / Enum / Identifier) { return value; }
+
+Array
+    = _ "{" elements: (Root ("," _ Root)*)? ","? _ "}" {
+        const array = [];
+        if (elements !== null) {
+            array.push(elements[0]);
+            for (const [_, __, value] of elements[1])
+                array.push(value);
+        }
+        return { type: "array", value: array };
+    }
+
+String
+    = _ "'" string: ([^'\\] / '\\' .)* "'" _ {
+        return {
+            type: 'string',
+            value: string.map(part => typeof part === 'string' ? part : part.join('')).join('')
+        };
+    }
+    / _ '"' string: ([^"\\] / '\\' .)* '"' _ {
+        return {
+            type: 'string',
+            value: string.map(part => typeof part === 'string' ? part : part.join('')).join('')
+        };
+    }
 
 Number 
-    = _ intPart:Digits decimalPart: ("." Digits)? _ {
+    = _ "0x" hexPart: HexDigits _ {
+        return {
+            type: 'hexNum',
+            value: hexPart.join('')
+        };
+    }
+    / _ intPart: Digits decimalPart: ("." Digits)? _ {
         return {
                 type: 'num',
                 value: intPart.join('') + (decimalPart === null ? '' : '.' + decimalPart[1].join(''))
             };
-    } 
-    / _ '#' intPart:HexDigits _ {
-        return {
-                type: 'hexNum',
-                value: intPart.join('').toLowerCase()
-            };
     }
 
-Enum = _ enumType:Identifier "." value:Identifier _ {
-        return { type: 'enum', enumType: enumType, value: value };
+Enum = _ enumType: Identifier "." value: Identifier _ {
+        return { type: 'enum', enumType, value };
     }
 
-Identifier = _ identifier:([a-zA-Z_][a-zA-Z0-9_]*) _ {
+Identifier = _ identifier: ([a-zA-Z_][a-zA-Z0-9_]*) _ {
 	return { type: 'identifier', value: identifier[0] + identifier[1].join('') };
 }
 

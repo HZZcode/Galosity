@@ -77,7 +77,8 @@ ZZ: Fine... Let's learn again.
 [Part] Variables & Enums
 ZZ: Variables are used for more flexible controlling.
 Ichiku: Try: input `[Var] x: 1`. This allows you to create a new variable, or assign to an existing variable.
-ZZ: There are only 2 types of variables in Galosity: numbers and enums.
+ZZ: There are 4 types of variables in Galosity: numbers, enums, strings and arrays.
+ZZ: Strings are surrounded with quotes, and arrays are surrounded with braces.
 ZZ: Enums are use to represent value with several possible values.
 Ichiku: For example, define an enum by `[Enum] Sex: Male, Female, Other`.
 Ichiku: Then you can define an variable with type 'Sex' and value 'Male' by `[Var] sex: Sex.Male`.
@@ -131,10 +132,20 @@ ZZ: ${x}|${y} is ${x|y};
 [Var] y: Female
 ZZ: ${x}==${y} is ${x==y};
 ZZ: ${x}!=${y} is ${x!=y};
-ZZ: (${1} is num) is ${1 is num}
-ZZ: (${true} is bool) is ${true is bool}
-ZZ: (${Male} is Sex) is ${Male is Sex}
-ZZ: (${1} is Sex) is ${1 is Sex}
+ZZ: (${1} is num) is ${1 is num};
+ZZ: (${true} is bool) is ${true is bool};
+ZZ: (${Male} is Sex) is ${Male is Sex};
+ZZ: (${1} is Sex) is ${1 is Sex};
+[Var] x: "abc"
+[Var] y: "def"
+ZZ: "${x}"+"${y}" is "${x+y}";
+ZZ: "${x}"*3 is "${x*3}";
+ZZ: "${x}"[1] is "${x[1]}".
+[Var] x: {1,2,3}
+[Var] y: {4,5,6}
+ZZ: ${x}+${y} is ${x+y};
+ZZ: ${x}*3 is ${x*3};
+ZZ: ${x}[1] is ${x[1]}.
 
 [Part] Built-in Variables
 ZZ: There are a few built-in vars in Galosity: `random` returns a random number from 0 to 1, and `randBool` returns a random bool.
@@ -145,7 +156,7 @@ ZZ: There are also vars representing real-world date time like dateNow=${dateNow
 
 [Part] Built-in Functions
 ZZ: This part is simple. sin(PI/6)=${sin(PI/6)}, tan(PI/4)=${tan(PI/4)}, ln(E^3)=${ln(E^3)}, etc.
-ZZ: There are also 3 special functions for enums: indexOf(Female)=${indexOf(Female)}, sizeOfType(Female)=${sizeOfType(Female)}, sex(1)=${Sex(1)}.
+ZZ: There are also 3 special functions for enums: indexOf(Female)=${indexOf(Female)}, lengthOf(Female)=${lengthOf(Female)}, sex(1)=${Sex(1)}.
 ZZ: You can also check whether a variable is defined with function `hasVar`.
 
 [Part] Switch-Case

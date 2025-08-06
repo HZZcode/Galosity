@@ -101,7 +101,7 @@ Processors.register(dataTypes.CaseData, (data, manager) => {
             const matchValue = manager.varsFrame.evaluate(data.text);
             const next = block.next(manager.currentPos);
             if (next === undefined) throw new Error(`Case error at line ${manager.currentPos}`);
-            if (!manager.varsFrame.equal(value, matchValue))
+            if (manager.varsFrame.evaluateSingleBinary('!=', value, matchValue).toBool())
                 manager.currentPos = next;
         } catch (e) {
             logger.error(e);

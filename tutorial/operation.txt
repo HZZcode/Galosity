@@ -23,7 +23,6 @@ ZZ: Alt+T switches the theme (light or dark).
 Ichiku: Ctrl+/ is for commenting.
 ZZ: Ctrl+L and Ctrl+Shift+L are for inserting inline or multi-line latex.
 Ichiku: Alt+T switches the theme (light or dark).
-ZZ: When inserting ( or {, the other part is completed.
 
 [Part] Engine operations
 ZZ: Here comes the engine part.

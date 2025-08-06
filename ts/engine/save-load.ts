@@ -30,7 +30,7 @@ class SaveInfo {
     }
     static fromString(str: string) {
         const [time, sourceFile, note] = str.split('|');
-        return new SaveInfo(sourceFile, note).withTime(new Date(Number.parseInt(time)));
+        return new SaveInfo(sourceFile, note).withTime(new Date(parseInt(time)));
     }
 }
 export class SaveLoadManager extends Files {
@@ -52,7 +52,7 @@ export class SaveLoadManager extends Files {
         for (const file of files) {
             const match = /save(\d+)\.gal/.exec(file);
             if (match === null) continue;
-            const slot = Number.parseInt(match[1]);
+            const slot = parseInt(match[1]);
             if (slot > max) max = slot;
         }
         return max;

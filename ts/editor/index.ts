@@ -56,6 +56,8 @@ function binds() {
     textKeybind.bind(KeyType.of('/', KeyConfig.Ctrl), comment);
     textKeybind.bind(KeyType.of('('), surround('(', ')'));
     textKeybind.bind(KeyType.of('{'), surround('{', '}'));
+    textKeybind.bind(KeyType.of("'"), surround("'", "'"));
+    textKeybind.bind(KeyType.of('"'), surround('"', '"'));
     textKeybind.bind(KeyType.of('l', KeyConfig.Ctrl), surround('\\(', '\\)'));
     textKeybind.bind(KeyType.of('l', KeyConfig.Ctrl | KeyConfig.Shift), surround('$$', '$$'));
     keybind.bind(KeyType.of('t', KeyConfig.Alt), themes.next.bind(themes));

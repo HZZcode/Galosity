@@ -1,12 +1,15 @@
 import { findDuplicates } from '../utils/array.js';
+import { assert } from '../utils/assert.js';
 import { splitWith } from '../utils/split.js';
 import { isIdentifier } from '../utils/string.js';
 
 export class GalVar {
     constructor(public type: string) { }
+
     getType() {
-        return 'GalVar';
+        return this.type;
     }
+
     toBool(): boolean {
         if (isBool(this)) return !!this.valueIndex;
         throw new Error(`Cannot convert ${this.getType()} into bool`);
@@ -15,12 +18,20 @@ export class GalVar {
         if (isNum(this)) return this.value;
         throw new Error(`Cannot convert ${this.getType()} into num`);
     }
+
+    toString(): string {
+        throw `'toString' is not implemented for ${this.getType()}`;
+    }
+    /** Note: `reprString` must ensure that `GalVars.evaluate(var.reprString())` is same as `var`. */
+    reprString() {
+        return this.toString();
+    }
 }
 
 export class GalNum extends GalVar {
     constructor(public value: number) {
         super('num');
-        if (isNaN(value)) throw new Error('Num cannot be NaN');
+        assert(typeof value === 'number' && !isNaN(value), `Invalid num: ${value}`);
     }
 
     override getType() {
@@ -89,7 +100,7 @@ export class GalEnum extends GalVar {
         const index = enumType.values.indexOf(value);
         if (index === -1)
             throw new Error(`value ${value} is not a legal value for enum ${enumType.name}: `
-            + `must be a value in ${enumType.values}`);
+                + `must be a value in ${enumType.values}`);
         return new GalEnum(enumType, index);
     }
 
@@ -116,6 +127,35 @@ class GalBoolEnumType extends GalEnumType {
 
 export const BoolType = new GalBoolEnumType();
 
+export class GalString extends GalVar {
+    constructor(public value: string) {
+        super('string');
+        assert(typeof value === 'string', `Invalid string: ${value}`);
+    }
+
+    override toString(): string {
+        return this.value;
+    }
+
+    override reprString(): string {
+        return `'${this.value}'`;
+    }
+}
+
+export class GalArray extends GalVar {
+    constructor(public value: GalVar[]) {
+        super('array');
+    }
+
+    override toString(): string {
+        return '{' + this.value.map(value => value.toString()).join(',') + '}';
+    }
+
+    override reprString(): string {
+        return '{' + this.value.map(value => value.reprString()).join(',') + '}';
+    }
+}
+
 export function isNum(value: GalVar): value is GalNum {
     return value.type === 'num';
 }
@@ -126,4 +166,12 @@ export function isEnum(value: GalVar): value is GalEnum {
 
 export function isBool(value: GalVar): value is GalEnum {
     return isEnum(value) && value.enumType.name === 'bool';
+}
+
+export function isString(value: GalVar): value is GalString {
+    return value.type === 'string';
+}
+
+export function isArray(value: GalVar): value is GalArray {
+    return value.type === 'array';
 }

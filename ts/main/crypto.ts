@@ -4,7 +4,7 @@ import { getMetadata, isMetadata } from "../utils/string.js";
 import { Files } from "./files.js";
 
 class CryptoHandle {
-    constructor(public secretKey: string) { }
+    constructor(private secretKey: string) { }
 
     encrypt(data: string): string {
         return CryptoJS.AES.encrypt(data, this.secretKey).toString();

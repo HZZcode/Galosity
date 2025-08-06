@@ -18,7 +18,7 @@ export class Frame {
     static fromString(str: string) {
         const [pos, varsFrame, resources, customData] = str.split('\n');
         return new Frame(
-            Number.parseInt(pos),
+            parseInt(pos),
             vars.GalVars.fromString(varsFrame),
             resources,
             CustomData.fromString(customData)
