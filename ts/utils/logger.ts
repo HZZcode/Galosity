@@ -12,7 +12,10 @@ class Logger {
     }
 
     fullString(object: any): string {
-        if (object instanceof Error) return object.stack!;
+        if (object instanceof Error) {
+            if (object.cause === undefined) return object.stack!;
+            return `${object.stack}\nCaused by: ${object.cause}`;
+        }
         return object.toString();
     }
 
