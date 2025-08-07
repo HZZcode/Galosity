@@ -1,10 +1,10 @@
 import type {
-  IpcRenderer, OpenDialogOptions, OpenDialogReturnValue,
+  IpcRenderer, IpcRendererEvent, OpenDialogOptions, OpenDialogReturnValue,
   SaveDialogOptions, SaveDialogReturnValue
 } from "electron";
 import type { Dirent } from "fs";
 
-type Configs = {
+export type Configs = {
   files: boolean,
   edit: boolean,
   autoSave: number, // seconds
@@ -15,8 +15,8 @@ type Configs = {
   encrypt: boolean,
   help: boolean
 };
-type EditorData = { configs: Configs, filename?: string };
-type EngineData = { configs: Configs, filename?: string };
+export type EditorData = { configs: Configs, filename?: string };
+export type EngineData = { configs: Configs, filename?: string };
 
 export interface GalIpcRenderer extends IpcRenderer {
   invoke(channel: 'showSaveDialog', options: SaveDialogOptions): Promise<SaveDialogReturnValue>;
@@ -28,7 +28,7 @@ export interface GalIpcRenderer extends IpcRenderer {
   invoke(channel: 'readFileDecrypted', path: string): Promise<string>;
   invoke(channel: 'resolve', pathname: string, directory?: string): Promise<string>;
   invoke(channel: 'directory'): Promise<string>;
-  invoke(channel: 'readdir', path: string, withFileTypes: false = false): Promise<string[]>;
+  invoke(channel: 'readdir', path: string, withFileTypes?: false): Promise<string[]>;
   invoke(channel: 'readdir', path: string, withFileTypes: true): Promise<Dirent[]>;
   invoke(channel: 'exists', path: string): Promise<boolean>;
   invoke(channel: 'delete', path: string): Promise<void>;
@@ -44,9 +44,9 @@ export interface GalIpcRenderer extends IpcRenderer {
 
   invoke(channel: 'exit', code?: number | string): Promise<void>;
 
-  on(channel: 'editor-data', handler: (_: unknown, data: EditorData) => void | Promise<void>): void;
-  on(channel: 'engine-data', handler: (_: unknown, data: EngineData) => void | Promise<void>): void;
-  on(channel: 'before-close', handler: (_: unknown) => void | Promise<void>): void;
+  on(channel: 'editor-data', handler: (_: IpcRendererEvent, data: EditorData) => void | Promise<void>): this;
+  on(channel: 'engine-data', handler: (_: IpcRendererEvent, data: EngineData) => void | Promise<void>): this;
+  on(channel: 'before-close', handler: (_: IpcRendererEvent) => void | Promise<void>): this;
 }
 
 declare global {

@@ -12,7 +12,9 @@
     "skipLibCheck": true,
     "allowJs": true,
     "checkJs": false,
-    "outDir": "./js"
+    "outDir": "./js",
+    "declaration": true,
+    "declarationDir": "./dts"
   },
   "include": [
     "./ts/**/*"

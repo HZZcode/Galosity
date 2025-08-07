@@ -54,7 +54,8 @@
       "!get-exports.py",
       "!plugins",
       "!merge.ps1",
-      "!src"
+      "!src",
+      "!dts"
     ],
     "extraFiles": [
       "tutorial",

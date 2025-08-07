@@ -1,4 +1,4 @@
-import type { OpenDialogReturnValue,SaveDialogReturnValue } from "electron";
+import type { OpenDialogReturnValue, SaveDialogReturnValue } from "electron";
 
 import { ipcRenderer } from "./runtime.js";
 

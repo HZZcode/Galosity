@@ -44,7 +44,7 @@ export class Manager {
         this.varsFrame = new vars.GalVars();
     }
     get SLManager() {
-        return new SaveLoadManager(this.resources.filename!);
+        return new SaveLoadManager(this.resources.filename);
     }
     unsupportedForImported() {
         if (this.isMain) return;
