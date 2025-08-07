@@ -1,4 +1,4 @@
-import type { Constructor, Func } from "./types.js";
+import type { Constructor, IntoType, TypeFilter } from "./types.js";
 
 export function findDuplicates<T>(array: T[]): T[] {
     return array.filter((item, index) => array.indexOf(item) !== index);
@@ -8,9 +8,9 @@ declare global {
     interface Array<T> {
         first(): T | undefined;
 
-        filterType<U>(type: Constructor<U>): U[];
+        filterType<F extends TypeFilter>(type: F): IntoType<F>[];
 
-        findIndexOfType<U>(type: Constructor<U>, predicate: Func<[U], boolean>): number;
+        findIndexOfType<F extends TypeFilter>(type: F, predicate: (_: IntoType<F>) => boolean): number;
 
         all(): boolean;
         any(): boolean;
@@ -22,16 +22,22 @@ declare global {
     }
 }
 
+const typeFilter = <T extends TypeFilter>(type: T) => (object: unknown) => {
+    if (typeof type === 'string') return typeof object === type;
+    return object instanceof (type as Constructor<any>);
+};
+
 Array.prototype.first = function () {
     return this.at(0);
 };
 
-Array.prototype.filterType = function <U>(type: Constructor<U>): U[] {
-    return this.filter((item: any) => item instanceof type);
+Array.prototype.filterType = function <F extends TypeFilter>(type: F) {
+    return this.filter(typeFilter(type));
 };
 
-Array.prototype.findIndexOfType = function <U>(type: Constructor<U>, predicate: Func<[U], boolean>) {
-    return this.findIndex(value => value instanceof type && predicate(value));
+Array.prototype.findIndexOfType = function <F extends TypeFilter>
+    (type: F, predicate: (_: IntoType<F>) => boolean) {
+    return this.findIndex(value => typeFilter(type)(value) && predicate(value));
 };
 
 Array.prototype.all = function () {

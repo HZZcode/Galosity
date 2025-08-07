@@ -1,4 +1,7 @@
-import type { MediaDataType } from "../engine/media";
+import type { MediaDataType } from "../engine/media.js";
+import { assert } from "../utils/assert.js";
+import { GalString } from "../vars/types.js";
+import type { GalVars } from "../vars/vars.js";
 
 export class GalData { }
 
@@ -87,9 +90,34 @@ export class SwitchData extends GalData {
         super();
     }
 }
+export enum InputType { Expression, Integer, Number, HexNumber, String }
 export class InputData extends GalData {
-    constructor(public valueVar: string, public errorVar: string) {
+    type = InputType.Expression;
+
+    static getTypes() {
+        return Object.values(InputType).filterType('string');
+    }
+
+    constructor(public valueVar: string, public errorVar: string, type: string) {
         super();
+        if (type.capitalize() in InputType)
+            this.type = InputType[type.capitalize() as keyof typeof InputType];
+    }
+
+    evaluate(vars: GalVars, expr: string) {
+        switch (this.type) {
+            case InputType.Expression: return vars.evaluate(expr);
+            case InputType.Integer:
+                assert(/^-?\d+$/.test(expr), `Invalid Integer: '${expr}'`);
+                return vars.evaluateNum(expr);
+            case InputType.Number:
+                assert(/^-?\d+(\.\d+)?$/.test(expr), `Invalid Number: '${expr}'`);
+                return vars.evaluateNum(expr);
+            case InputType.HexNumber:
+                assert(/^-?[0-9a-fA-F]+$/.test(expr), `Invalid Hexagon Number: '${expr}'`);
+                return vars.evaluateHexNum(expr);
+            case InputType.String: return new GalString(expr);
+        }
     }
 }
 export class ImageData extends GalData {
@@ -182,10 +210,10 @@ export class MediaData extends GalData implements MediaDataType {
     getArgs() {
         return Object.keys(this).filter(key => key !== 'file') as (keyof this & string)[];
     }
-    constructor(public file: string, config?: Record<string, string>) {
+    constructor(public file: string, configs?: Record<string, string>) {
         super();
-        if (config === undefined) return;
+        if (configs === undefined) return;
         for (const key of this.getArgs())
-            if (key in config) this[key] = config[key].trim() as this[keyof this & string];
+            if (key in configs) this[key] = configs[key].trim() as this[keyof this & string];
     }
 }

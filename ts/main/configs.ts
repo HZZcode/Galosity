@@ -1,4 +1,4 @@
-import type { Configs } from "../types";
+import type { Configs } from "../types.js";
 
 function isDebug() {
     return process.env['NODE_ENV'] === 'development';

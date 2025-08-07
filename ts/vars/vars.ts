@@ -135,12 +135,12 @@ export class GalVars extends Builtins {
         return (this as any)[`evaluate${node.type.capitalize()}`](node);
     }
 
-    evaluateNum(node: Node) {
-        return new GalNum(notNaN(parseFloat(node.value)));
+    evaluateNum(node: Node | string) {
+        return new GalNum(notNaN(parseFloat(typeof node === 'string' ? node : node.value)));
     }
 
-    evaluateHexNum(node: Node) {
-        return new GalNum(notNaN(parseInt(node.value, 16)));
+    evaluateHexNum(node: Node | string) {
+        return new GalNum(notNaN(parseInt(typeof node === 'string' ? node : node.value, 16)));
     }
 
     evaluateEnum(node: Node) {

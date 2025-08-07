@@ -5,7 +5,7 @@ import * as dataTypes from "./data-types.js";
 
 function parseFunc(func: string): [string, string[]] {
     const left = func.search(/\(/), right = func.search(/\)/);
-    if (left === -1 || right === -1) {
+    if ([left, right].includes(-1)) {
         const name = func.trim();
         if (!isIdentifier(name)) throw new Error(`Invalid func name: ${name}`);
         return [name, []];
@@ -57,8 +57,9 @@ Parsers.register('Enum', part => {
     return new dataTypes.EnumData(name, values.split(',').map(value => value.trim()));
 });
 Parsers.register('Input', part => {
-    const [valueVar, errorVar] = splitWith(',')(part);
-    return new dataTypes.InputData(valueVar, errorVar);
+    const [vars, type] = part.includes(':') ? splitWith(':')(part) : [part, ''];
+    const [valueVar, errorVar] = splitWith(',')(vars);
+    return new dataTypes.InputData(valueVar, errorVar, type);
 });
 Parsers.register('Image', part => {
     const [imageType, imageFile] = splitWith(':')(part);

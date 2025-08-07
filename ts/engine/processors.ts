@@ -126,7 +126,7 @@ Processors.register(dataTypes.InputData, (data, manager) => {
     manager.unsupportedForImported();
     manager.buttons.drawInput(manager.next.bind(manager), expr => {
         try {
-            const value = manager.varsFrame.evaluate(expr);
+            const value = data.evaluate(manager.varsFrame, expr);
             manager.varsFrame.setVar(data.valueVar, value);
             manager.varsFrame.setVar(data.errorVar, types.BoolType.ofBool(false));
         } catch (e) {

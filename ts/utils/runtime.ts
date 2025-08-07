@@ -1,4 +1,4 @@
-import type { Configs, GalIpcRenderer } from "../types";
+import type { Configs, GalIpcRenderer } from "../types.js";
 
 export const ipcRenderer = require('electron').ipcRenderer as GalIpcRenderer;
 
