@@ -15,8 +15,8 @@ class FilesClass {
         return this.upper(pathname, configs.packed ? 5 : 3);
     }
 
-    static resolve(pathname: string) {
-        return path.resolve(this.directory, pathname).replaceAll('\\', '/');
+    static resolve(pathname: string, directory = this.directory) {
+        return path.resolve(directory, pathname).replaceAll('\\', '/');
     }
 
     static async write(pathname: string, content: string) {

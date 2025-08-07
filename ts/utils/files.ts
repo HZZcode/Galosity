@@ -58,16 +58,22 @@ export class Files {
     async writeFile(path: string, content: string) {
         await ipcRenderer.invoke('writeFile', path, content);
     }
+    async writeFileEncrypted(path: string, content: string) {
+        await ipcRenderer.invoke('writeFileEncrypted', path, content);
+    }
     async readFile(path: string) {
         return await ipcRenderer.invoke('readFile', path);
     }
     async readFileDecrypted(path: string) {
         return await ipcRenderer.invoke('readFileDecrypted', path);
     }
-    async resolve(path: string) {
-        return await ipcRenderer.invoke('resolve', path);
+    async resolve(path: string, directory?: string) {
+        return await ipcRenderer.invoke('resolve', path, directory);
     }
     async hasFile(path: string) {
         return await ipcRenderer.invoke('exists', path);
+    }
+    async delete(path: string) {
+        await ipcRenderer.invoke('delete', path);
     }
 }

@@ -13,7 +13,7 @@ import { manager } from "./manager.js";
 class SaveInfo {
     time;
     note;
-    constructor(public sourceFile: string, note = '') {
+    constructor(public sourceFile: string, note: string) {
         this.time = new Date();
         this.note = note.replaceAll('\n', '');
     }
@@ -33,58 +33,66 @@ class SaveInfo {
         return new SaveInfo(sourceFile, note).withTime(new Date(parseInt(time)));
     }
 }
-export class SaveLoadManager extends Files {
-    constructor(filename: string) {
-        super(filename);
+
+type LoadResult = [lines: string[] | undefined, frame: Frame];
+
+export abstract class SaveLoad<Id> extends Files {
+    abstract idToFilename(id: Id): string;
+    async getSaveFilePath(id: Id) {
+        return await this.resolve(this.idToFilename(id), await this.getSavePath());
     }
-    async getSaveFilePath(slot: number) {
-        return await this.getSavePath() + `/save${slot}.gal`;
+    async isFilled(id: Id) {
+        return await this.hasFile(await this.getSaveFilePath(id));
     }
-    async isFilled(slot: number) {
-        return await this.hasFile(await this.getSaveFilePath(slot));
+    async checkFilled(id: Id) {
+        const filename = await this.getSaveFilePath(id);
+        if (!await this.isFilled(id)) throw new Error(`No save data in ${filename}`);
     }
-    async checkFilled(slot: number) {
-        if (!await this.isFilled(slot)) throw new Error(`No save data in slot ${slot}`);
+    async getSaveFiles() {
+        return await ipcRenderer.invoke('readdir', await this.getSavePath());
     }
-    async maxSlot() {
-        const files = await ipcRenderer.invoke('readdir', await this.getSavePath());
-        let max = 0;
-        for (const file of files) {
-            const match = /save(\d+)\.gal/.exec(file);
-            if (match === null) continue;
-            const slot = parseInt(match[1]);
-            if (slot > max) max = slot;
-        }
-        return max;
-    }
-    async save(slot: number, frame: Frame, note = '') {
+    async save(id: Id, frame: Frame, note: string) {
+        const filename = await this.getSaveFilePath(id);
         await manager.resources.check();
-        const str = new SaveInfo(manager.resources.filename!, note).toString() + '\n' + frame.toString();
-        await this.writeFile(await this.getSaveFilePath(slot), str);
+        const content = new SaveInfo(manager.resources.filename!, note).toString() + '\n' + frame.toString();
+        await this.writeFileEncrypted(filename, content);
     }
-    async getInfo(slot: number) {
-        this.checkFilled(slot);
-        const str = await this.readFile(await this.getSaveFilePath(slot));
-        return SaveInfo.fromString(splitWith('\n')(str)[0]);
+    async getInfo(id: Id) {
+        const filename = await this.getSaveFilePath(id);
+        this.checkFilled(id);
+        const content = await this.readFileDecrypted(filename);
+        return SaveInfo.fromString(splitWith('\n')(content)[0]);
     }
-    async load(slot: number): Promise<[lines: string[] | undefined, frame: Frame]> {
-        this.checkFilled(slot);
+    async load(id: Id): Promise<LoadResult> {
+        const filename = await this.getSaveFilePath(id);
+        this.checkFilled(id);
         try {
-            const str = await this.readFile(await this.getSaveFilePath(slot));
-            const file = (await this.getInfo(slot)).sourceFile;
+            const content = await this.readFileDecrypted(filename);
+            const file = (await this.getInfo(id)).sourceFile;
             return [
-                file === this.filename ? undefined : (await this.readFile(file)).splitLine(),
-                Frame.fromString(splitWith('\n')(str)[1])
+                file === this.filename ? undefined : (await this.readFileDecrypted(file)).splitLine(),
+                Frame.fromString(splitWith('\n')(content)[1])
             ];
         }
         catch (e) {
             logger.error(e);
             error.error(e);
-            throw new Error(`Cannot load from slot ${slot}`, { cause: e });
+            throw new Error(`Cannot load from ${filename}`, { cause: e });
         }
     }
-    async delete(slot: number) {
-        await ipcRenderer.invoke('delete', await this.getSaveFilePath(slot));
+    async deleteSave(id: Id) {
+        const filename = await this.getSaveFilePath(id);
+        await this.delete(filename);
+    }
+}
+
+export class SaveLoadManager extends SaveLoad<number> {
+    override idToFilename(slot: number) {
+        return `save${slot}.gal`;
+    }
+    async maxSlot() {
+        return Math.max(0, ...(await this.getSaveFiles()).map(file =>
+            parseInt(/save(\d+)\.gal/.exec(file)?.[1] ?? '0')));
     }
 }
 
@@ -215,7 +223,7 @@ export class SaveLoadScreen {
 
     async delete(slot: number) {
         if (await confirm(`Delete save file at slot ${slot}?`)) {
-            await manager.SLManager.delete(slot);
+            await manager.SLManager.deleteSave(slot);
             await this.flush();
         }
     }

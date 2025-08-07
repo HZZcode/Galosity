@@ -23,14 +23,15 @@ export interface GalIpcRenderer extends IpcRenderer {
   invoke(channel: 'showOpenDialog', options: OpenDialogOptions): Promise<OpenDialogReturnValue>;
 
   invoke(channel: 'writeFile', path: string, content: string): Promise<void>;
+  invoke(channel: 'writeFileEncrypted', path: string, content: string): Promise<void>;
   invoke(channel: 'readFile', path: string): Promise<string>;
   invoke(channel: 'readFileDecrypted', path: string): Promise<string>;
-  invoke(channel: 'resolve', pathname: string): Promise<string>;
+  invoke(channel: 'resolve', pathname: string, directory?: string): Promise<string>;
   invoke(channel: 'directory'): Promise<string>;
   invoke(channel: 'readdir', path: string, withFileTypes: false = false): Promise<string[]>;
   invoke(channel: 'readdir', path: string, withFileTypes: true): Promise<Dirent[]>;
   invoke(channel: 'exists', path: string): Promise<boolean>;
-  invoke(channel: 'delete', path: string): Promise<boolean>;
+  invoke(channel: 'delete', path: string): Promise<void>;
 
   invoke(channel: 'openExternal', url: string): Promise<void>;
 

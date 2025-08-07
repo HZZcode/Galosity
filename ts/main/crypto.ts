@@ -31,21 +31,23 @@ class ScriptCrypto {
         const metadata = getMetadata(content.splitLine());
         if (!('secretKey' in metadata)) return content;
         const handle = new CryptoHandle(metadata['secretKey']);
-        return content.splitLine().map(line => isMetadata(line) ? line : handle.decrypt(line)).join('\n');
+        return content.splitLine().filter(line => !isMetadata(line))
+            .map(line => handle.decrypt(line)).join('\n');
     }
 }
 
 export class Crypto {
     private constructor() { }
 
-    static async encrypt(filename: string) {
-        const content = await Files.read(filename);
-        const encrypted = ScriptCrypto.encrypt(filename, content);
-        await Files.write(filename + '.galcrypt', encrypted);
+    static async writeEncrypted(filename: string, content: string) {
+        await Files.write(filename, ScriptCrypto.encrypt(filename, content));
     }
 
-    static async decrypt(filename: string) {
-        const content = await Files.read(filename);
-        return ScriptCrypto.decrypt(content);
+    static async encrypt(filename: string) {
+        await this.writeEncrypted(filename + '.galcrypt', await Files.read(filename));
+    }
+
+    static async readDecrypted(filename: string) {
+        return ScriptCrypto.decrypt(await Files.read(filename));
     }
 }

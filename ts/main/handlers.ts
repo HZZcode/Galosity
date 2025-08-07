@@ -26,9 +26,11 @@ Handlers.add('showOpenDialog', (event, options: OpenDialogOptions) =>
     dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender)!, options));
 
 Handlers.add('writeFile', (_, pathname: string, content: string) => Files.write(pathname, content));
+Handlers.add('writeFileEncrypted', (_, pathname: string, content: string) =>
+    Crypto.writeEncrypted(pathname, content));
 Handlers.add('readFile', (_, pathname: string) => Files.read(pathname));
-Handlers.add('readFileDecrypted', (_, pathname: string) => Crypto.decrypt(pathname));
-Handlers.add('resolve', (_, pathname: string) => Files.resolve(pathname));
+Handlers.add('readFileDecrypted', (_, pathname: string) => Crypto.readDecrypted(pathname));
+Handlers.add('resolve', (_, pathname: string, directory?: string) => Files.resolve(pathname, directory));
 Handlers.add('directory', _ => Files.directory);
 Handlers.add('readdir', (_, pathname: string, withFileTypes = false) =>
     Files.readDir(pathname, withFileTypes));
