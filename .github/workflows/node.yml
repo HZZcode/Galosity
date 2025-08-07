@@ -154,7 +154,7 @@ jobs:
         run: cp gen-plugin-dts.py dts/
 
       - name: Run gen-plugin-dts.py
-        run: python dts/gen-plugin-dts.py
+        run: python gen-plugin-dts.py
         working-directory: dts
 
       - name: Remove gen-plugin-dts.py
