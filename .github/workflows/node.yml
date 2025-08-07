@@ -169,5 +169,5 @@ jobs:
       - name: Upload single .d.ts artifact
         uses: actions/upload-artifact@v4
         with:
-          name: exports-dts
+          name: exports.d.ts
           path: dts/exports.d.ts
