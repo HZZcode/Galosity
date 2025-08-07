@@ -1,3 +1,4 @@
+/// <reference path="../../dts/exports.d.ts" />
 const enabled = galosity.utils.runtime.Runtime.configs.isDebug;
 
 async function test(name) {
@@ -39,7 +40,7 @@ export async function setup(info) {
         galosity.engine.processors.Processors.register(
             TestData,
             async (data, self) => {
-                self.texts.outputText('Tester ZZ_404', `Plugin test! Data is '${data.name}'`, 'green');
+                self.texts.outputTexts('Tester ZZ_404', `Plugin test! Data is '${data.name}'`, 'green');
                 await test(data.name);
                 return true;
             }

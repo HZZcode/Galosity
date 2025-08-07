@@ -44,10 +44,12 @@ def to_iden(file: File) -> str:
 
 
 def import_part(files: Files) -> Lines:
-    return [f'import * as {to_iden(file)} from "{trim_dts(file)}";' for file in files]
+    return [f'import * as {to_iden(file)} from "{trim_dts(file)}";'
+            for file in files if len(list(find_symbols(file))) != 0]
 
 
-def find_symbols(lines: Lines) -> Iterable[Symbol]:
+def find_symbols(file: File) -> Iterable[Symbol]:
+    lines = get_lines(file)
     pattern = r'export declare (abstract class|class|const|enum|function|let) (.*?)[^a-zA-Z]'
     for line in lines:
         match = re.search(pattern, line)
@@ -56,11 +58,13 @@ def find_symbols(lines: Lines) -> Iterable[Symbol]:
 
 
 def single_symbol_part(file: File) -> Lines:
-    symbols = list(find_symbols(get_lines(file)))
+    symbols = list(find_symbols(file))
     return [f'export import {symbol} = {to_iden(file)}.{symbol};' for symbol in symbols]
 
 
 def symbol_part(files: Files) -> Lines:
+    yield 'declare global {'
+    yield tab + 'namespace galosity {'
     for file in files:
         parts = file.split('/')[1:]
         parts[-1] = trim_dts(parts[-1])
@@ -68,14 +72,14 @@ def symbol_part(files: Files) -> Lines:
         symbols = list(single_symbol_part(file))
         if len(symbols) == 0:
             continue
-        yield 'declare global {'
         for i, part in enumerate(parts):
-            yield f'{tab * (i + 1)}namespace {to_lower_iden(part)} {{'
+            yield f'{tab * (i + 2)}namespace {to_lower_iden(part)} {{'
         for line in symbols:
-            yield tab * depth + line
-        for i in range(depth - 1, 0, -1):
+            yield tab * (depth + 1) + line
+        for i in range(depth, 1, -1):
             yield f'{tab * i}}}'
-        yield '}'
+    yield tab + '}'
+    yield '}'
 
 
 def main() -> None:
