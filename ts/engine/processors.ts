@@ -195,7 +195,7 @@ Processors.register(dataTypes.ImportData, async (data, manager) => {
     // Execute this file in an no-side-effect mode
     // And read the vars and enums with these names from the sub-manager
     // If they weren't defined in this environment yet, define them; otherwise nothing is done
-    // It seems to be difficult to call funcs across files 
+    // It seems to be difficult to call funcs across files
     // So I guess we would implement this a bit later
     const content = await new Files().readFileDecrypted(data.file);
     const subManager = new Manager(false);

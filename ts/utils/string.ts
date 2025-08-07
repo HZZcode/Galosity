@@ -30,6 +30,7 @@ declare global {
         replaceAllPos(pos: SlicePos[], str: string): string;
 
         capitalize(): string;
+        uncapitalize(): string;
     }
 }
 
@@ -81,6 +82,9 @@ String.prototype.replaceAllPos = function (pos: SlicePos[], str: string) {
 
 String.prototype.capitalize = function () {
     return this.length === 0 ? '' : this[0].toUpperCase() + this.slice(1);
+};
+String.prototype.uncapitalize = function () {
+    return this.length === 0 ? '' : this[0].toLowerCase() + this.slice(1);
 };
 
 export function parseConfig(configs: string) {

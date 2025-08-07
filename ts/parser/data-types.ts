@@ -92,20 +92,22 @@ export class SwitchData extends GalData {
 }
 export enum InputType { Expression, Integer, Number, HexNumber, String }
 export class InputData extends GalData {
-    type = InputType.Expression;
-
     static getTypes() {
-        return Object.values(InputType).filterType('string');
+        return Object.values(InputType).filterType('string').map(type => type.uncapitalize());
     }
 
-    constructor(public valueVar: string, public errorVar: string, type: string) {
+    get inputType() {
+        if (this.type.capitalize() in InputType)
+            return InputType[this.type.capitalize() as keyof typeof InputType];
+        return InputType.Expression;
+    }
+
+    constructor(public valueVar: string, public errorVar: string, public type: string) {
         super();
-        if (type.capitalize() in InputType)
-            this.type = InputType[type.capitalize() as keyof typeof InputType];
     }
 
     evaluate(vars: GalVars, expr: string) {
-        switch (this.type) {
+        switch (this.inputType) {
             case InputType.Expression: return vars.evaluate(expr);
             case InputType.Integer:
                 assert(/^-?\d+$/.test(expr), `Invalid Integer: '${expr}'`);
