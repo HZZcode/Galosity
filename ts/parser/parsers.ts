@@ -46,7 +46,6 @@ Parsers.register('Case', part => {
     const [value, configs] = splitWith(':')(part);
     return new dataTypes.CaseData(value, parseConfig(configs));
 });
-Parsers.register('Break', _ => new dataTypes.BreakData());
 Parsers.register('End', _ => new dataTypes.EndData());
 Parsers.register('Var', part => {
     const [name, expr] = splitWith(':')(part);

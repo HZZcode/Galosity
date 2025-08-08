@@ -63,6 +63,7 @@ Processors.register(dataTypes.JumpData, async (data, manager) => {
             manager.unsupportedForImported();
             if (await confirm(`Open '${anchor}'?`))
                 await ipcRenderer.invoke('openExternal', anchor);
+            else manager.currentPos -= 2;
             break;
         default: {
             const pos = manager.paragraph.findAnchorPos(anchor);
@@ -81,7 +82,7 @@ Processors.register(dataTypes.SelectData, (_, manager) => {
         const show = manager.varsFrame.evaluate(data.show).toBool();
         const enable = manager.varsFrame.evaluate(data.enable).toBool();
         const text = interpolate(data.text, manager.varsFrame);
-        const callback = async () => await manager.jump(manager.getFrame().withPos(pos));
+        const callback = async () => await manager.jump(manager.getFrame().withPos(pos + 1));
 
         if (show) buttons.push(new ButtonData(text, callback, enable));
         if (data.timeout !== undefined)
@@ -92,30 +93,23 @@ Processors.register(dataTypes.SelectData, (_, manager) => {
     manager.buttons.drawButtons(buttons);
     return true;
 });
-Processors.register(dataTypes.CaseData, (data, manager) => {
-    if (manager.paragraph.isSwitchCase(manager.currentPos)) {
-        const block = manager.paragraph.findCaseControlBlock(manager.currentPos);
-        const switchData = manager.paragraph.dataList[block.startPos] as dataTypes.SwitchData;
-        try {
-            const value = manager.varsFrame.evaluate(switchData.expr);
-            const matchValue = manager.varsFrame.evaluate(data.text);
-            const next = block.next(manager.currentPos);
-            if (next === undefined) throw new Error(`Case error at line ${manager.currentPos}`);
-            if (manager.varsFrame.evaluateSingleBinary('!=', value, matchValue).toBool())
-                manager.currentPos = next;
-        } catch (e) {
-            logger.error(e);
-            error.error(e);
+Processors.register(dataTypes.SwitchData, (data, manager) => {
+    const block = manager.paragraph.findStartControlBlock(manager.currentPos);
+    for (const pos of block!.casesPosList) {
+        const caseData = manager.paragraph.dataList[pos] as dataTypes.CaseData;
+        const value = manager.varsFrame.evaluate(data.expr);
+        const matchValue = manager.varsFrame.evaluate(caseData.text);
+        if (value.equals(matchValue)) {
+            manager.currentPos = pos;
+            break;
         }
     }
     return false;
 });
-Processors.register(dataTypes.BreakData, (_, manager) => {
-    const casePos = manager.paragraph.getCasePosAt(manager.currentPos);
-    const block = manager.paragraph.findCaseControlBlock(casePos);
-    if (block === undefined) throw new Error(`[Break] at line ${manager.currentPos} is not in control block`);
-    const endPos = block.endPos;
-    manager.currentPos = endPos;
+Processors.register(dataTypes.CaseData, (_, manager) => {
+    const block = manager.paragraph.findCaseControlBlock(manager.currentPos);
+    const next = block.next(manager.currentPos);
+    manager.currentPos = next - 1;
     return false;
 });
 Processors.register(dataTypes.VarData, (data, manager) => {

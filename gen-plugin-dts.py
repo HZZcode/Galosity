@@ -21,7 +21,7 @@ def get_dts_list() -> Files:
         for file in files:
             if file.endswith('.d.ts'):
                 dts_files.append(os.path.join(root, file).replace('\\', '/'))
-    return dts_files
+    return [file for file in dts_files if not file.startswith('./main')]
 
 
 def trim_dts(file: File) -> File:
@@ -50,11 +50,11 @@ def import_part(files: Files) -> Lines:
 
 def find_symbols(file: File) -> Iterable[Symbol]:
     lines = get_lines(file)
-    pattern = r'export declare (abstract class|class|const|enum|function|let) (.*?)[^a-zA-Z]'
+    pattern = r'export (declare )?(abstract class|class|const|enum|function|let) (.*?)[^a-zA-Z]'
     for line in lines:
         match = re.search(pattern, line)
         if match:
-            yield match.group(2)
+            yield match.group(3)
 
 
 def single_symbol_part(file: File) -> Lines:

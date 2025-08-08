@@ -4,6 +4,8 @@ import type { Func } from "../utils/types.js";
 import { exportAll, exports } from "./exports.js";
 import { MetaInfo } from "./meta-info.js";
 
+type Setup = Func<[MetaInfo], boolean | undefined>;
+
 async function getPlugins() {
     const plugins = await ipcRenderer.invoke('readdir', 'plugins');
     return plugins.filter(async plugin => await ipcRenderer.invoke('exists', getPath(plugin)));
@@ -15,15 +17,7 @@ function getPath(plugin: string) {
 }
 
 class LoadResult {
-    plugin;
-    loaded;
-    error;
-
-    constructor(plugin: string, loaded: boolean, error?: any) {
-        this.plugin = plugin;
-        this.loaded = loaded;
-        this.error = error;
-    }
+    constructor(public plugin: string, public loaded: boolean, public error?: any) { }
 }
 
 async function tryLoadPlugin(plugin: string) {
@@ -31,7 +25,7 @@ async function tryLoadPlugin(plugin: string) {
     window.galosity = exports;
     const path = getPath(plugin);
     try {
-        const result = await (await import(path)).setup(new MetaInfo()) as boolean | undefined;
+        const result = await ((await import(path)).setup as Setup)(new MetaInfo());
         return new LoadResult(plugin, result === undefined || !!result);
     } catch (e) {
         return new LoadResult(plugin, false, e);

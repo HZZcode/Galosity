@@ -52,7 +52,8 @@ export class AnchorData extends GalData {
         super();
     }
 }
-export class SelectData extends GalData { }
+export class ControlStartData extends GalData { }
+export class SelectData extends ControlStartData { }
 export class CaseData extends GalData {
     show = 'true'; // Whether the player can see this choice
     enable = 'true'; // Whether the player can select this choice
@@ -73,7 +74,6 @@ export class CaseData extends GalData {
             if (key in config) this[key] = config[key].trim() as this[keyof this & string];
     }
 }
-export class BreakData extends GalData { }
 export class EndData extends GalData { }
 export class VarData extends GalData {
     constructor(public name: string, public expr: string) {
@@ -85,7 +85,7 @@ export class EnumData extends GalData {
         super();
     }
 }
-export class SwitchData extends GalData {
+export class SwitchData extends ControlStartData {
     constructor(public expr: string) {
         super();
     }

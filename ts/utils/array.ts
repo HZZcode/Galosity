@@ -19,6 +19,8 @@ declare global {
         maxs(key?: (value: T) => number): T[];
 
         repeat(count: number): T[];
+
+        pushAndReturn(value: T): T;
     }
 }
 
@@ -60,6 +62,11 @@ Array.prototype.maxs = function (key?: (value: any) => number) {
 
 Array.prototype.repeat = function (count: number) {
     return Array.apply(0, Array(count)).flatMap(() => this);
+};
+
+Array.prototype.pushAndReturn = function (value: any) {
+    this.push(value);
+    return this.at(-1);
 };
 
 export function sum(nums: number[]) {

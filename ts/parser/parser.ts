@@ -26,6 +26,7 @@ export class ControlBlock {
         for (const [i, pos] of this.casesPosList.entries())
             if (pos === casePos)
                 return i === this.casesPosList.length - 1 ? this.endPos : this.casesPosList[i + 1];
+        throw new Error(`Line ${casePos} is not a case!`);
     }
 }
 

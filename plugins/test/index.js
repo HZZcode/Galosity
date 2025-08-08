@@ -4,7 +4,7 @@ const enabled = galosity.utils.runtime.Runtime.configs.isDebug;
 async function test(name) {
     const message = `${name} test`;
     galosity.utils.logger.logger.log(message);
-    await galosity.electron.ipcRenderer.invoke('log', message);
+    await galosity.utils.runtime.ipcRenderer.invoke('log', message);
 }
 
 class TestData extends galosity.parser.dataTypes.GalData {
@@ -15,6 +15,7 @@ class TestData extends galosity.parser.dataTypes.GalData {
     }
 }
 
+/** @param {galosity.plugin.metaInfo.MetaInfo} info */
 export async function setup(info) {
     info.version.atLeast('2.1');
 
@@ -39,8 +40,8 @@ export async function setup(info) {
 
         galosity.engine.processors.Processors.register(
             TestData,
-            async (data, self) => {
-                self.texts.outputTexts('Tester ZZ_404', `Plugin test! Data is '${data.name}'`, 'green');
+            async (data, manager) => {
+                manager.texts.outputSpeech('Tester ZZ_404', `Plugin test! Data is '${data.name}'`, 'green');
                 await test(data.name);
                 return true;
             }
