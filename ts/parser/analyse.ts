@@ -9,12 +9,14 @@ class FileCache {
 
     constructor(public filename: string) { }
 
-    async getContent() {
-        return this.fileContent ??= await new Files().readFileDecrypted(this.filename);
+    async getContent(files: Files) {
+        const path = await files.resolve(this.filename, await files.getPath());
+        return this.fileContent ??= await files.readFileDecrypted(path);
     }
 }
 
 class FileCaches {
+    private files?: Files;
     private caches: FileCache[] = [];
 
     private getCache(filename: string) {
@@ -23,7 +25,7 @@ class FileCaches {
     }
 
     async getContent(filename: string) {
-        return await this.getCache(filename).getContent();
+        return await this.getCache(filename).getContent(this.files ??= new Files(filename));
     }
 }
 
@@ -58,7 +60,8 @@ class Position {
     }
 
     toString() {
-        return `[${this.line}] @${this.filename} +${this.debugNextsString()}`;
+        return `[${this.line}] @${this.filename} +${this.debugNextsString()}`
+            + ` [${this.callStack.map(pos => pos.line).toSorted().join(', ')}]`;
     }
     debugNextsString() {
         return '{' + [...this.nexts].map(pos => pos.line).toSorted().join(', ') + '}';
@@ -104,8 +107,6 @@ class Position {
     }
 }
 
-// FIXME: delete this comment after completing
-// console.log((await galosity.parser.analyse.analyse('D:/Electron/Galosity/gal.txt')).root.debugString())
 export const analyseNext = new TypeDispatch<[pos: Position],
     Iterable<Position> | Position, dataTypes.GalData>();
 analyseNext.register(dataTypes.GalData, async (_, pos) =>
@@ -153,8 +154,10 @@ class Analyser {
         let next = new Set<Position>();
         for (const unresolved of this.unresolveds) {
             const nexts = await unresolved.findNexts(this.founds, this.positions);
+            const unioned = unresolved.nexts.union(nexts);
+            if (unioned.size === unresolved.nexts.size) continue;
             next = next.union(nexts);
-            unresolved.nexts = unresolved.nexts.union(nexts);
+            unresolved.nexts = unioned;
         }
         this.unresolveds = next;
     }
@@ -164,4 +167,4 @@ export async function analyse(filename: string) {
     const analyser = new Analyser(filename);
     while (!analyser.isDone()) await analyser.next();
     return analyser;
-}
+} // Analysing tutorial files of 300+ lines cost ~1000ms
