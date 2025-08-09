@@ -55,11 +55,7 @@ Parsers.register('Enum', part => {
     const [name, values] = splitWith(':')(part);
     return new dataTypes.EnumData(name, values.split(',').map(value => value.trim()));
 });
-Parsers.register('Input', part => {
-    const [vars, type] = part.includes(':') ? splitWith(':')(part) : [part, ''];
-    const [valueVar, errorVar] = splitWith(',')(vars);
-    return new dataTypes.InputData(valueVar, errorVar, type);
-});
+Parsers.register('Input', part => new dataTypes.InputData(part));
 Parsers.register('Image', part => {
     const [imageType, imageFile] = splitWith(':')(part);
     return new dataTypes.ImageData(imageType, imageFile);

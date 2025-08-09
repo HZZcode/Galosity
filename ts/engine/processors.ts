@@ -1,6 +1,7 @@
 const lodash = require('lodash');
 
 import * as dataTypes from '../parser/data-types.js';
+import { assert } from '../utils/assert.js';
 import { parseBool } from '../utils/bool.js';
 import { confirm } from '../utils/confirm.js';
 import { Files } from '../utils/files.js';
@@ -79,14 +80,14 @@ Processors.register(dataTypes.SelectData, (_, manager) => {
     const buttons = [];
     for (const pos of block!.casesPosList) {
         const data = manager.paragraph.dataList[pos] as dataTypes.CaseData;
-        const show = manager.varsFrame.evaluate(data.show).toBool();
-        const enable = manager.varsFrame.evaluate(data.enable).toBool();
+        const show = manager.varsFrame.eval(data.show).toBool();
+        const enable = manager.varsFrame.eval(data.enable).toBool();
         const text = interpolate(data.text, manager.varsFrame);
         const callback = async () => await manager.jump(manager.getFrame().withPos(pos + 1));
 
         if (show) buttons.push(new ButtonData(text, callback, enable));
         if (data.timeout !== undefined)
-            manager.timeout.set(callback, manager.varsFrame.evaluate(data.timeout).toNum() * 1000);
+            manager.timeout.set(callback, manager.varsFrame.eval(data.timeout).toNum() * 1000);
         if (data.key !== undefined)
             manager.keybind.bind(KeyType.of(interpolate(data.key, manager.varsFrame)), callback);
     }
@@ -97,8 +98,8 @@ Processors.register(dataTypes.SwitchData, (data, manager) => {
     const block = manager.paragraph.findStartControlBlock(manager.currentPos);
     for (const pos of block!.casesPosList) {
         const caseData = manager.paragraph.dataList[pos] as dataTypes.CaseData;
-        const value = manager.varsFrame.evaluate(data.expr);
-        const matchValue = manager.varsFrame.evaluate(caseData.text);
+        const value = manager.varsFrame.eval(data.expr);
+        const matchValue = manager.varsFrame.eval(caseData.text);
         if (value.equals(matchValue)) {
             manager.currentPos = pos;
             break;
@@ -113,22 +114,13 @@ Processors.register(dataTypes.CaseData, (_, manager) => {
     return false;
 });
 Processors.register(dataTypes.VarData, (data, manager) => {
-    errorHandled(() => manager.varsFrame.setVar(data.name, manager.varsFrame.evaluate(data.expr)))();
+    errorHandled(() => manager.varsFrame.setVar(data.name, manager.varsFrame.eval(data.expr)))();
     return false;
 });
 Processors.register(dataTypes.InputData, (data, manager) => {
     manager.unsupportedForImported();
-    manager.buttons.drawInput(manager.next.bind(manager), expr => {
-        try {
-            const value = data.evaluate(manager.varsFrame, expr);
-            manager.varsFrame.setVar(data.valueVar, value);
-            manager.varsFrame.setVar(data.errorVar, types.BoolType.ofBool(false));
-        } catch (e) {
-            logger.error(e);
-            error.error(e);
-            manager.varsFrame.setVar(data.errorVar, types.BoolType.ofBool(true));
-        }
-    });
+    manager.buttons.drawInput(manager.next.bind(manager), expr =>
+        manager.varsFrame.setVar(data.valueVar, new types.GalString(expr)));
     return true;
 });
 Processors.register(dataTypes.ImageData, async (data, manager) => {
@@ -150,7 +142,7 @@ Processors.register(dataTypes.TransformData, (data, manager) => {
 Processors.register(dataTypes.DelayData, (data, manager) => {
     manager.unsupportedForImported();
     manager.timeout.set(manager.next.bind(manager),
-        manager.varsFrame.evaluate(data.seconds).toNum() * 1000, 2);
+        manager.varsFrame.eval(data.seconds).toNum() * 1000, 2);
     return false;
 });
 Processors.register(dataTypes.PauseData, () => true);
@@ -170,14 +162,13 @@ Processors.register(dataTypes.CallData, (data, manager) => {
     if (funcData.args.length !== data.args.length)
         throw new Error(`Args doesn't match func ${funcData.name} at line ${manager.currentPos}`);
     for (const [i, expr] of data.args.entries())
-        manager.varsFrame.setVar(funcData.args[i], manager.varsFrame.evaluate(expr));
+        manager.varsFrame.setVar(funcData.args[i], manager.varsFrame.eval(expr));
     manager.currentPos = pos;
     return false;
 });
 Processors.register(dataTypes.ReturnData, (data, manager) => {
-    const value = data.value === '' ? new types.GalNum(0) : manager.varsFrame.evaluate(data.value);
-    if (manager.callStack.length === 0)
-        throw new Error(`Call stack is empty`);
+    const value = data.value === '' ? new types.GalNum(0) : manager.varsFrame.eval(data.value);
+    assert(manager.callStack.length !== 0, 'Call stack is empty');
     const frame = manager.callStack.pop()!;
     manager.currentPos = frame.pos;
     manager.varsFrame = frame.varsFrame;

@@ -1,7 +1,4 @@
 import type { MediaDataType } from "../engine/media.js";
-import { assert } from "../utils/assert.js";
-import { GalString } from "../vars/types.js";
-import type { GalVars } from "../vars/vars.js";
 
 export class GalData { }
 
@@ -90,36 +87,9 @@ export class SwitchData extends ControlStartData {
         super();
     }
 }
-export enum InputType { Expression, Integer, Number, HexNumber, String }
 export class InputData extends GalData {
-    static getTypes() {
-        return Object.values(InputType).filterType('string').map(type => type.uncapitalize());
-    }
-
-    get inputType() {
-        if (this.type.capitalize() in InputType)
-            return InputType[this.type.capitalize() as keyof typeof InputType];
-        return InputType.Expression;
-    }
-
-    constructor(public valueVar: string, public errorVar: string, public type: string) {
+    constructor(public valueVar: string) {
         super();
-    }
-
-    evaluate(vars: GalVars, expr: string) {
-        switch (this.inputType) {
-            case InputType.Expression: return vars.evaluate(expr);
-            case InputType.Integer:
-                assert(/^-?\d+$/.test(expr), `Invalid Integer: '${expr}'`);
-                return vars.evaluateNum(expr);
-            case InputType.Number:
-                assert(/^-?\d+(\.\d+)?$/.test(expr), `Invalid Number: '${expr}'`);
-                return vars.evaluateNum(expr);
-            case InputType.HexNumber:
-                assert(/^-?[0-9a-fA-F]+$/.test(expr), `Invalid Hexagon Number: '${expr}'`);
-                return vars.evaluateHexNum(expr);
-            case InputType.String: return new GalString(expr);
-        }
     }
 }
 export class ImageData extends GalData {

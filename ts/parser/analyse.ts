@@ -42,7 +42,7 @@ class Position {
         return new Position(this.files, this.filename, this.line, [...this.callStack, top]);
     }
     top() {
-        assert(this.callStack.length !== 0);
+        assert(this.callStack.length !== 0, 'Call stack is empty');
         return this.callStack.at(-1)!;
     }
 

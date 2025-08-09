@@ -75,7 +75,6 @@ export class TabCompleters {
 }
 
 const getTags = () => Parsers.tags().map(tag => `[${tag}]`);
-const inputTypes = dataTypes.InputData.getTypes();
 const imageTypes = ['background', 'foreground', 'left', 'center', 'right'];
 const transformTypes = new dataTypes.TransformData('').getAllArgs();
 const mediaArgs = new dataTypes.MediaData('', {}).getArgs();
@@ -138,13 +137,6 @@ TabCompleters.register(TabCompleter.ofCombined(
     },
     context => scanSymbols(context.dataList)
 )); // Symbols
-TabCompleters.register(TabCompleter.ofCombined(
-    new AutoComplete(inputTypes),
-    context => {
-        const data = parseLine(context.front);
-        if (context.front.includes(':') && data instanceof dataTypes.InputData) return data.type;
-    }
-)); // Input Types
 TabCompleters.register(TabCompleter.ofCombined(
     new AutoComplete(),
     context => {

@@ -3,7 +3,7 @@ const lodash = require('lodash');
 import { assert } from '../utils/assert.js';
 import { splitWith } from '../utils/split.js';
 import { isDiscarded, isIdentifier } from '../utils/string.js';
-import { Builtins } from './builtins.js';
+import { builtinEvalFunc, Builtins } from './builtins.js';
 import * as grammar from './grammar/grammar.js';
 import { operators } from './operators.js';
 import type { GalEnum, GalVar } from './types.js';
@@ -38,6 +38,23 @@ export class GalVars extends Builtins {
     constructor() {
         super();
         this.initBuiltins();
+        this.initBuiltinEvals();
+    }
+
+    initBuiltinEvals() {
+        this.registerBuiltinFunc('eval', builtinEvalFunc(expr => this.eval(expr)));
+        this.registerBuiltinFunc('evalInt', builtinEvalFunc(expr => {
+            assert(/^-?\d+$/.test(expr), `Invalid Integer: '${expr}'`);
+            return this.evalNum(expr);
+        }));
+        this.registerBuiltinFunc('evalNum', builtinEvalFunc(expr => {
+            assert(/^-?\d+(\.\d+)?$/.test(expr), `Invalid Number: '${expr}'`);
+            return this.evalNum(expr);
+        }));
+        this.registerBuiltinFunc('evalHexNum', builtinEvalFunc(expr => {
+            assert(/^-?[0-9a-fA-F]+$/.test(expr), `Invalid Hexagon Number: '${expr}'`);
+            return this.evalHexNum(expr);
+        }));
     }
 
     override toString() {
@@ -56,7 +73,7 @@ export class GalVars extends Builtins {
             if (varsPart !== '')
                 vars.vars = Object.fromEntries(varsPart.split(',').map(entry => {
                     const [name, value] = splitWith('=')(entry);
-                    return [name, vars.evaluate(value)];
+                    return [name, vars.eval(value)];
                 }));
             vars.enumTypes = enumPart.split(',').map(type => GalEnumType.fromString(type));
             return vars;
@@ -121,36 +138,36 @@ export class GalVars extends Builtins {
         return this.isDefinedVar(name) || this.isDefinedEnum(name);
     }
 
-    evaluate(expr: string) {
+    eval(expr: string) {
         try {
-            return this.evaluateNode(grammar.parse(expr));
+            return this.evalNode(grammar.parse(expr));
         } catch (e) {
             throw new Error(`Cannot evaluate '${expr}'`, { cause: e });
         }
     }
 
-    evaluateNode(node: Node): GalVar {
-        this satisfies Record<`evaluate${Capitalize<NodeType>}`, (node: Node) => GalVar>;
+    evalNode(node: Node): GalVar {
+        this satisfies Record<`eval${Capitalize<NodeType>}`, (node: Node) => GalVar>;
         if (!NodeTypes.includes(node.type)) throw new Error(`Error node type: ${node.type}`);
-        return (this as any)[`evaluate${node.type.capitalize()}`](node);
+        return (this as any)[`eval${node.type.capitalize()}`](node);
     }
 
-    evaluateNum(node: Node | string) {
+    evalNum(node: Node | string) {
         return new GalNum(notNaN(parseFloat(typeof node === 'string' ? node : node.value)));
     }
 
-    evaluateHexNum(node: Node | string) {
+    evalHexNum(node: Node | string) {
         return new GalNum(notNaN(parseInt(typeof node === 'string' ? node : node.value, 16)));
     }
 
-    evaluateEnum(node: Node) {
+    evalEnum(node: Node) {
         const enumType = this.getEnumType(node.enumType.value);
         if (enumType === undefined)
             throw new Error(`No such enum: ${node.enumType.value}`);
         return enumType.getValue(node.value.value);
     }
 
-    evaluateIdentifier(node: Node) {
+    evalIdentifier(node: Node) {
         const name = node.value;
         if (isDiscarded(name)) throw new Error(`${name} is discarded`);
         if (name in this.builtins) return this.builtins[name].get();
@@ -160,82 +177,82 @@ export class GalVars extends Builtins {
         throw new Error(`No such identifier or enum value: ${name}`);
     }
 
-    evaluateString(node: Node) {
+    evalString(node: Node) {
         return new GalString(JSON.parse(`"${node.value}"`).toString());
     }
 
-    evaluateArray(node: Node) {
-        return new GalArray((node.value as Node[]).map(value => this.evaluateNode(value)));
+    evalArray(node: Node) {
+        return new GalArray((node.value as Node[]).map(value => this.evalNode(value)));
     }
 
-    evaluateFunction(node: Node) {
+    evalFunction(node: Node) {
         const func = node.func.value;
         if (func === 'hasVar') {
             assert(node.value.type === 'identifier', `Function 'hasVar' can only be applied on identifier`);
-            return BoolType.ofBool(tried(() => this.evaluateIdentifier(node.value)));
+            return BoolType.ofBool(tried(() => this.evalIdentifier(node.value)));
         }
-        const value = this.evaluateNode(node.value);
+        const value = this.evalNode(node.value);
         if (func in this.builtinFuncs) return this.builtinFuncs[func].apply(value);
         const enumType = this.getEnumType(func);
         if (enumType !== undefined) return enumType.apply(value);
         throw new Error(`No such function: ${func}`);
     }
 
-    evaluateFactor(node: Node) {
-        return operators.applyUnary(node.operator, this.evaluateNode(node.value));
+    evalFactor(node: Node) {
+        return operators.applyUnary(node.operator, this.evalNode(node.value));
     }
 
-    evaluateIndex(node: Node) {
-        return operators.applyBinary('[]', [this.evaluateNode(node.value), this.evaluateNode(node.index)]);
+    evalIndex(node: Node) {
+        return operators.applyBinary('[]', [this.evalNode(node.value), this.evalNode(node.index)]);
     }
 
-    evaluateSingleBinary(op: string, x: GalVar, y: GalVar) {
+    evalSingleBinary(op: string, x: GalVar, y: GalVar) {
         return operators.applyBinary(op, [x, y]);
     }
 
-    evaluateLeftBinary(node: Node) {
+    evalLeftBinary(node: Node) {
         const ops = (node.value.length - 1) / 2;
-        let result = this.evaluateNode(node.value[0]);
+        let result = this.evalNode(node.value[0]);
         for (let i = 0; i < ops; i++) {
             const op = node.value[2 * i + 1];
-            const value = this.evaluateNode(node.value[2 * i + 2]);
-            result = this.evaluateSingleBinary(op, result, value);
+            const value = this.evalNode(node.value[2 * i + 2]);
+            result = this.evalSingleBinary(op, result, value);
         }
         return result;
     }
 
-    evaluateRightBinary(node: Node) {
+    evalRightBinary(node: Node) {
         const ops = (node.value.length - 1) / 2;
-        let result = this.evaluateNode(node.value.at(-1));
+        let result = this.evalNode(node.value.at(-1));
         for (let i = ops - 1; i >= 0; i--) {
-            const value = this.evaluateNode(node.value[2 * i]);
+            const value = this.evalNode(node.value[2 * i]);
             const op = node.value[2 * i + 1];
-            result = this.evaluateSingleBinary(op, value, result);
+            result = this.evalSingleBinary(op, value, result);
         }
         return result;
     }
 
-    evaluateComparing(node: Node) {
+    evalComparing(node: Node) {
         const ops = (node.value.length - 1) / 2;
         for (let i = 0; i < ops; i++) {
-            const left = this.evaluateNode(node.value[2 * i]);
+            const left = this.evalNode(node.value[2 * i]);
             const op = node.value[2 * i + 1];
-            const right = this.evaluateNode(node.value[2 * i + 2]);
-            if (!this.evaluateSingleBinary(op, left, right).toBool())
+            const right = this.evalNode(node.value[2 * i + 2]);
+            if (!this.evalSingleBinary(op, left, right).toBool())
                 return BoolType.ofBool(false);
         }
         return BoolType.ofBool(true);
     }
 
-    evaluateMatching(node: Node) {
-        const value = this.evaluateNode(node.value);
+    evalMatching(node: Node) {
+        const value = this.evalNode(node.value);
         const type = node.enumType;
         if (type === 'num') return BoolType.ofBool(isNum(value));
         return BoolType.ofBool(isEnum(value) && value.enumType.name === type);
     }
 
-    evaluateTriCondition(node: Node) {
-        return this.evaluateNode(node.condition).toBool()
-            ? this.evaluateNode(node.left) : this.evaluateNode(node.right);
+    evalTriCondition(node: Node) {
+        return this.evalNode(node.condition).toBool()
+            ? this.evalNode(node.left) : this.evalNode(node.right);
     }
 }

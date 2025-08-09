@@ -3,7 +3,7 @@
 ZZ: Hi! I'm ZZ.
 [Character] Ichiku
 Ichiku: Hi, I'm Ichiku nya~
-ZZ: Welcome to Galosity, a lite pure-text galgame editor. What do you want to know?
+ZZ: Welcome to Galosity, a lite pure-text galgame editor.\n This is Galosity version ${versionString} (Update: ${versionName}).\n What do you want to know?
 [Select]
 [Case] How to use Galosity?:
 [Jump]>operation.txt

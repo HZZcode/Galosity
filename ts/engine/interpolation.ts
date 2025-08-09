@@ -39,7 +39,7 @@ export function interpolate(text: string, varsFrame: vars.GalVars) {
     const interpolation = new Interpolations();
     interpolation.register('$', sub => {
         let result = sub;
-        errorHandledAsWarning(() => result = varsFrame.evaluate(sub).toString())();
+        errorHandledAsWarning(() => result = varsFrame.eval(sub).toString())();
         return result;
     });
     interpolation.register('^', sub => `<sup>${sub}</sup>`);

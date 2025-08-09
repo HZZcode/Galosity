@@ -28,6 +28,10 @@ export abstract class GalVar {
     equals(_: GalVar) {
         return false;
     }
+
+    get len(): number {
+        throw new Error(`Cannot get length of ${this.getType()}`);
+    } // Note: naming this to `length` confuses lodash
 }
 
 export class GalNum extends GalVar {
@@ -54,7 +58,7 @@ export class GalNum extends GalVar {
     }
 
     override equals(other: GalVar) {
-        return other instanceof GalNum && Math.abs(this.value - other.value) <= 1e-5;
+        return other instanceof GalNum && this.toString() === other.toString();
     }
 }
 
@@ -127,6 +131,10 @@ export class GalEnum extends GalVar {
             && this.enumType.name === other.enumType.name
             && this.valueIndex === other.valueIndex;
     }
+
+    override get len() {
+        return this.enumType.values.length;
+    }
 }
 class GalBoolEnumType extends GalEnumType {
     constructor() {
@@ -156,6 +164,10 @@ export class GalString extends GalVar {
     override equals(other: GalVar) {
         return other instanceof GalString && this.value === other.value;
     }
+
+    override get len() {
+        return this.value.length;
+    }
 }
 
 export class GalArray extends GalVar {
@@ -175,24 +187,24 @@ export class GalArray extends GalVar {
         return other instanceof GalArray && this.value.length === other.value.length
             && this.value.map((value, index) => value.equals(other.value[index])).all();
     }
+
+    override get len() {
+        return this.value.length;
+    }
 }
 
 export function isNum(value: GalVar): value is GalNum {
     return value.type === 'num';
 }
-
 export function isEnum(value: GalVar): value is GalEnum {
     return value.type === 'enum';
 }
-
 export function isBool(value: GalVar): value is GalEnum {
     return isEnum(value) && value.enumType.name === 'bool';
 }
-
 export function isString(value: GalVar): value is GalString {
     return value.type === 'string';
 }
-
 export function isArray(value: GalVar): value is GalArray {
     return value.type === 'array';
 }

@@ -150,7 +150,7 @@ ZZ: There are a few built-in vars in Galosity: `random` returns a random number 
 Ichiku: Try: input `$​{random}`.
 ZZ: These vars might have different values every time you use it.
 ZZ: For instance, one call might return ${random} while the other returns ${random}.
-ZZ: There are also vars representing real-world date time like dateNow=${dateNow}, and math constants like E=${E} and PI=${PI}.
+ZZ: There are also vars representing real-world date time like timeNow=${timeNow}, and math constants like E=${E} and PI=${PI}.
 
 [Part] Built-in Functions
 ZZ: This part is simple. sin(PI/6)=${sin(PI/6)}, tan(PI/4)=${tan(PI/4)}, ln(E^3)=${ln(E^3)}, etc.
@@ -165,29 +165,17 @@ ZZ: [Switch]-[Case] blocks can also fall through; but at every case, the conditi
 
 [Part] Inputting
 ZZ: You can get an input from the user with [Input] tag.
-Ichiku: Try: input `[Input] result, error`.
-ZZ: Here, user input will be evaluated to a var; if the evaluation succeeded, `result` will be assigned and `error` will be false; if evaluation failed, `result` will not be defined, and `error` will be true.
-Ichiku: Remember that you'll need to deal with errors yourself!
-ZZ: There are several modes: expression, integer, number, hexNumber and string.
-Ichiku: Try: input `[Input] result, _: string`.
+Ichiku: Try: input `[Input] result`.
+ZZ: Here, user input will be stored into a string.
+Ichiku: You can then parse them with builtin function `eval`, `evalInt`, `evalNum` or `evalHexNum`.
 ZZ: For example, let's input two numbers below...
 ZZ: First number:
-[Anchor] num1
-[Input] n1, err: number
-[Switch] err
-[Case] true:
-ZZ: Error: invalid number!
-[Jump] num1
-[End]
+[Input] s1
+[Var] n1: evalNum(s1)
 ZZ: You inputted ${n1}!
 ZZ: Second number:
-[Anchor] num2
-[Input] n2, err: number
-[Switch] err
-[Case] true:
-ZZ: Error: invalid number!
-[Jump] num2
-[End]
+[Input] s2
+[Var] n2: evalNum(s2)
 ZZ: You inputted ${n2}!
 ZZ: ${n1} * ${n2} = ${n1*n2}.
 
