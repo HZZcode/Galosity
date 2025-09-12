@@ -18,6 +18,12 @@ export type Configs = {
 export type EditorData = { configs: Configs, filename?: string };
 export type EngineData = { configs: Configs, filename?: string };
 
+export type HandlerRegistry = {
+  channel: string;
+  args: string[];
+  code: string;
+};
+
 export interface GalIpcRenderer extends IpcRenderer {
   invoke(channel: 'showSaveDialog', options: SaveDialogOptions): Promise<SaveDialogReturnValue>;
   invoke(channel: 'showOpenDialog', options: OpenDialogOptions): Promise<OpenDialogReturnValue>;
@@ -40,9 +46,9 @@ export interface GalIpcRenderer extends IpcRenderer {
 
   invoke(channel: 'engine-data', data: EngineData): Promise<void>;
 
-  invoke(channel: 'log', str: any): Promise<void>;
-
   invoke(channel: 'exit', code?: number | string): Promise<void>;
+
+  invoke(channel: 'add-handler', registry: HandlerRegistry): Promise<void>;
 
   on(channel: 'editor-data', handler: (_: IpcRendererEvent, data: EditorData) => void | Promise<void>): this;
   on(channel: 'engine-data', handler: (_: IpcRendererEvent, data: EngineData) => void | Promise<void>): this;

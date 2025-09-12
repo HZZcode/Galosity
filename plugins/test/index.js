@@ -1,10 +1,18 @@
 /// <reference path="../../dts/exports.d.ts" />
 const enabled = galosity.utils.runtime.Runtime.configs.isDebug;
 
+async function handleLogger() {
+    await galosity.plugin.handlers.Handlers.add({
+        channel: 'test::logger',
+        args: ['message'],
+        code: 'console.log(message)'
+    });
+}
+
 async function test(name) {
     const message = `${name} test`;
     galosity.utils.logger.logger.log(message);
-    await galosity.utils.runtime.ipcRenderer.invoke('log', message);
+    await galosity.utils.runtime.ipcRenderer.invoke('test::logger', message);
 }
 
 class TestData extends galosity.parser.dataTypes.GalData {
@@ -17,8 +25,9 @@ class TestData extends galosity.parser.dataTypes.GalData {
 
 /** @param {galosity.plugin.metaInfo.MetaInfo} info */
 export async function setup(info) {
-    info.version.atLeast('2.1');
+    info.version.atLeast('2.3');
 
+    await handleLogger();
     await test('plugin');
 
     if (enabled) {

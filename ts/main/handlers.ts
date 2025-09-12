@@ -1,6 +1,7 @@
 import type { IpcMainInvokeEvent, OpenDialogOptions, SaveDialogOptions } from 'electron';
 import { BrowserWindow, dialog, ipcMain, shell } from 'electron';
 
+import type { HandlerRegistry } from '../types.js';
 import { Crypto } from './crypto.js';
 import { Files } from './files.js';
 
@@ -39,7 +40,8 @@ Handlers.add('delete', (_, pathname: string) => Files.delete(pathname));
 
 Handlers.add('openExternal', (_, url: string) => shell.openExternal(url));
 
-// eslint-disable-next-line no-console
-Handlers.add('log', (_, str: any) => console.log(str));
-
 Handlers.add('exit', (_, code?: number | string) => process.exit(code));
+
+Handlers.add('add-handler', (_, registry: HandlerRegistry) =>
+    ipcMain.handle(registry.channel, (_, ...args: any[]) =>
+        new Function(...registry.args, registry.code)(...args)));
