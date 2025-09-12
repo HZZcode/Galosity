@@ -2,6 +2,7 @@ const lodash = require('lodash');
 
 import * as dataTypes from '../parser/data-types.js';
 import * as parser from '../parser/parser.js';
+import { wrapError } from '../utils/assert.js';
 import { KeybindManager } from '../utils/keybind.js';
 import { logger } from '../utils/logger.js';
 import { TimeoutManager } from '../utils/timeout.js';
@@ -72,11 +73,10 @@ export class Manager {
             .then(async content => {
                 await this.set(content.splitLine());
                 this.resources.setFile(path);
-            })
-            .catch(e => {
+            }).catch(e => {
                 logger.error(e);
                 error.error(e);
-                throw new Error(`Cannot open file ${path}`, { cause: e });
+                wrapError(`Cannot open file ${path}`, e);
             });
     }
     async process(data: dataTypes.GalData) {

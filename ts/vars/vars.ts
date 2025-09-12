@@ -1,6 +1,6 @@
 const lodash = require('lodash');
 
-import { assert } from '../utils/assert.js';
+import { assert, notUndefined, wrapError } from '../utils/assert.js';
 import { splitWith } from '../utils/split.js';
 import { isDiscarded, isIdentifier } from '../utils/string.js';
 import { builtinEvalFunc, Builtins } from './builtins.js';
@@ -12,10 +12,7 @@ import { BoolType, GalArray, GalEnumType, GalNum, GalString, isEnum, isNum } fro
 const NodeTypes = ['triCondition', 'leftBinary', 'rightBinary', 'comparing', 'matching', 'factor',
     'index', 'function', 'array', 'string', 'hexNum', 'num', 'enum', 'identifier'] as const;
 type NodeType = typeof NodeTypes[number];
-type Node = {
-    type: NodeType,
-    [_: string]: any
-};
+type Node = { type: NodeType } & Record<string, any>;
 
 function notNaN(num: number) {
     assert(!isNaN(num));
@@ -78,15 +75,15 @@ export class GalVars extends Builtins {
             vars.enumTypes = enumPart.split(',').map(type => GalEnumType.fromString(type));
             return vars;
         } catch (e) {
-            throw new Error('Parse Error: ' + e);
+            wrapError('Parse Error', e);
         }
     }
 
     setVar(name: string, value: GalVar) {
         if (isDiscarded(name)) return;
-        if (!isIdentifier(name)) throw new Error(`Invalid variable name: ${name}`);
+        assert(isIdentifier(name), `Invalid variable name: ${name}`);
         if (name in this.builtins) this.builtins[name].set(value);
-        this.vars[name] = value;
+        else this.vars[name] = value;
     }
 
     copy() {
@@ -121,9 +118,8 @@ export class GalVars extends Builtins {
     getEnumValue(name: string) {
         const values = this.getEnumValues();
         const found = values.filter(e => e.getName() === name);
-        if (found.length > 1) throw new Error(`Found multiple enum value named ${name}`);
-        if (found.length === 0) return undefined;
-        return found[0];
+        assert(found.length <= 1, `Found multiple enum value named ${name}`);
+        return found.at(0);
     }
 
     isDefinedVar(name: string) {
@@ -142,13 +138,13 @@ export class GalVars extends Builtins {
         try {
             return this.evalNode(grammar.parse(expr));
         } catch (e) {
-            throw new Error(`Cannot evaluate '${expr}'`, { cause: e });
+            wrapError(`Cannot evaluate '${expr}'`, e);
         }
     }
 
     evalNode(node: Node): GalVar {
         this satisfies Record<`eval${Capitalize<NodeType>}`, (node: Node) => GalVar>;
-        if (!NodeTypes.includes(node.type)) throw new Error(`Error node type: ${node.type}`);
+        assert(NodeTypes.includes(node.type), `Error node type: ${node.type}`);
         return (this as any)[`eval${node.type.capitalize()}`](node);
     }
 
@@ -162,19 +158,15 @@ export class GalVars extends Builtins {
 
     evalEnum(node: Node) {
         const enumType = this.getEnumType(node.enumType.value);
-        if (enumType === undefined)
-            throw new Error(`No such enum: ${node.enumType.value}`);
-        return enumType.getValue(node.value.value);
+        return notUndefined(enumType, `No such enum: ${node.enumType.value}`).getValue(node.value.value);
     }
 
     evalIdentifier(node: Node) {
         const name = node.value;
-        if (isDiscarded(name)) throw new Error(`${name} is discarded`);
+        assert(!isDiscarded(name), `${name} is discarded`);
         if (name in this.builtins) return this.builtins[name].get();
         if (name in this.vars) return this.vars[name];
-        const enumValue = this.getEnumValue(name);
-        if (enumValue !== undefined) return enumValue;
-        throw new Error(`No such identifier or enum value: ${name}`);
+        return notUndefined(this.getEnumValue(name), `No such identifier or enum value: ${name}`);
     }
 
     evalString(node: Node) {
@@ -193,9 +185,7 @@ export class GalVars extends Builtins {
         }
         const value = this.evalNode(node.value);
         if (func in this.builtinFuncs) return this.builtinFuncs[func].apply(value);
-        const enumType = this.getEnumType(func);
-        if (enumType !== undefined) return enumType.apply(value);
-        throw new Error(`No such function: ${func}`);
+        return notUndefined(this.getEnumType(func), `No such function: ${func}`).apply(value);
     }
 
     evalFactor(node: Node) {

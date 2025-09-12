@@ -55,8 +55,10 @@ operators.registerUnary('+', GalNum, value => new GalNum(+value.value));
 operators.registerUnary('-', GalNum, value => new GalNum(-value.value));
 operators.registerUnary('!', GalVar, value => BoolType.ofBool(!value.toBool()));
 
-operators.registerBinary('[]', [GalString, GalNum], (x, y) => new GalString(x.value[y.value]));
-operators.registerBinary('[]', [GalArray, GalNum], (x, y) => notUndefined(x.value.at(y.value)));
+operators.registerBinary('[]', [GalString, GalNum], (x, y) => new GalString(notUndefined(x.value[y.value],
+    `String access out of range: ${x.reprString()}[${y.value}]`)));
+operators.registerBinary('[]', [GalArray, GalNum], (x, y) => notUndefined(x.value.at(y.value), 
+    `Array access out of range: ${x.reprString()}[${y.value}]`));
 
 operators.registerBinary('+', [GalNum, GalNum], (x, y) => new GalNum(x.value + y.value));
 operators.registerBinary('+', [GalString, GalString], (x, y) => new GalString(x.value + y.value));

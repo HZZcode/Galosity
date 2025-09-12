@@ -1,3 +1,4 @@
+import { wrapError } from "../utils/assert.js";
 import { confirm } from "../utils/confirm.js";
 import { EventListener } from "../utils/event-listener.js";
 import { Files } from "../utils/files.js";
@@ -77,7 +78,7 @@ export abstract class SaveLoad<Id> extends Files {
         catch (e) {
             logger.error(e);
             error.error(e);
-            throw new Error(`Cannot load from ${filename}`, { cause: e });
+            wrapError(`Cannot load from ${filename}`, e);
         }
     }
     async deleteSave(id: Id) {

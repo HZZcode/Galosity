@@ -19,8 +19,6 @@
     "@types/crypto-js": "^4.2.2",
     "@types/electron": "^1.4.38",
     "@types/node": "^24.0.10",
-    "@typescript-eslint/eslint-plugin": "^8.35.1",
-    "@typescript-eslint/parser": "^8.35.1",
     "cross-env": "^7.0.3",
     "electron": "^35.2.1",
     "electron-builder": "^26.0.12",
@@ -28,8 +26,6 @@
     "eslint-plugin-no-floating-promise": "^2.0.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "globals": "^16.3.0",
-    "ts-loader": "^9.5.2",
-    "ts-unused-exports": "^11.0.1",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.35.1"
   },

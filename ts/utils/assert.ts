@@ -8,7 +8,11 @@ export function assert(condition: boolean, error: Error | string = 'Assertion fa
     }
 }
 
-export function notUndefined<T>(value: T | undefined) {
-    assert(value !== undefined, 'Invalid undefined');
+export function notUndefined<T>(value: T | undefined, error: Error | string = 'Invalid undefined') {
+    assert(value !== undefined, error);
     return value!;
+}
+
+export function wrapError(msg: string, cause: unknown): never {
+    throw new Error(msg, { cause });
 }

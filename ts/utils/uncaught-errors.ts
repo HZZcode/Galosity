@@ -1,3 +1,4 @@
+import { wrapError } from "./assert.js";
 import { logger } from "./logger.js";
 import { ipcRenderer, Runtime } from "./runtime.js";
 
@@ -34,6 +35,6 @@ document.addEventListener('keyup', async event => {
     switch (event.key.toUpperCase()) {
         case 'C': return await logger.copy();
         case 'E': return await logger.export();
-        case 'X': throw new Error(`Uncaught Exception Test`, { cause: new Error('Just a Test') });
+        case 'X': wrapError(`Uncaught Exception Test`, new Error('Just a Test'));
     }
 });

@@ -68,7 +68,7 @@ Processors.register(dataTypes.JumpData, async (data, manager) => {
             break;
         default: {
             const pos = manager.paragraph.findAnchorPos(anchor);
-            if (pos === -1) throw new Error(`Anchor not found: ${anchor}`);
+            assert(pos !== -1, `Anchor not found: ${anchor}`);
             manager.currentPos = pos - 1;
         }
     }
