@@ -11,9 +11,14 @@ export class Handlers {
 
     static handlers: Record<string, Listener> = {};
 
+    static doHandle(channel: string, listener: Listener) {
+        ipcMain.removeHandler(channel);
+        ipcMain.handle(channel, listener);
+    }
+
     static handle() {
         for (const [channel, listener] of Object.entries(this.handlers))
-            ipcMain.handle(channel, listener);
+            this.doHandle(channel, listener);
     }
 
     static add(channel: string, listener: Listener) {
@@ -43,5 +48,5 @@ Handlers.add('openExternal', (_, url: string) => shell.openExternal(url));
 Handlers.add('exit', (_, code?: number | string) => process.exit(code));
 
 Handlers.add('add-handler', (_, registry: HandlerRegistry) =>
-    ipcMain.handle(registry.channel, (_, ...args: any[]) =>
+    Handlers.doHandle(registry.channel, (_, ...args: any[]) =>
         new Function(...registry.args, registry.code)(...args)));

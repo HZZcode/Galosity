@@ -1,6 +1,6 @@
 import { notUndefined } from "../utils/assert.js";
 import type { Constructor } from "../utils/types.js";
-import { BoolType, GalArray, GalNum, GalString, GalVar } from "./types.js";
+import { BoolType, GalArray, GalNum, GalSequence, GalString, GalVar } from "./types.js";
 
 class UnaryOp<TBase, TReturn> {
     constructor(public op: string, public type: Constructor<TBase>, public func: (_: any) => TReturn) { }
@@ -32,20 +32,24 @@ class Operators<TBase extends { getType: () => string } = any, TReturn = any> {
         this.binary.push(new BinaryOp<TBase, TReturn>(op, types, func));
     }
 
+    error(op: string, ...values: TBase[]): never {
+        throw new Error(`Operator ${op} cannot be applied on `
+            + values.map(value => value.getType()).join(' and '));
+    }
+
     applyUnary(op: string, value: TBase) {
         let result: TReturn | undefined;
         for (const unary of this.unary)
             if ((result = unary.apply(op, value)) !== undefined)
                 return result;
-        throw new Error(`Operator ${op} cannot be applied on ${value.getType()}`);
+        this.error(op, value);
     }
     applyBinary(op: string, values: [TBase, TBase]) {
         let result: TReturn | undefined;
         for (const binary of this.binary)
             if ((result = binary.apply(op, values)) !== undefined)
                 return result;
-        throw new Error(`Operator ${op} cannot be applied `
-            + `on ${values[0].getType()} and ${values[1].getType()}`);
+        this.error(op, ...values);
     }
 }
 
@@ -55,20 +59,16 @@ operators.registerUnary('+', GalNum, value => new GalNum(+value.value));
 operators.registerUnary('-', GalNum, value => new GalNum(-value.value));
 operators.registerUnary('!', GalVar, value => BoolType.ofBool(!value.toBool()));
 
-operators.registerBinary('[]', [GalString, GalNum], (x, y) => new GalString(notUndefined(x.value[y.value],
-    `String access out of range: ${x.reprString()}[${y.value}]`)));
-operators.registerBinary('[]', [GalArray, GalNum], (x, y) => notUndefined(x.value.at(y.value), 
-    `Array access out of range: ${x.reprString()}[${y.value}]`));
+operators.registerBinary('[]', [GalSequence, GalNum], (x, y) => notUndefined(x.getIndex(y.value),
+    `${x.getType().capitalize()} access out of range: ${x.reprString()}[${y.value}]`));
 
 operators.registerBinary('+', [GalNum, GalNum], (x, y) => new GalNum(x.value + y.value));
-operators.registerBinary('+', [GalString, GalString], (x, y) => new GalString(x.value + y.value));
-operators.registerBinary('+', [GalArray, GalArray], (x, y) => new GalArray([...x.value, ...y.value]));
+operators.registerBinary('+', [GalString, GalString], (x, y) => x.combine(y));
+operators.registerBinary('+', [GalArray, GalArray], (x, y) => x.combine(y));
 operators.registerBinary('-', [GalNum, GalNum], (x, y) => new GalNum(x.value - y.value));
 operators.registerBinary('*', [GalNum, GalNum], (x, y) => new GalNum(x.value * y.value));
-operators.registerBinary('*', [GalString, GalNum], (x, y) => new GalString(x.value.repeat(y.value)));
-operators.registerBinary('*', [GalNum, GalString], (x, y) => new GalString(y.value.repeat(x.value)));
-operators.registerBinary('*', [GalArray, GalNum], (x, y) => new GalArray(x.value.repeat(y.value)));
-operators.registerBinary('*', [GalNum, GalArray], (x, y) => new GalArray(y.value.repeat(x.value)));
+operators.registerBinary('*', [GalSequence, GalNum], (x, y) => x.repeat(y.value));
+operators.registerBinary('*', [GalNum, GalSequence], (x, y) => y.repeat(x.value));
 operators.registerBinary('/', [GalNum, GalNum], (x, y) => new GalNum(x.value / y.value));
 operators.registerBinary('//', [GalNum, GalNum], (x, y) => new GalNum(Math.floor(x.value / y.value)));
 operators.registerBinary('%', [GalNum, GalNum], (x, y) => new GalNum(x.value % y.value));

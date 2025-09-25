@@ -34,6 +34,13 @@ export abstract class GalVar {
     } // Note: naming this to `length` confuses lodash
 }
 
+export abstract class GalSequence extends GalVar {
+    abstract getIndex(index: number): GalVar;
+    abstract setIndex(index: number, value: GalVar): void;
+    abstract combine(other: this): GalVar;
+    abstract repeat(count: number): GalVar;
+}
+
 export class GalNum extends GalVar {
     constructor(public value: number) {
         super('num');
@@ -147,7 +154,7 @@ class GalBoolEnumType extends GalEnumType {
 
 export const BoolType = new GalBoolEnumType();
 
-export class GalString extends GalVar {
+export class GalString extends GalSequence {
     constructor(public value: string) {
         super('string');
         assert(typeof value === 'string', `Invalid string: ${value}`);
@@ -168,9 +175,32 @@ export class GalString extends GalVar {
     override get len() {
         return this.value.length;
     }
+
+    override getIndex(index: number) {
+        return new GalString(this.value[index]);
+    }
+
+    override setIndex(index: number, value: GalVar) {
+        if (!isString(value))
+            throw new Error(`Cannot set index of ${this.getType()} into ${value.getType()}`);
+        const char = value.value;
+        assert(char.length === 1,
+            `Cannot set index of ${this.getType()} into string with length ${char.length}`);
+        assert(Number.isInteger(index) && index >= 0 && index < this.value.length,
+            `Cannot set index ${index} of ${this.reprString()}`);
+        this.value = this.value.substring(0, index) + char + this.value.substring(index + 1);
+    }
+
+    override combine(other: GalString) {
+        return new GalString(this.value + other.value);
+    }
+
+    override repeat(count: number) {
+        return new GalString(this.value.repeat(count));
+    }
 }
 
-export class GalArray extends GalVar {
+export class GalArray extends GalSequence {
     constructor(public value: GalVar[]) {
         super('array');
     }
@@ -190,6 +220,24 @@ export class GalArray extends GalVar {
 
     override get len() {
         return this.value.length;
+    }
+
+    override getIndex(index: number) {
+        return this.value[index];
+    }
+
+    override setIndex(index: number, value: GalVar) {
+        assert(Number.isInteger(index) && index >= 0 && index <= this.value.length,
+            `Cannot set index ${index} of ${this.reprString()}`);
+        this.value[index] = value;
+    }
+
+    override combine(other: GalArray) {
+        return new GalArray([...this.value, ...other.value]);
+    }
+
+    override repeat(count: number) {
+        return new GalArray(this.value.repeat(count));
     }
 }
 

@@ -13,7 +13,7 @@ import { TypeDispatch } from "../utils/type-dispatch.js";
 import type { Constructor } from '../utils/types.js';
 import * as types from "../vars/types.js";
 import { ButtonData } from "./buttons.js";
-import { error, errorHandled, errorHandledAsWarning } from "./error-handler.js";
+import { error, errorHandledAsWarning } from "./error-handler.js";
 import { escape, interpolate } from "./interpolation.js";
 import { Manager, UnsupportedForImported } from "./manager.js";
 
@@ -114,7 +114,16 @@ Processors.register(dataTypes.CaseData, (_, manager) => {
     return false;
 });
 Processors.register(dataTypes.VarData, (data, manager) => {
-    errorHandled(() => manager.varsFrame.setVar(data.name, manager.varsFrame.eval(data.expr)))();
+    const name = data.name;
+    const left = name.indexOf('[');
+    const result = manager.varsFrame.eval(data.expr);
+    if (left === -1 || name.at(-1) !== ']') manager.varsFrame.setVar(name, result);
+    else {
+        const value = manager.varsFrame.eval(name.slice(0, left));
+        const index = manager.varsFrame.eval(name.slice(left + 1, -1));
+        if (value instanceof types.GalSequence && index instanceof types.GalNum)
+            value.setIndex(index.value, result);
+    }
     return false;
 });
 Processors.register(dataTypes.InputData, (data, manager) => {
