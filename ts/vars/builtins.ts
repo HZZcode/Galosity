@@ -1,5 +1,6 @@
 import { MetaInfo } from '../plugin/meta-info.js';
 import { logger } from '../utils/logger.js';
+import { Random } from '../utils/random.js';
 import type { GalVar } from './types.js';
 import { BoolType, GalArray, GalNum, GalString, isEnum, isNum, isString } from './types.js';
 
@@ -52,8 +53,8 @@ export class Builtins {
 
 const prototype = new Builtins();
 
-prototype.registerBuiltin('random', () => new GalNum(Math.random()));
-prototype.registerBuiltin('randBool', () => BoolType.ofBool(Math.random() < 0.5));
+prototype.registerBuiltin('random', () => new GalNum(Random.nextNum));
+prototype.registerBuiltin('randBool', () => BoolType.ofBool(Random.nextBool));
 
 prototype.registerBuiltin('timeNow', () => numArray([
     new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate(),

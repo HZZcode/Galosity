@@ -6,10 +6,12 @@ export class MetaInfo {
     isDebug;
     version;
     versionName;
+    environment;
 
     constructor() {
         this.isDebug = Runtime.configs.isDebug;
         [this.version, this.versionName] = Versions.latest();
+        this.environment = Runtime.environment;
     }
 }
 

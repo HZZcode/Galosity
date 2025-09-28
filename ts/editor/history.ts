@@ -11,6 +11,9 @@ export class Lines {
     constructor(public minLine: number, public maxLine: number, public lines: string[]) {
         assert(lines.length === this.length);
     }
+    static single(line: number, text: string) {
+        return new Lines(line, line, [text]);
+    }
 }
 
 export class EditData {
@@ -45,7 +48,7 @@ export class EditData {
 
 export class LineEditData extends EditData {
     constructor(lineCount: number, before: string, after: string, tag?: string) {
-        super(new Lines(lineCount, lineCount, [before]), [after], tag);
+        super(Lines.single(lineCount, before), [after], tag);
     }
 }
 

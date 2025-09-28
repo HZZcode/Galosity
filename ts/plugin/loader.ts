@@ -32,22 +32,21 @@ async function tryLoadPlugin(plugin: string) {
     }
 }
 
-export async function loadPlugins(onError?: Func<[error: string], void>) {
+export async function loadPlugins(onError?: Func<[error: any], void>) {
     try {
-        const results = await Promise.all((await getPlugins())
-            .map(async plugin => await tryLoadPlugin(plugin)));
+        const results = await Promise.all((await getPlugins()).map(tryLoadPlugin));
         await setInfo(results.filter(result => result.loaded).map(result => result.plugin));
         const errors = results.filter(result => !result.loaded && result.error !== undefined)
             .map(result => `Failed to load plugin '${result.plugin}': ${result.error}`);
         if (errors.length !== 0) await onError?.(errors.join('\n'));
-    } catch (e) {
-        await onError?.((e as any).toString());
+    } catch (e: any) {
+        await onError?.(e);
     }
 }
 
 async function setInfo(loaded: string[]) {
-    await ipcRenderer.invoke('editorTitle', `Galosity (${info(loaded)})`);
-    await ipcRenderer.invoke('engineTitle', `Galosity Engine (${info(loaded)})`);
+    const env = Runtime.environment;
+    await ipcRenderer.invoke(`${env}Title`, `Galosity ${env.capitalize()} (${info(loaded)})`);
 }
 
 function info(loaded: string[]) {

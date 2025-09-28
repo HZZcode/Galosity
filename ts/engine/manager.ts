@@ -11,7 +11,6 @@ import * as types from '../vars/types.js';
 import * as vars from '../vars/vars.js';
 import { ButtonsManager } from "./buttons.js";
 import { CustomData } from "./custom-data.js";
-import { character, currentLine, part, speech, texts } from "./elements.js";
 import { error } from "./error-handler.js";
 import { Frame } from "./frame.js";
 import { Processors } from "./processors.js";
@@ -23,6 +22,20 @@ export class UnsupportedForImported extends Error {
     constructor(pos: number, type: string) {
         super(`Operation not supported in imported files: at line ${pos}, data type is '${type}'`);
     }
+
+    static warned<T extends any[], U>(func: (..._: T) => U) {
+        return (...args: T) => {
+            try {
+                return func(...args);
+            } catch (e) {
+                if (e instanceof this) {
+                    logger.warn(e);
+                    error.warn(e);
+                }
+                else throw e;
+            }
+        };
+    }
 }
 
 export class Manager {
@@ -32,8 +45,8 @@ export class Manager {
     history: Frame[] = [];
     callStack: Frame[] = []; //frames of [Call]s
     customData = new CustomData(); //might be used by [Eval] custom data
-    info = new InfoManager(part, currentLine);
-    texts = new TextManager(character, speech, texts);
+    info = new InfoManager();
+    texts = new TextManager();
     buttons = new ButtonsManager();
     resources = new ResourceManager();
     timeout = new TimeoutManager();
@@ -85,6 +98,7 @@ export class Manager {
         this.buttons.clear();
         this.timeout.clear();
         this.keybind.clear();
+        this.texts.clear();
         this.setEnums();
         return await Processors.apply(data, this);
     }

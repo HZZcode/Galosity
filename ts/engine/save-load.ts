@@ -6,7 +6,6 @@ import { KeybindManager, KeyType } from "../utils/keybind.js";
 import { logger } from "../utils/logger.js";
 import { ipcRenderer } from "../utils/runtime.js";
 import { splitWith } from "../utils/split.js";
-import { saveLoad } from "./elements.js";
 import { error, errorHandled } from "./error-handler.js";
 import { Frame } from "./frame.js";
 import { manager } from "./manager.js";
@@ -100,7 +99,7 @@ export class SaveLoadManager extends SaveLoad<number> {
 export class SaveLoadScreen {
     rows = 3;
     columns = 3;
-    element = saveLoad;
+    element = document.getElementById('save-load') as HTMLDivElement;
 
     start = 1;
     shown = false;

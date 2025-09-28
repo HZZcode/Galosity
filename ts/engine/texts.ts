@@ -1,9 +1,9 @@
 const hljs = require('highlight.js');
 
 export class TextManager {
-    constructor(public character: HTMLDivElement,
-        public speech: HTMLDivElement,
-        public texts: HTMLDivElement) { }
+    readonly character = document.getElementById('character') as HTMLDivElement;
+    readonly speech = document.getElementById('speech') as HTMLDivElement;
+    readonly texts = document.getElementById('texts') as HTMLDivElement;
 
     outputSpeech(name: string, text: string, color = 'var(--color-4)') {
         this.character.innerHTML = name;
@@ -21,10 +21,14 @@ export class TextManager {
     outputCode(language: string, code: string) {
         this.outputTexts(hljs.highlight(code, { language }).value);
     }
+    clear() {
+        this.outputTexts('');
+    }
 }
 
 export class InfoManager {
-    constructor(public part: HTMLDivElement, public currentLine: HTMLDivElement) { }
+    readonly part = document.getElementById('part') as HTMLDivElement;
+    readonly currentLine = document.getElementById('current-line') as HTMLDivElement;
 
     setPart(name: string) {
         this.part.innerText = name;

@@ -129,6 +129,7 @@ const initPromise = new Promise<void>((resolve, reject) => {
     ipcRenderer.on('editor-data', async (_, data) => {
         try {
             Runtime.configs = data.configs;
+            Runtime.environment = 'editor';
             await loadPlugins(e => {
                 logger.error(e);
                 error.error(e);

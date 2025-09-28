@@ -4,10 +4,12 @@ import type {
 } from "electron";
 import type { Dirent } from "fs";
 
+import type { Func } from "./utils/types";
+
 export type Configs = {
   files: boolean,
   edit: boolean,
-  autoSave: number, // seconds
+  autoSave: number, // in seconds
   scriptTest: boolean,
   isDebug: boolean,
   readonly packed: boolean,
@@ -17,6 +19,7 @@ export type Configs = {
 };
 export type EditorData = { configs: Configs, filename?: string };
 export type EngineData = { configs: Configs, filename?: string };
+export type Environment = 'editor' | 'engine';
 
 export type HandlerRegistry = {
   channel: string;
@@ -41,8 +44,7 @@ export interface GalIpcRenderer extends IpcRenderer {
 
   invoke(channel: 'openExternal', url: string): Promise<void>;
 
-  invoke(channel: 'editorTitle', title: string): Promise<void>;
-  invoke(channel: 'engineTitle', title: string): Promise<void>;
+  invoke(channel: `${Environment}Title`, title: string): Promise<void>;
 
   invoke(channel: 'engine-data', data: EngineData): Promise<void>;
 
@@ -50,9 +52,9 @@ export interface GalIpcRenderer extends IpcRenderer {
 
   invoke(channel: 'add-handler', registry: HandlerRegistry): Promise<void>;
 
-  on(channel: 'editor-data', handler: (_: IpcRendererEvent, data: EditorData) => void | Promise<void>): this;
-  on(channel: 'engine-data', handler: (_: IpcRendererEvent, data: EngineData) => void | Promise<void>): this;
-  on(channel: 'before-close', handler: (_: IpcRendererEvent) => void | Promise<void>): this;
+  on(channel: 'editor-data', handler: Func<[IpcRendererEvent, data: EditorData], void>): this;
+  on(channel: 'engine-data', handler: Func<[IpcRendererEvent, data: EngineData], void>): this;
+  on(channel: 'before-close', handler: Func<[IpcRendererEvent], void>): this;
 }
 
 declare global {

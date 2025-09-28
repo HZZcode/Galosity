@@ -6,14 +6,13 @@ import { parseBool } from '../utils/bool.js';
 import { confirm } from '../utils/confirm.js';
 import { Files } from '../utils/files.js';
 import { KeyType } from '../utils/keybind.js';
-import { logger } from "../utils/logger.js";
 import { ipcRenderer } from '../utils/runtime.js';
 import type { DispatchFunc } from "../utils/type-dispatch.js";
 import { TypeDispatch } from "../utils/type-dispatch.js";
 import type { Constructor } from '../utils/types.js';
 import * as types from "../vars/types.js";
 import { ButtonData } from "./buttons.js";
-import { error, errorHandledAsWarning } from "./error-handler.js";
+import { errorHandled, errorHandledAsWarning } from "./error-handler.js";
 import { escape, interpolate } from "./interpolation.js";
 import { Manager, UnsupportedForImported } from "./manager.js";
 
@@ -28,15 +27,7 @@ export class Processors {
     }
 
     static apply(data: dataTypes.GalData, manager: Manager) {
-        try {
-            return this.dispatch.call(data, manager);
-        } catch (e) {
-            if (e instanceof UnsupportedForImported) {
-                logger.warn(e);
-                error.warn(e);
-            }
-            else throw e;
-        }
+        return errorHandled(UnsupportedForImported.warned(() => this.dispatch.call(data, manager)))();
     }
 }
 
@@ -213,17 +204,12 @@ Processors.register(dataTypes.TextData, (data, manager) => {
 });
 Processors.register(dataTypes.CodeData, (data, manager) => {
     manager.unsupportedForImported();
-    try {
-        manager.texts.outputCode(data.language, escape(data.code));
-    } catch (e) {
-        logger.warn(e);
-        error.warn(e);
-    }
+    errorHandledAsWarning(() => manager.texts.outputCode(data.language, escape(data.code)))();
     return true;
 });
 Processors.register(dataTypes.MediaData, async (data, manager) => {
     manager.unsupportedForImported();
-    try {
+    return await errorHandledAsWarning(async () => {
         const interpolated = lodash.cloneDeep(data);
         for (const [key, value] of Object.entries(data))
             interpolated[key] = interpolate(value, manager.varsFrame);
@@ -232,8 +218,5 @@ Processors.register(dataTypes.MediaData, async (data, manager) => {
         interpolated.resisting = parseBool(interpolated.resisting);
         await manager.resources.playMedia(interpolated.file, interpolated);
         return interpolated.block;
-    } catch (e) {
-        logger.warn(e);
-        error.warn(e);
-    }
+    })();
 });

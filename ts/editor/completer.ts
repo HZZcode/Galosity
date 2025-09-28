@@ -1,20 +1,16 @@
 import { ipcRenderer } from "../utils/runtime.js";
 
-export class AutoComplete {
+export abstract class AbstractComplete {
     chosenFoundIndex = 0;
     found: string[] = [];
-    constructor(public list: string[] = []) { }
-    setList(list: string[]) {
-        this.list = list;
-    }
-    getList(): string[] | Promise<string[]> {
-        return this.list;
-    }
+    abstract getList(): string[] | Promise<string[]>;
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    setList(_: string[]) { }
     clear() {
         this.chosenFoundIndex = 0;
         this.found = [];
     }
-    async includes(word: string) {
+    private async includes(word: string) {
         return (await this.getList()).includes(word);
     }
     async completeInclude(start: string) {
@@ -31,15 +27,27 @@ export class AutoComplete {
         }
         return this.found.at(this.chosenFoundIndex);
     }
-    async findWords(start: string) {
+    private async findWords(start: string) {
         return (await this.getList()).filter(word => word.toLowerCase().startsWith(start.toLowerCase()));
     }
 }
 
-export class FileComplete extends AutoComplete {
+export class AutoComplete extends AbstractComplete {
+    constructor(public list: string[] = []) {
+        super();
+    }
+    override getList() {
+        return this.list;
+    }
+    override setList(list: string[]) {
+        this.list = list;
+    }
+}
+
+export class FileComplete extends AbstractComplete {
     extra: string[] = [];
     constructor(public pathGetter: () => string | Promise<string>, public fileType?: string) {
-        super([]);
+        super();
     }
     withExtra(extra: string[] | string) {
         if (typeof extra === 'string') this.extra = [extra];

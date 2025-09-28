@@ -1,5 +1,4 @@
-import type { EditData } from "./history.js";
-import { HistoryManager,LineEditData } from "./history.js";
+import { EditData, HistoryManager, Lines } from "./history.js";
 
 export const textHistory = new HistoryManager();
 
@@ -61,9 +60,7 @@ export class TextAreaManager {
         this.textarea.selectionEnd += step;
     }
     edit(line: number, modified: string, record = true, tag?: string) {
-        if (record) textHistory.record(new LineEditData(line, this.lines[line], modified, tag));
-        this.lines[line] = modified;
-        this.sync();
+        this.editData(new EditData(Lines.single(line, this.lines[line]), modified.splitLine(), tag), record);
     }
     editData(edit?: EditData, record = false) {
         if (edit === undefined) return;

@@ -9,7 +9,6 @@ import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
 import { logger } from '../utils/logger.js';
 import { ipcRenderer, Runtime } from "../utils/runtime.js";
 import { isNum } from "../utils/string.js";
-import { codeInput, evalButton, jump, lineInput } from "./elements.js";
 import { error, errorHandled } from "./error-handler.js";
 import { manager } from "./manager.js";
 
@@ -17,6 +16,7 @@ const initPromise = new Promise<void>((resolve, reject) => {
     ipcRenderer.on('engine-data', async (_, data) => {
         try {
             Runtime.configs = data.configs;
+            Runtime.environment = 'engine';
             await loadPlugins(e => {
                 logger.error(e);
                 error.error(e);
@@ -59,15 +59,8 @@ async function main() {
 }
 
 function bindScriptTests() {
-    bindInput(jump, lineInput, async () => {
-        const index = lineInput.value;
-        if (isNum(index)) await manager.jump(parseInt(index));
-    });
-
-    bindInput(evalButton, codeInput, async () => {
-        const code = codeInput.value;
-        await manager.eval(code);
-    });
+    bindInput('jump', 'line', async index => isNum(index) ? await manager.jump(parseInt(index)) : void 0);
+    bindInput('eval', 'code', async code => await manager.eval(code));
 }
 
 function hideElements(classNames: string) {
