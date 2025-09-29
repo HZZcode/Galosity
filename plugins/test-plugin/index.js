@@ -29,7 +29,7 @@ export async function setup(info) {
     if (!info.isDebug) return false;
 
     await handleLogger();
-    await test(`plugin (@${info.environment})`);
+    await test(`plugin (@${info.environment}, Galosity ${info.version})`);
 
     galosity.parser.parsers.Parsers.register(
         'Test', part => new TestData(part)

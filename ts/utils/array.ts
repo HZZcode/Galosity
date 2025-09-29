@@ -1,4 +1,5 @@
-import type { Constructor, IntoType, TypeFilter } from "./types.js";
+import type { IntoType, TypeFilter } from "./types.js";
+import { typeFilter } from "./types.js";
 
 export function findDuplicates<T>(array: T[]): T[] {
     return array.filter((item, index) => array.indexOf(item) !== index);
@@ -23,11 +24,6 @@ declare global {
         pushAndReturn(value: T): T;
     }
 }
-
-const typeFilter = <T extends TypeFilter>(type: T) => (object: unknown) => {
-    if (typeof type === 'string') return typeof object === type;
-    return object instanceof (type as Constructor<any>);
-};
 
 Array.prototype.first = function () {
     return this.at(0);

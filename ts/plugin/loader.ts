@@ -1,7 +1,7 @@
 import { ipcRenderer } from "../utils/runtime.js";
 import { Runtime } from "../utils/runtime.js";
 import type { Func } from "../utils/types.js";
-import { exportAll, exports } from "./exports.js";
+import { exportAll, exportObject } from "./exports.js";
 import { MetaInfo } from "./meta-info.js";
 
 type Setup = Func<[MetaInfo], boolean | undefined>;
@@ -21,18 +21,20 @@ class LoadResult {
 }
 
 async function tryLoadPlugin(plugin: string) {
-    await exportAll();
-    window.galosity = exports;
     const path = getPath(plugin);
     try {
-        const result = await ((await import(path)).setup as Setup)(new MetaInfo());
-        return new LoadResult(plugin, result === undefined || !!result);
+        const module = await import(path);
+        const result = await (module.setup as Setup)(new MetaInfo());
+        const loaded = result === undefined || !!result;
+        if (loaded) exportObject(['plugins', plugin], module);
+        return new LoadResult(plugin, loaded);
     } catch (e) {
         return new LoadResult(plugin, false, e);
     }
 }
 
 export async function loadPlugins(onError?: Func<[error: any], void>) {
+    await exportAll();
     try {
         const results = await Promise.all((await getPlugins()).map(tryLoadPlugin));
         await setInfo(results.filter(result => result.loaded).map(result => result.plugin));

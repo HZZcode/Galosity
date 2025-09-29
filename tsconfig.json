@@ -1,17 +1,6 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "useUnknownInCatchVariables": true,
-    "noImplicitOverride": true,
-    "strict": true,
-    "strictNullChecks": true,
-    "skipLibCheck": true,
-    "allowJs": true,
-    "checkJs": false,
     "outDir": "./js",
     "declaration": true,
     "declarationDir": "./dts"

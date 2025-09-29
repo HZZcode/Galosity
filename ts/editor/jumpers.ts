@@ -8,7 +8,7 @@ import { file } from "./file-manager.js";
 import type { TextAreaManager } from "./text-manager.js";
 
 export class Jumper {
-    constructor(public lineGetter: Func<[context: JumpContext], JumpResult | undefined>) { }
+    private constructor(public lineGetter: Func<[context: JumpContext], JumpResult | undefined>) { }
 
     static of<TData extends dataTypes.GalData = dataTypes.GalData>(type: Constructor<TData>,
         lineGetter: Func<[context: JumpContext<TData>], JumpResult | undefined>) {

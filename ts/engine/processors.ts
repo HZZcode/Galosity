@@ -6,13 +6,14 @@ import { parseBool } from '../utils/bool.js';
 import { confirm } from '../utils/confirm.js';
 import { Files } from '../utils/files.js';
 import { KeyType } from '../utils/keybind.js';
+import { logger } from '../utils/logger.js';
 import { ipcRenderer } from '../utils/runtime.js';
 import type { DispatchFunc } from "../utils/type-dispatch.js";
 import { TypeDispatch } from "../utils/type-dispatch.js";
 import type { Constructor } from '../utils/types.js';
 import * as types from "../vars/types.js";
 import { ButtonData } from "./buttons.js";
-import { errorHandled, errorHandledAsWarning } from "./error-handler.js";
+import { error, errorHandledAsWarning } from "./error-handler.js";
 import { escape, interpolate } from "./interpolation.js";
 import { Manager, UnsupportedForImported } from "./manager.js";
 
@@ -27,7 +28,20 @@ export class Processors {
     }
 
     static apply(data: dataTypes.GalData, manager: Manager) {
-        return errorHandled(UnsupportedForImported.warned(() => this.dispatch.call(data, manager)))();
+        try {
+            return this.dispatch.call(data, manager);
+        } catch (e) {
+            if (e instanceof UnsupportedForImported) {
+                logger.warn(e);
+                error.warn(e);
+            }
+            else {
+                const e1 = new Error(`Error occured while processing line `
+                    + `${manager.currentPos}`, { cause: e });
+                logger.error(e1);
+                error.error(e1);
+            }
+        }
     }
 }
 

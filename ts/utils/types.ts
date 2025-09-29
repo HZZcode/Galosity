@@ -4,9 +4,7 @@ export function getType(object: any) {
 
 export type Constructor<T> = abstract new (..._: any[]) => T;
 
-export type Func<TArgs extends any[], TReturn>
-    = ((...args: TArgs) => TReturn) | ((...args: TArgs) => Promise<TReturn>)
-    | ((...args: TArgs) => TReturn | Promise<TReturn>);
+export type Func<TArgs extends any[], TReturn> = (...args: TArgs) => TReturn | Promise<TReturn>;
 
 type Types = {
     'bigint': bigint,
@@ -22,3 +20,8 @@ type Types = {
 export type TypeFilter = Constructor<any> | keyof Types;
 export type IntoType<T extends TypeFilter> = T extends keyof Types ? Types[T]
     : T extends Constructor<infer U> ? U : never;
+
+export const typeFilter = <T extends TypeFilter>(type: T) => (object: unknown) => {
+    if (typeof type === 'string') return typeof object === type;
+    return object instanceof (type as Constructor<any>);
+};

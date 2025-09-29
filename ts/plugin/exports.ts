@@ -4,8 +4,9 @@ import { logger } from "../utils/logger.js";
 type Exports = Record<string, any>;
 
 export const exports: Exports = {};
+window.galosity = exports;
 
-function exportObject(path: string[], object: any, root: Exports = exports) {
+export function exportObject(path: string[], object: any, root: Exports = exports) {
     path = path.map(name => name.toIdentifier());
     if (path.length === 0) return;
     if (path.length === 1) {

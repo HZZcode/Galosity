@@ -17,7 +17,8 @@ export default defineConfig([
       "eslint.config.js",
       "mathjax/*",
       "font-awesome/*",
-      "highlight/*"
+      "highlight/*",
+      "plugins/analyse/index.js"
     ]
   },
   {

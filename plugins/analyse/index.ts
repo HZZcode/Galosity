@@ -1,8 +1,20 @@
-import { assert } from "../utils/assert.js";
-import { Files } from "../utils/files.js";
-import { TypeDispatch } from "../utils/type-dispatch.js";
-import * as dataTypes from "./data-types.js";
-import { Paragraph } from "./parser.js";
+// This file was /utils/analyse.ts, but later unused in Galosity, so we moved it here.
+
+/// <reference path="../../dts/exports.d.ts" />
+
+// These were import statements.
+const { assert, notUndefined } = galosity.utils.assert;
+const { Files } = galosity.utils.files;
+const { TypeDispatch } = galosity.utils.typeDispatch;
+const { Runtime } = galosity.utils.runtime;
+const { logger } = galosity.utils.logger;
+const dataTypes = galosity.parser.dataTypes;
+const { Paragraph } = galosity.parser.parser;
+const { file } = galosity.editor.fileManager;
+const { manager } = galosity.engine.manager;
+
+type Files = InstanceType<typeof Files>;
+type GalData = InstanceType<typeof dataTypes.GalData>;
 
 class FileCache {
     private fileContent?: string;
@@ -108,7 +120,7 @@ class Position {
 }
 
 export const analyseNext = new TypeDispatch<[pos: Position],
-    Iterable<Position> | Position, dataTypes.GalData>();
+    Iterable<Position> | Position, GalData>();
 analyseNext.register(dataTypes.GalData, async (_, pos) =>
     pos.line >= await pos.getDataLength() - 1 ? [] : pos.nextLine());
 analyseNext.register(dataTypes.JumpData, async (data, pos) => {
@@ -163,8 +175,18 @@ class Analyser {
     }
 }
 
-export async function analyse(filename: string) {
-    const analyser = new Analyser(filename);
+export async function analyse(filename?: string) {
+    switch (Runtime.environment) {
+        case "editor": filename ??= file.filename; break;
+        case "engine": filename ??= manager.resources.filename; break;
+    }
+    const analyser = new Analyser(notUndefined(filename));
     while (!analyser.isDone()) await analyser.next();
     return analyser;
 } // Analysing tutorial files of 300+ lines cost ~1000ms
+
+export async function analyseLog(filename?: string) {
+    logger.log((await analyse(filename)).root.debugString());
+}
+
+export const setup = () => true;

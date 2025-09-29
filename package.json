@@ -7,7 +7,9 @@
     "start": "cross-env NODE_ENV=development electron .",
     "build": "cross-env NODE_ENV=production electron-builder",
     "grammar": "npx pegjs -o ./ts/vars/grammar/grammar.js ./ts/vars/grammar/grammar.pegjs",
-    "tsc": "tsc"
+    "tsc-main": "tsc",
+    "tsc-analyse": "tsc -p ./plugins/analyse/tsconfig.json",
+    "tsc": "npm run tsc-main && npm run tsc-analyse"
   },
   "keywords": [],
   "author": "ZZ_404",
