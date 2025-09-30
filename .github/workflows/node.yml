@@ -70,6 +70,19 @@ jobs:
               break
         shell: python
       
+      - name: Compile Main Typescript files
+        run: npm run tsc-main
+
+      - name: Copy gen-plugin-dts.py
+        run: cp gen-plugin-dts.py dts/
+
+      - name: Run gen-plugin-dts.py
+        run: python gen-plugin-dts.py
+        working-directory: dts
+
+      - name: Remove gen-plugin-dts.py
+        run: rm dts/gen-plugin-dts.py
+      
       - name: Compile Typescript files
         run: npm run tsc
 
@@ -96,6 +109,12 @@ jobs:
       - name: Check if tex-mml-chtml.js exists
         run: import os; exit(1) if not os.path.isfile('./mathjax/es5/tex-mml-chtml.js') else print("File exists")
         shell: python
+
+      - name: Upload exports artifact for ${{ matrix.os }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: exports-dts-${{ matrix.os }}
+          path: dts/
 
       - name: Upload artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v4
@@ -125,43 +144,3 @@ jobs:
 
       - name: Run ESLint
         run: npx eslint . --max-warnings=0
-
-  gen-dts:
-    name: Generate .d.ts for plugin exports
-    runs-on: ubuntu-latest
-    if: always()
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      
-      - name: Use Python 3.12 as shell
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.12
-
-      - name: Set GH_TOKEN environment variable
-        run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Install dependencies
-        run: npm install
-      
-      - name: Compile Typescript files
-        run: npm run tsc
-
-      - name: Copy gen-plugin-dts.py
-        run: cp gen-plugin-dts.py dts/
-
-      - name: Run gen-plugin-dts.py
-        run: python gen-plugin-dts.py
-        working-directory: dts
-
-      - name: Remove gen-plugin-dts.py
-        run: rm dts/gen-plugin-dts.py
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: exports-dts
-          path: dts/
