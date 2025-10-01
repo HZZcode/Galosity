@@ -187,8 +187,8 @@ function peg$parse(input, options) {
       peg$c25 = peg$literalExpectation("is", false),
       peg$c26 = "~",
       peg$c27 = peg$literalExpectation("~", false),
-      peg$c28 = function(value, enumType) {
-              return { type: "matching", value, enumType: enumType.value }
+      peg$c28 = function(value, typeName) {
+              return { type: "matching", value, typeName }
           },
       peg$c29 = "+",
       peg$c30 = peg$literalExpectation("+", false),

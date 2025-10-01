@@ -29,8 +29,8 @@ Comparing
     }
 
 Matching
-    = value: Addition _ ("is" / "~") _ enumType: Identifier {
-        return { type: "matching", value, enumType: enumType.value }
+    = value: Addition _ ("is" / "~") _ typeName: Identifier {
+        return { type: "matching", value, typeName }
     }
     / value: Addition { return value; }
 

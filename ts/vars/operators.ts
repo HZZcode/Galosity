@@ -44,7 +44,7 @@ class Operators<TBase extends { getType: () => string } = any, TReturn = any> {
                 return result;
         this.error(op, value);
     }
-    applyBinary(op: string, values: [TBase, TBase]) {
+    applyBinary(op: string, ...values: [TBase, TBase]) {
         let result: TReturn | undefined;
         for (const binary of this.binary)
             if ((result = binary.apply(op, values)) !== undefined)

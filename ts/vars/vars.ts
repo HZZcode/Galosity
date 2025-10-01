@@ -5,14 +5,12 @@ import { splitWith } from '../utils/split.js';
 import { isDiscarded, isIdentifier } from '../utils/string.js';
 import { builtinEvalFunc, Builtins } from './builtins.js';
 import * as grammar from './grammar/grammar.js';
+import type * as nodes from './node-types.js';
 import { operators } from './operators.js';
 import type { GalEnum, GalVar } from './types.js';
-import { BoolType, GalArray, GalEnumType, GalNum, GalString, isEnum, isNum } from './types.js';
-
-const NodeTypes = ['triCondition', 'leftBinary', 'rightBinary', 'comparing', 'matching', 'factor',
-    'index', 'function', 'array', 'string', 'hexNum', 'num', 'enum', 'identifier'] as const;
-type NodeType = typeof NodeTypes[number];
-type Node = { type: NodeType } & Record<string, any>;
+import {
+    BoolType, GalArray, GalEnumType, GalNum, GalString, isArray, isEnum, isNum, isString
+} from './types.js';
 
 function notNaN(num: number) {
     assert(!isNaN(num));
@@ -142,26 +140,27 @@ export class GalVars extends Builtins {
         }
     }
 
-    evalNode(node: Node): GalVar {
-        this satisfies Record<`eval${Capitalize<NodeType>}`, (node: Node) => GalVar>;
-        assert(NodeTypes.includes(node.type), `Error node type: ${node.type}`);
+    evalNode(node: nodes.NodeType): GalVar {
+        this satisfies {
+            [Tag in nodes.NodeTag as `eval${Capitalize<Tag>}`]: (node: nodes.NodeOf<Tag>) => GalVar;
+        };
         return (this as any)[`eval${node.type.capitalize()}`](node);
     }
 
-    evalNum(node: Node | string) {
+    evalNum(node: nodes.DecNumNode | string) {
         return new GalNum(notNaN(parseFloat(typeof node === 'string' ? node : node.value)));
     }
 
-    evalHexNum(node: Node | string) {
+    evalHexNum(node: nodes.HexNumNode | string) {
         return new GalNum(notNaN(parseInt(typeof node === 'string' ? node : node.value, 16)));
     }
 
-    evalEnum(node: Node) {
+    evalEnum(node: nodes.EnumNode) {
         const enumType = this.getEnumType(node.enumType.value);
         return notUndefined(enumType, `No such enum: ${node.enumType.value}`).getValue(node.value.value);
     }
 
-    evalIdentifier(node: Node) {
+    evalIdentifier(node: nodes.IdentifierNode) {
         const name = node.value;
         assert(!isDiscarded(name), `${name} is discarded`);
         if (name in this.builtins) return this.builtins[name].get();
@@ -169,80 +168,88 @@ export class GalVars extends Builtins {
         return notUndefined(this.getEnumValue(name), `No such identifier or enum value: ${name}`);
     }
 
-    evalString(node: Node) {
+    evalString(node: nodes.StringNode) {
         return new GalString(JSON.parse(`"${node.value}"`).toString());
     }
 
-    evalArray(node: Node) {
-        return new GalArray((node.value as Node[]).map(value => this.evalNode(value)));
+    evalArray(node: nodes.ArrayNode) {
+        return new GalArray(node.value.map(value => this.evalNode(value)));
     }
 
-    evalFunction(node: Node) {
+    evalFunction(node: nodes.FunctionNode) {
         const func = node.func.value;
         if (func === 'hasVar') {
-            assert(node.value.type === 'identifier', `Function 'hasVar' can only be applied on identifier`);
-            return BoolType.ofBool(tried(() => this.evalIdentifier(node.value)));
+            const value = node.value;
+            if (value.type !== 'identifier')
+                throw new Error(`Function 'hasVar' can only be applied on identifier`);
+            return BoolType.ofBool(tried(() => this.evalIdentifier(value)));
         }
         const value = this.evalNode(node.value);
         if (func in this.builtinFuncs) return this.builtinFuncs[func].apply(value);
         return notUndefined(this.getEnumType(func), `No such function: ${func}`).apply(value);
     }
 
-    evalFactor(node: Node) {
+    evalFactor(node: nodes.FactorOpNode) {
         return operators.applyUnary(node.operator, this.evalNode(node.value));
     }
 
-    evalIndex(node: Node) {
-        return operators.applyBinary('[]', [this.evalNode(node.value), this.evalNode(node.index)]);
+    evalIndex(node: nodes.IndexNode) {
+        return operators.applyBinary('[]', this.evalNode(node.value), this.evalNode(node.index));
     }
 
-    evalSingleBinary(op: string, x: GalVar, y: GalVar) {
-        return operators.applyBinary(op, [x, y]);
-    }
-
-    evalLeftBinary(node: Node) {
+    evalLeftBinary(node: nodes.LeftBinaryNode) {
         const ops = (node.value.length - 1) / 2;
-        let result = this.evalNode(node.value[0]);
+        let result = this.evalNode(node.value.at<0>(0));
         for (let i = 0; i < ops; i++) {
-            const op = node.value[2 * i + 1];
-            const value = this.evalNode(node.value[2 * i + 2]);
-            result = this.evalSingleBinary(op, result, value);
+            const op = node.value.at<1>(2 * i + 1);
+            const value = this.evalNode(node.value.at<0>(2 * i + 2));
+            result = operators.applyBinary(op, result, value);
         }
         return result;
     }
 
-    evalRightBinary(node: Node) {
+    evalRightBinary(node: nodes.RightBinaryNode) {
         const ops = (node.value.length - 1) / 2;
-        let result = this.evalNode(node.value.at(-1));
+        let result = this.evalNode(node.value.at<0>(-1));
         for (let i = ops - 1; i >= 0; i--) {
-            const value = this.evalNode(node.value[2 * i]);
-            const op = node.value[2 * i + 1];
-            result = this.evalSingleBinary(op, value, result);
+            const value = this.evalNode(node.value.at<0>(2 * i));
+            const op = node.value.at<1>(2 * i + 1);
+            result = operators.applyBinary(op, value, result);
         }
         return result;
     }
 
-    evalComparing(node: Node) {
+    evalComparing(node: nodes.ComparingNode) {
         const ops = (node.value.length - 1) / 2;
         for (let i = 0; i < ops; i++) {
-            const left = this.evalNode(node.value[2 * i]);
-            const op = node.value[2 * i + 1];
-            const right = this.evalNode(node.value[2 * i + 2]);
-            if (!this.evalSingleBinary(op, left, right).toBool())
+            const left = this.evalNode(node.value.at<0>(2 * i));
+            const op = node.value.at<1>(2 * i + 1);
+            const right = this.evalNode(node.value.at<0>(2 * i + 2));
+            if (!operators.applyBinary(op, left, right).toBool())
                 return BoolType.ofBool(false);
         }
         return BoolType.ofBool(true);
     }
 
-    evalMatching(node: Node) {
+    evalMatching(node: nodes.MatchingOpNode) {
         const value = this.evalNode(node.value);
-        const type = node.enumType;
-        if (type === 'num') return BoolType.ofBool(isNum(value));
-        return BoolType.ofBool(isEnum(value) && value.enumType.name === type);
+        const type = node.typeName.value;
+        return BoolType.ofBool(this.match(value, type));
     }
 
-    evalTriCondition(node: Node) {
-        return this.evalNode(node.condition).toBool()
-            ? this.evalNode(node.left) : this.evalNode(node.right);
+    match(value: GalVar, type: string) {
+        switch (type) {
+            case 'num': return isNum(value);
+            case 'enum': return isEnum(value);
+            case 'string': return isString(value);
+            case 'array': return isArray(value);
+            default:
+                assert(this.isDefinedEnum(type), `Invalid matching type: ${type}`);
+                return isEnum(value) && value.enumType.name === type;
+        }
+    }
+
+    evalTriCondition(node: nodes.TriConditionOpNode) {
+        return this.evalNode(node.condition).toBool() ? this.evalNode(node.left) : this.evalNode(node.right);
     }
 }
