@@ -1,4 +1,52 @@
 [Character] ZZ
-[Character] Ichiku
 
-In progress...
+ZZ: Hi developer! I'm ZZ_404.
+ZZ: Let me introduce to you how to develop plugins for Galosity.
+
+[Part] Basic Information
+ZZ: It is unrealistic for this tutorial to contain anything you need to develop a plugin. So, be prepared to look at %{the source code:https://github.com/HZZcode/Galosity} for information whenever needed.
+ZZ: Another recourse that might be useful is %{the deepwiki:https://deepwiki.com/HZZcode/Galosity}. Take this AI-Generated document at your own risk.
+ZZ: Galosity takes some command line arguments -- you can check them out by `Galosity --help=true`. It is recommended to open debug window while developing plugins with argument `--debug=true`.
+ZZ: Although this isn't nessesary, we strongly recommend you to use our type declarations while developing.
+ZZ: These can be downloaded in %{the Github Actions:https://github.com/HZZcode/Galosity/actions}, which is presented as an artifact named `exports-dts`.
+ZZ: The main declaration is named `exports.d.ts`. For javascript, you can use the triple-slash directive above.
+[Code] js:/// <reference path="../../dts/exports.d.ts" />
+ZZ: As you can see in the .d.ts file, all the exported stuffs are stored in the global object `galosity`.
+ZZ: For example, if a function `f` is in source file utils/file-name.ts, then you can access it with `galosity.utils.fileName.f`.
+ZZ: Another thing you'll need to know is that, in order for Galosity to load your plugin properly, your plugin folder must be placed in the plugins/ directory of the Galosity program, containing an entry file named index.js. We'll talk about this entry file soon.
+
+[Part] Entry & MetaInfo
+ZZ: The entry file `index.js` needs to export a function `setup` which recieves an argument of type `MetaInfo` and returns an boolean or undefined.
+ZZ: This function can be either synchonized or asynchonized.
+ZZ: The return value indicates whether your plugin is successfully loaded -- when returning true or undefined, it is seen as success; otherwise, returning false or throwing exception is seen as failed.
+ZZ: The class `MetaInfo` (`galosity.plugin.metaInfo.MetaInfo`, to be precise) contains several useful metadata.
+ZZ: `info.isDebug` is a boolean that indicates whether Galosity is running in debug mode (whether you launched with argument `--debug=true`), and info.versionName is a string of the name of the current version.
+ZZ: `info.version` is an object of type `galosity.plugin.metaInfo.Version`, which provides 3 methods to check the version: `atLeast`, `atMost` and `exactly`. For example, if your plugin does not support versions below 2.3, use the code above.
+[Code] js:info.version.atLeast('2.3');
+ZZ: This throws an exception when the requirement is not met.
+ZZ: Galosity processes can be divided into main process and the renderer process, and the renderer process contains editor process and engine process. Your plugin setup will be run in every renderer process when it launch.
+ZZ: `info.environment` is a string that is either `editor` or `engine`, showing which process is your plugin being loaded.
+ZZ: Here is a simple example for your entry file and function.
+[Code] js:/** @param {galosity.plugin.metaInfo.MetaInfo} info */\nexport async function setup(info) {\n    info.version.atLeast('2.3');\n    galosity.utils.logger.logger.log('Hello, Galosity!');\n}
+
+[Part] Defining DataType & Parser
+ZZ: There are many types of script tags in Galosity -- for instance, `[Character]`, `[Note]`, `[Var]`, etc.
+ZZ: You can also define your own tag by creating a class extending `galosity.parser.dataTypes.GalData`.
+[Code] js:class TestData extends galosity.parser.dataTypes.GalData {\n    name;\n    constructor(name) {\n        super();\n        this.name = name;\n    }\n}
+ZZ: Then, you'll need to register a parser for it so that Galosity can use your parser while parsing lines.
+[Code] js:galosity.parser.parsers.Parsers.register(\n   'Test', part => new TestData(part)\n);
+ZZ: Here, the argument `part` of callback function is the trimmed part of the line without the tag part. For example, when the parser meet line `[Test] abc`, that callback is called with part='abc'.
+
+[Part] Registering Processor
+ZZ: Now our tagged lines can be parsed by Galosity -- However, they still cannot be properly displayed by the engine.
+ZZ: This is where the processor is used.
+ZZ: See the example above.
+[Code] js:galosity.engine.processors.Processors.register(\n    TestData,\n    async (data, manager) => {\n        manager.texts.outputSpeech('Tester ZZ_404', `Plugin test! Data is '${data.name}'`, 'green');\n        await test(data.name);\n        return true;\n    }\n);
+ZZ: Here `manager` is an object that contains all the data used in the engine, and argument `data` is the data of the line.
+ZZ: The returning value should be a boolean that indicates whether the engine is blocked at this line.
+
+[Part] Registering Tab-Completers & Jumpers
+[Note] In process...
+
+[Part] Registering Main Process Handlers
+[Note] In process...
