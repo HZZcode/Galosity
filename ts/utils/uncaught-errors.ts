@@ -1,6 +1,7 @@
-import { wrapError } from "./assert.js";
 import { logger } from "./logger.js";
 import { ipcRenderer, Runtime } from "./runtime.js";
+
+class TestError extends Error { }
 
 function noExcept(func: () => void) {
     try {
@@ -12,7 +13,7 @@ async function handler(error: any) {
     let exit = true, popup = true;
     noExcept(() => {
         logger.error(error);
-        popup = exit = !Runtime.configs.isDebug;
+        popup = exit = !Runtime.configs.isDebug || error instanceof TestError;
     });
     noExcept(() => {
         if (!popup) return;
@@ -35,6 +36,6 @@ document.addEventListener('keyup', async event => {
     switch (event.key.toUpperCase()) {
         case 'C': return await logger.copy();
         case 'E': return await logger.export();
-        case 'X': wrapError(`Uncaught Exception Test`, new Error('Just a Test'));
+        case 'X': throw new TestError(`Uncaught Exception Test`, { cause: new Error('Just a Test') });
     }
 });

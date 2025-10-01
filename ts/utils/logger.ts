@@ -38,7 +38,7 @@ class Logger {
         await ipcRenderer.invoke('writeFile', path, this.content);
     }
     async copy() {
-        await navigator.clipboard.writeText(this.content);
+        await ipcRenderer.invoke('copy', this.content);
     }
 
     log(message: any) {

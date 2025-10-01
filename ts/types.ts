@@ -42,6 +42,8 @@ export interface GalIpcRenderer extends IpcRenderer {
   invoke(channel: 'exists', path: string): Promise<boolean>;
   invoke(channel: 'delete', path: string): Promise<void>;
 
+  invoke(channel: 'copy', text: string): Promise<void>;
+
   invoke(channel: 'openExternal', url: string): Promise<void>;
 
   invoke(channel: `${Environment}Title`, title: string): Promise<void>;

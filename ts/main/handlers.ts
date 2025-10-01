@@ -1,5 +1,5 @@
 import type { IpcMainInvokeEvent, OpenDialogOptions, SaveDialogOptions } from 'electron';
-import { BrowserWindow, dialog, ipcMain, shell } from 'electron';
+import { BrowserWindow, clipboard, dialog, ipcMain, shell } from 'electron';
 
 import type { HandlerRegistry } from '../types.js';
 import { Crypto } from './crypto.js';
@@ -44,6 +44,8 @@ Handlers.add('exists', (_, pathname: string) => Files.exists(pathname));
 Handlers.add('delete', (_, pathname: string) => Files.delete(pathname));
 
 Handlers.add('openExternal', (_, url: string) => shell.openExternal(url));
+
+Handlers.add('copy', (_, text: string) => clipboard.writeText(text));
 
 Handlers.add('exit', (_, code?: number | string) => process.exit(code));
 
