@@ -23,7 +23,7 @@ export class UnsupportedForImported extends Error {
         super(`Operation not supported in imported files: at line ${pos}, data type is '${type}'`);
     }
 
-    static warned<T extends any[], U>(func: (..._: T) => U) {
+    static warned<T extends never[], U>(func: (..._: T) => U) {
         return (...args: T) => {
             try {
                 return func(...args);

@@ -33,9 +33,9 @@ class MediaRecord {
         return MediaRecord.typeOf(this.source);
     }
 
-    get mediaType(): 'audio' | 'video' | undefined {
+    get mediaType() {
         const type = this.type.split('/')[0];
-        if (['audio', 'video'].includes(type)) return type as any;
+        if (['audio', 'video'].includes(type)) return type as 'audio' | 'video';
         return undefined;
     }
 

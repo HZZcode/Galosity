@@ -4,13 +4,11 @@ import { assert, notUndefined, wrapError } from '../utils/assert.js';
 import { splitWith } from '../utils/split.js';
 import { isDiscarded, isIdentifier } from '../utils/string.js';
 import { builtinEvalFunc, Builtins } from './builtins.js';
-import * as grammar from './grammar/grammar.js';
+import { parse } from './grammar/grammar.js';
 import type * as nodes from './node-types.js';
 import { operators } from './operators.js';
 import type { GalEnum, GalVar } from './types.js';
-import {
-    BoolType, GalArray, GalEnumType, GalNum, GalString, isArray, isEnum, isNum, isString
-} from './types.js';
+import { BoolType, GalArray, GalEnumType, GalNum, GalString } from './types.js';
 
 function notNaN(num: number) {
     assert(!isNaN(num));
@@ -134,17 +132,16 @@ export class GalVars extends Builtins {
 
     eval(expr: string) {
         try {
-            return this.evalNode(grammar.parse(expr));
+            return this.evalNode(parse(expr));
         } catch (e) {
             wrapError(`Cannot evaluate '${expr}'`, e);
         }
     }
 
     evalNode(node: nodes.NodeType): GalVar {
-        this satisfies {
+        return (this satisfies {
             [Tag in nodes.NodeTag as `eval${Capitalize<Tag>}`]: (node: nodes.NodeOf<Tag>) => GalVar;
-        };
-        return (this as any)[`eval${node.type.capitalize()}`](node);
+        } as any)[`eval${node.type.capitalize()}`](node);
     }
 
     evalNum(node: nodes.DecNumNode | string) {
@@ -234,19 +231,7 @@ export class GalVars extends Builtins {
     evalMatching(node: nodes.MatchingOpNode) {
         const value = this.evalNode(node.value);
         const type = node.typeName.value;
-        return BoolType.ofBool(this.match(value, type));
-    }
-
-    match(value: GalVar, type: string) {
-        switch (type) {
-            case 'num': return isNum(value);
-            case 'enum': return isEnum(value);
-            case 'string': return isString(value);
-            case 'array': return isArray(value);
-            default:
-                assert(this.isDefinedEnum(type), `Invalid matching type: ${type}`);
-                return isEnum(value) && value.enumType.name === type;
-        }
+        return BoolType.ofBool(value.matches.includes(type));
     }
 
     evalTriCondition(node: nodes.TriConditionOpNode) {

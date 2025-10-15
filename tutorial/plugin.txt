@@ -13,6 +13,8 @@ ZZ: The main declaration is named `exports.d.ts`. For javascript, you can use th
 [Code] js:/// <reference path="../../dts/exports.d.ts" />
 ZZ: As you can see in the .d.ts file, all the exported stuffs are stored in the global object `galosity`.
 ZZ: For example, if a function `f` is in source file utils/file-name.ts, then you can access it with `galosity.utils.fileName.f`.
+ZZ: You can also access exported symbols from other plugins. For instance, symbols from plugin `test` will be stored into `galosity.plugins.test`.
+ZZ: If you want to ensure plugin `test` is loaded before your plugin, use `await galosity.pluginSetups.test.setup()`. This will not cause the plugin to be loaded more than once, but cannot automatically detect cycle-referencing.
 ZZ: Another thing you'll need to know is that, in order for Galosity to load your plugin properly, your plugin folder must be placed in the plugins/ directory of the Galosity program, containing an entry file named index.js. We'll talk about this entry file soon.
 
 [Part] Entry & MetaInfo
@@ -41,7 +43,7 @@ ZZ: Here, the argument `part` of callback function is the trimmed part of the li
 ZZ: Now our tagged lines can be parsed by Galosity -- However, they still cannot be properly displayed by the engine.
 ZZ: This is where the processor is used.
 ZZ: See the example above.
-[Code] js:galosity.engine.processors.Processors.register(\n    TestData,\n    async (data, manager) => {\n        manager.texts.outputSpeech('Tester ZZ_404', `Plugin test! Data is '${data.name}'`, 'green');\n        await test(data.name);\n        return true;\n    }\n);
+[Code] js:galosity.engine.processors.Processors.register(\n    TestData,\n    async (data, manager) => {\n        manager.unsupportedForImported();\n        manager.texts.outputSpeech('Tester ZZ_404', `Plugin test! Data is '${data.name}'`, 'green');\n        await test(data.name);\n        return true;\n    }\n);
 ZZ: Here `manager` is an object that contains all the data used in the engine, and argument `data` is the data of the line.
 ZZ: The returning value should be a boolean that indicates whether the engine is blocked at this line.
 

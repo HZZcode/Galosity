@@ -34,7 +34,7 @@ class Searcher {
 
 const SearchOperations = ['search', 'replace', 'replace-all'] as const;
 type SearchOperation = typeof SearchOperations[number];
-type SearchConfigs = { fromCursor: boolean, withRegex: boolean };
+interface SearchConfigs { fromCursor: boolean, withRegex: boolean }
 
 export class SearchScreen {
     private constructor() { }

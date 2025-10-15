@@ -6,7 +6,7 @@ export type Constructor<T> = abstract new (..._: any[]) => T;
 
 export type Func<TArgs extends any[], TReturn> = (...args: TArgs) => TReturn | Promise<TReturn>;
 
-type Types = {
+interface Types {
     'bigint': bigint,
     'boolean': boolean,
     'function': Function,

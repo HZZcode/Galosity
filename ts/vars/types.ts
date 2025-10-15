@@ -14,8 +14,7 @@ export abstract class GalVar {
         if (isBool(this)) return !!this.valueIndex;
         throw new Error(`Cannot convert ${this.getType()} into bool`);
     }
-    toNum() {
-        if (isNum(this)) return this.value;
+    toNum(): number {
         throw new Error(`Cannot convert ${this.getType()} into num`);
     }
 
@@ -25,9 +24,9 @@ export abstract class GalVar {
         return this.toString();
     }
 
-    equals(_: GalVar) {
-        return false;
-    }
+    abstract equals(_: GalVar): boolean;
+
+    abstract get matches(): string[];
 
     get len(): number {
         throw new Error(`Cannot get length of ${this.getType()}`);
@@ -51,6 +50,10 @@ export class GalNum extends GalVar {
         return this.type;
     }
 
+    override toNum() {
+        return this.value;
+    }
+
     override toString() {
         const str = this.value.toString();
         if (!/[0-9]+\./.test(str)) return str;
@@ -66,6 +69,10 @@ export class GalNum extends GalVar {
 
     override equals(other: GalVar) {
         return other instanceof GalNum && this.toString() === other.toString();
+    }
+
+    override get matches() {
+        return ['num'];
     }
 }
 
@@ -139,6 +146,10 @@ export class GalEnum extends GalVar {
             && this.valueIndex === other.valueIndex;
     }
 
+    override get matches() {
+        return ['enum', this.getType()];
+    }
+
     override get len() {
         return this.enumType.values.length;
     }
@@ -170,6 +181,10 @@ export class GalString extends GalSequence {
 
     override equals(other: GalVar) {
         return other instanceof GalString && this.value === other.value;
+    }
+
+    override get matches() {
+        return ['string'];
     }
 
     override get len() {
@@ -216,6 +231,10 @@ export class GalArray extends GalSequence {
     override equals(other: GalVar) {
         return other instanceof GalArray && this.value.length === other.value.length
             && this.value.map((value, index) => value.equals(other.value[index])).all();
+    }
+
+    override get matches() {
+        return ['array'];
     }
 
     override get len() {

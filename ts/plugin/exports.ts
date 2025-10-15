@@ -3,8 +3,8 @@ import { logger } from "../utils/logger.js";
 
 type Exports = Record<string, any>;
 
-export const exports: Exports = {};
-window.galosity = exports;
+const exports: Exports = {};
+window.galosity = exports as any;
 
 export function exportObject(path: string[], object: any, root: Exports = exports) {
     path = path.map(name => name.toIdentifier());
@@ -43,10 +43,4 @@ async function getExportFiles() {
 export async function exportAll() {
     for (const pack of packs) exportPack(pack);
     for (const file of await getExportFiles()) await exportFile(file);
-}
-
-declare global {
-    interface Window {
-        galosity: Exports;
-    }
 }

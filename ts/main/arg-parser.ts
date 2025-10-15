@@ -5,7 +5,7 @@ abstract class Arg {
     constructor(public key: string, public prefixes: string[],
         public description: string = key, public defaultValue?: string) { }
 
-    abstract parseValue(str: string): any;
+    abstract parseValue(str: string): unknown;
 
     abstract get type(): string;
 

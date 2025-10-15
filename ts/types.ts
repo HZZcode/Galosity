@@ -4,9 +4,10 @@ import type {
 } from "electron";
 import type { Dirent } from "fs";
 
+import type { Setupable } from "./plugin/loader";
 import type { Func } from "./utils/types";
 
-export type Configs = {
+export interface Configs {
   files: boolean,
   edit: boolean,
   autoSave: number, // in seconds
@@ -16,16 +17,16 @@ export type Configs = {
   theme: number,
   encrypt: boolean,
   help: boolean
-};
-export type EditorData = { configs: Configs, filename?: string };
-export type EngineData = { configs: Configs, filename?: string };
+}
+export interface EditorData { configs: Configs, filename?: string }
+export interface EngineData { configs: Configs, filename?: string }
 export type Environment = 'editor' | 'engine';
 
-export type HandlerRegistry = {
+export interface HandlerRegistry {
   channel: string;
   args: string[];
   code: string;
-};
+}
 
 export interface GalIpcRenderer extends IpcRenderer {
   invoke(channel: 'showSaveDialog', options: SaveDialogOptions): Promise<SaveDialogReturnValue>;
@@ -62,5 +63,10 @@ export interface GalIpcRenderer extends IpcRenderer {
 declare global {
   namespace MathJax {
     function typeset(): void;
+  }
+
+  namespace galosity {
+    const plugins: Record<string, any>;
+    let pluginSetups: Record<string, Setupable>;
   }
 }

@@ -50,6 +50,7 @@ export async function setup(info) {
     galosity.engine.processors.Processors.register(
         TestData,
         async (data, manager) => {
+            manager.unsupportedForImported();
             manager.texts.outputSpeech('Tester ZZ_404', `Plugin test! Data is '${data.name}'`, 'green');
             await test(data.name);
             return true;

@@ -26,11 +26,6 @@ export default defineConfig([
     plugins: { js, floatingPromise, simpleImportSort },
     extends: ["js/recommended"],
     rules: {
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-require-imports": "off",
-      "@typescript-eslint/consistent-type-definitions": "off",
-
       "@typescript-eslint/no-empty-function": ["error", { "allow": ["private-constructors", "protected-constructors"] }],
       "@typescript-eslint/explicit-member-accessibility": ["warn", { "accessibility": "no-public" }],
       "@typescript-eslint/no-unused-vars": [
@@ -41,8 +36,7 @@ export default defineConfig([
           "caughtErrors": "all",
           "caughtErrorsIgnorePattern": "^_",
           "destructuredArrayIgnorePattern": "^_",
-          "varsIgnorePattern": "^_",
-          "ignoreRestSiblings": true
+          "varsIgnorePattern": "^_"
         }
       ],
       "@typescript-eslint/parameter-properties": ["warn", { "prefer": "parameter-property" }],

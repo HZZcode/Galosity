@@ -1,5 +1,5 @@
 export class CustomData {
-    [key: string]: any;
+    [key: string]: unknown;
 
     constructor(object: object = {}) {
         if (object === undefined) return;

@@ -1,13 +1,23 @@
-export type NodeType = TriConditionNode | ComparingNode | MatchingNode
-    | MultiplicationNode | PowerNode | FactorNode;
+export type NodeType = TriConditionNode | ComparingNode
+    | MatchingNode | MultiplicationNode | PowerNode | FactorNode;
 export type NodeTag = NodeType['type'];
 
-export type TriConditionNode = TriConditionOpNode | LogicalNode;
-
-export type NodeOf<Tag extends NodeTag> = NodeType & { type: Tag };
+export type NodeOf<Tag extends Node['type'], Node extends Record<'type', any> = NodeType>
+    = Node extends Node ? Node['type'] extends Tag ? Node : never : never;
 
 export type LeftBinaryNode = NodeOf<'leftBinary'>;
 export type RightBinaryNode = NodeOf<'rightBinary'>;
+
+type EvenKey = 0 | 'even';
+type OddKey = 1 | 'odd';
+type AlterKey = EvenKey | OddKey;
+type AlterMap<Even, Odd> = Record<EvenKey, Even> & Record<OddKey, Odd>;
+export interface AlterArray<Even, Odd> extends Array<Even | Odd> {
+    at<Key extends AlterKey = AlterKey>(index: number): AlterMap<Even, Odd>[Key];
+}
+
+
+export type TriConditionNode = TriConditionOpNode | LogicalNode;
 
 export interface TriConditionOpNode {
     type: 'triCondition';
@@ -102,12 +112,4 @@ export interface EnumNode {
 export interface IdentifierNode {
     type: 'identifier';
     value: string;
-}
-
-type EvenKey = 0 | 'even';
-type OddKey = 1 | 'odd';
-type AlterKey = EvenKey | OddKey;
-type AlterMap<Even, Odd> = Record<EvenKey, Even> & Record<OddKey, Odd>;
-export interface AlterArray<Even, Odd> extends Array<Even | Odd> {
-    at<Key extends AlterKey = AlterKey>(index: number): AlterMap<Even, Odd>[Key];
 }
