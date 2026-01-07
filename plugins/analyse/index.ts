@@ -3,7 +3,7 @@
 /// <reference path="../../dts/exports.d.ts" />
 
 // These were import statements.
-const { assert, notUndefined } = galosity.utils.assert;
+const { notUndefined } = galosity.utils.assert;
 const { Files } = galosity.utils.files;
 const { TypeDispatch } = galosity.utils.typeDispatch;
 const { Runtime } = galosity.utils.runtime;
@@ -12,6 +12,10 @@ const dataTypes = galosity.parser.dataTypes;
 const { Paragraph } = galosity.parser.parser;
 const { file } = galosity.editor.fileManager;
 const { manager } = galosity.engine.manager;
+
+// We need to do this due to an issue; see https://github.com/microsoft/TypeScript/issues/41047.
+const assert: (condition: boolean, error?: Error | string)
+    => asserts condition = galosity.utils.assert.assert;
 
 type Files = InstanceType<typeof Files>;
 type GalData = InstanceType<typeof dataTypes.GalData>;

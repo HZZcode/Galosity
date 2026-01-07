@@ -15,3 +15,4 @@ save
 /src
 /dts
 /plugins/analyse/index.js
+/ts/vars/grammar/grammar.js

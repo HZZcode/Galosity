@@ -69,6 +69,9 @@ jobs:
               os.rename(folder_name, 'font-awesome')
               break
         shell: python
+
+      - name: Run Peggy.js
+        run: npm run grammar
       
       - name: Compile Main Typescript files
         run: npm run tsc-main

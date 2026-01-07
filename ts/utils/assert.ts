@@ -1,6 +1,6 @@
 import { logger } from "./logger.js";
 
-export function assert(condition: boolean, error: Error | string = 'Assertion failed') {
+export function assert(condition: boolean, error: Error | string = 'Assertion failed'): asserts condition {
     if (typeof error === 'string') error = new Error(error);
     if (!condition) {
         logger.error(error);

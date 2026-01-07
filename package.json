@@ -6,7 +6,7 @@
   "scripts": {
     "start": "cross-env NODE_ENV=development electron .",
     "build": "cross-env NODE_ENV=production electron-builder",
-    "grammar": "npx pegjs -o ./ts/vars/grammar/grammar.js ./ts/vars/grammar/grammar.pegjs",
+    "grammar": "npx peggy -c ./peggy.config.js",
     "tsc-main": "tsc",
     "tsc-analyse": "tsc -p ./plugins/analyse/tsconfig.json",
     "tsc": "npm run tsc-main && npm run tsc-analyse"
@@ -28,6 +28,7 @@
     "eslint-plugin-no-floating-promise": "^2.0.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "globals": "^16.3.0",
+    "peggy": "^5.0.6",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.35.1"
   },
@@ -76,7 +77,6 @@
     "highlight.js": "^11.11.1",
     "lodash": "^4.17.21",
     "mathjax": "^3.2.2",
-    "pegjs": "^0.10.0",
     "uuid": "^11.1.0"
   }
 }
