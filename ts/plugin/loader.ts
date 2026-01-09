@@ -55,26 +55,22 @@ class LoadResult {
     constructor(public plugin: string, public loaded: boolean, public error?: any) { }
 }
 
-export async function loadPlugins(onError?: Func<[error: any], void>) {
+export async function loadPlugins() {
     await exportAll();
-    try {
-        const setups: Record<string, Plugin> = {};
-        for (const name of await getPlugins()) {
-            const plugin = await Plugin.of(name);
-            setups[name.toIdentifier()] = plugin;
-        }
-        window.galosity.pluginSetups = setups;
-        const plugins = Object.values(setups);
-        
-        await Promise.all(plugins.map(plugin => plugin.setup()));
-        const results = plugins.map(plugin => plugin.result!);
-        await setInfo(results.filter(result => result.loaded).map(result => result.plugin));
-        const errors = results.filter(result => !result.loaded && result.error !== undefined)
-            .map(result => `Failed to load plugin '${result.plugin}': ${result.error}`);
-        if (errors.length !== 0) await onError?.(errors.join('\n'));
-    } catch (e: any) {
-        await onError?.(e);
+    const setups: Record<string, Plugin> = {};
+    for (const name of await getPlugins()) {
+        const plugin = await Plugin.of(name);
+        setups[name.toIdentifier()] = plugin;
     }
+    window.galosity.pluginSetups = setups;
+    const plugins = Object.values(setups);
+
+    await Promise.all(plugins.map(plugin => plugin.setup()));
+    const results = plugins.map(plugin => plugin.result!);
+    await setInfo(results.filter(result => result.loaded).map(result => result.plugin));
+    const errors = results.filter(result => !result.loaded && result.error !== undefined)
+        .map(result => `Failed to load plugin '${result.plugin}': ${result.error}`);
+    if (errors.length !== 0) throw new Error(errors.join('\n'));
 }
 
 async function setInfo(loaded: string[]) {

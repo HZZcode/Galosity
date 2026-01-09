@@ -1,9 +1,11 @@
 /* eslint-disable no-console */
 
+import { AutoBind } from "./auto-bind.js";
 import { ipcRenderer, Runtime } from "./runtime.js";
 
 type LogType = 'log' | 'warn' | 'error';
 
+@AutoBind
 class Logger {
     private logs: string[] = [];
 

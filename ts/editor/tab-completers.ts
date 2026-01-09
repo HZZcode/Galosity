@@ -118,7 +118,7 @@ TabCompleters.register(TabCompleter.ofCombined(
     context => context.dataList.filterType(dataTypes.AnchorData).map(data => data.anchor)
 )); // Jump anchors
 TabCompleters.register(TabCompleter.ofCombined(
-    new FileComplete(() => file.getPath(), 'txt'),
+    new FileComplete(file.getPath, 'txt'),
     context => context.data instanceof dataTypes.JumpData
         && context.data.type === dataTypes.JumpType.File ? context.data.anchor : undefined
 )); // Jump files
@@ -172,7 +172,7 @@ TabCompleters.register(TabCompleter.ofCombined(
     context => context.dataList.filter(data => data instanceof dataTypes.FuncData).map(data => data.name)
 )); // Func names
 TabCompleters.register(TabCompleter.ofCombined(
-    new FileComplete(() => file.getPath(), 'txt'),
+    new FileComplete(file.getPath, 'txt'),
     context => {
         const data = parseLine(context.front);
         return data instanceof dataTypes.ImportData && !context.front.includes(':') ? data.file : undefined;
@@ -192,7 +192,7 @@ TabCompleters.register(TabCompleter.ofCombined(
     }
 )); // Import symbol
 TabCompleters.register(TabCompleter.ofCombined(
-    new FileComplete(() => file.getSourcePath()).withExtra('clear'),
+    new FileComplete(file.getSourcePath).withExtra('clear'),
     context => {
         const data = parseLine(context.front);
         if (!context.front.includes(':') && data instanceof dataTypes.MediaData) return data.file;

@@ -5,10 +5,9 @@ import { bindFunction } from "../utils/bind-events.js";
 import { themes } from "../utils/color-theme.js";
 import { isConfirming } from "../utils/confirm.js";
 import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
-import { logger } from '../utils/logger.js';
 import { ipcRenderer, Runtime } from "../utils/runtime.js";
 import type { Func } from "../utils/types.js";
-import { error, getManager, textarea, updateInfo } from "./elements.js";
+import { getManager, textarea, updateInfo } from "./elements.js";
 import { FileManager } from "./file-manager.js";
 import { file } from "./file-manager.js";
 import { editTag } from "./history.js";
@@ -36,22 +35,21 @@ function binds() {
     textarea.addEventListener('input', update);
     textarea.addEventListener('selectionchange', update);
 
-    if (Runtime.configs.autoSave > 0)
-        setInterval(async () => await file.autoSave(), Runtime.configs.autoSave * 1000);
+    if (Runtime.configs.autoSave > 0) setInterval(file.autoSave, Runtime.configs.autoSave * 1000);
 
-    bindFunctions('new', KeyType.of('n', KeyConfig.Ctrl), file.new.bind(file));
-    bindFunctions('open', KeyType.of('o', KeyConfig.Ctrl), file.open.bind(file));
-    bindFunctions('save', KeyType.of('s', KeyConfig.Ctrl), file.save.bind(file));
-    bindFunctions('save-as', KeyType.of('s', KeyConfig.Ctrl | KeyConfig.Shift), file.saveAs.bind(file));
+    bindFunctions('new', KeyType.of('n', KeyConfig.Ctrl), file.new);
+    bindFunctions('open', KeyType.of('o', KeyConfig.Ctrl), file.open);
+    bindFunctions('save', KeyType.of('s', KeyConfig.Ctrl), file.save);
+    bindFunctions('save-as', KeyType.of('s', KeyConfig.Ctrl | KeyConfig.Shift), file.saveAs);
     bindFunctions('test', KeyType.of('F5'), test);
     bindFunctions('help', KeyType.of('h', KeyConfig.Ctrl), help);
 
     bindTextFunctions('undo', KeyType.of('z', KeyConfig.Ctrl), () => getManager().undo());
     bindTextFunctions('redo', KeyType.of('y', KeyConfig.Ctrl), () => getManager().redo());
     bindTextFunctions('tab', KeyType.of('Tab'), autoComplete);
-    bindTextFunctions('searcher', KeyType.of('f', KeyConfig.Ctrl), () => SearchScreen.show());
+    bindTextFunctions('searcher', KeyType.of('f', KeyConfig.Ctrl), SearchScreen.show);
     bindFunction('jump', jumpTo); textarea.addEventListener('mouseup', jump);
-    bindTextFunctions('back', KeyType.of('b', KeyConfig.Ctrl), file.back.bind(file));
+    bindTextFunctions('back', KeyType.of('b', KeyConfig.Ctrl), file.back);
 
     textKeybind.bind(KeyType.of('/', KeyConfig.Ctrl), comment);
     textKeybind.bind(KeyType.of('('), surround('(', ')'));
@@ -60,7 +58,7 @@ function binds() {
     textKeybind.bind(KeyType.of('"'), surround('"', '"'));
     textKeybind.bind(KeyType.of('l', KeyConfig.Ctrl), surround('\\(', '\\)'));
     textKeybind.bind(KeyType.of('l', KeyConfig.Ctrl | KeyConfig.Shift), surround('$$', '$$'));
-    keybind.bind(KeyType.of('t', KeyConfig.Alt), themes.next.bind(themes));
+    keybind.bind(KeyType.of('t', KeyConfig.Alt), themes.next);
 }
 
 function update(event?: Event) {
@@ -130,10 +128,7 @@ const initPromise = new Promise<void>((resolve, reject) => {
         try {
             Runtime.configs = data.configs;
             Runtime.environment = 'editor';
-            await loadPlugins(e => {
-                logger.error(e);
-                error.error(e);
-            });
+            await loadPlugins();
             if (data.filename !== undefined)
                 await file.read(data.filename);
             update();

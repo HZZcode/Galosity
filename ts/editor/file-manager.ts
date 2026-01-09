@@ -1,8 +1,10 @@
+import { AutoBind } from "../utils/auto-bind.js";
+import { HandleError, WrapError } from "../utils/errors.js";
 import { Files } from "../utils/files.js";
-import { logger } from "../utils/logger.js";
-import { error, getManager,info, textarea, updateInfo } from "./elements.js";
+import { getManager, info, textarea, updateInfo } from "./elements.js";
 import { textHistory } from "./text-manager.js";
 
+@AutoBind
 export class FileManager extends Files {
     previousFiles: string[] = [];
     constructor() {
@@ -12,34 +14,28 @@ export class FileManager extends Files {
         this.setFile(await this.resolve(file));
         return this;
     }
+    @HandleError
+    @WrapError('Failed to write to file')
     async write(path?: string) {
         if (path === undefined) return;
         const content = getManager().content;
-        try {
-            await this.writeFile(path, content);
-            this.setFile(await this.resolve(path));
-            updateInfo();
-            info.innerText += ' Saved!';
-            setTimeout(updateInfo, 1000);
-        } catch (e) {
-            logger.error(e);
-            error.error(`Failed to Write to ${path}`);
-        }
+        await this.writeFile(path, content);
+        this.setFile(await this.resolve(path));
+        updateInfo();
+        info.innerText += ' Saved!';
+        setTimeout(updateInfo, 1000);
     }
+    @HandleError
+    @WrapError('Failed to read from file')
     async read(path?: string, memorize = true) {
         if (path === undefined) return;
-        try {
-            if (memorize) await this.remember();
-            const content = await this.readFile(path);
-            textarea.value = content;
-            textHistory.clear();
-            this.setFile(await this.resolve(path));
-            updateInfo();
-            return content;
-        } catch (e) {
-            logger.error(e);
-            error.error(`Failed to Read from ${path}`);
-        };
+        if (memorize) await this.remember();
+        const content = await this.readFile(path);
+        textarea.value = content;
+        textHistory.clear();
+        this.setFile(await this.resolve(path));
+        updateInfo();
+        return content;
     }
     async remember() {
         await this.check();

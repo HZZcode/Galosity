@@ -1,8 +1,10 @@
 import CryptoJS from 'crypto-js';
 
+import { AutoBind } from '../utils/auto-bind.js';
 import { getMetadata, isMetadata } from "../utils/string.js";
 import { Files } from "./files.js";
 
+@AutoBind
 class CryptoHandle {
     constructor(private secretKey: string) { }
 
@@ -31,8 +33,7 @@ class ScriptCrypto {
         const metadata = getMetadata(content.splitLine());
         if (!('secretKey' in metadata)) return content;
         const handle = new CryptoHandle(metadata['secretKey']);
-        return content.splitLine().filter(line => !isMetadata(line))
-            .map(line => handle.decrypt(line)).join('\n');
+        return content.splitLine().filter(line => !isMetadata(line)).map(handle.decrypt).join('\n');
     }
 }
 

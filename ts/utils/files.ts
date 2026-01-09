@@ -1,7 +1,9 @@
 import type { OpenDialogReturnValue, SaveDialogReturnValue } from "electron";
 
+import { AutoBind } from "./auto-bind.js";
 import { ipcRenderer } from "./runtime.js";
 
+@AutoBind
 export class Files {
     filename?: string;
     valid = false;

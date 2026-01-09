@@ -69,7 +69,7 @@ prototype.registerBuiltin('version', () => numArray(new MetaInfo().version.parts
 prototype.registerBuiltin('versionString', () => new GalString(new MetaInfo().version.toString()));
 prototype.registerBuiltin('versionName', () => new GalString(new MetaInfo().versionName));
 
-prototype.registerBuiltin('LOGGER', () => new GalNum(0), value => logger.log(value));
+prototype.registerBuiltin('LOGGER', () => new GalNum(0), logger.log);
 
 prototype.registerBuiltinFunc('sin', builtinNumFunc(Math.sin));
 prototype.registerBuiltinFunc('cos', builtinNumFunc(Math.cos));

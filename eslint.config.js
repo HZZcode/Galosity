@@ -10,15 +10,16 @@ export default defineConfig([
   tseslint.configs.stylistic,
   {
     ignores: [
-      "./js/*",
+      "./js",
       "./dts",
       "./ts/vars/grammar/grammar.js",
       "package-lock.json",
       "eslint.config.js",
-      "mathjax/*",
-      "font-awesome/*",
-      "highlight/*",
-      "plugins/analyse/index.js"
+      "mathjax",
+      "font-awesome",
+      "highlight",
+      "plugins/analyse/index.js",
+      "./build"
     ]
   },
   {

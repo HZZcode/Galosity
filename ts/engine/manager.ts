@@ -2,42 +2,28 @@ const lodash = require('lodash');
 
 import * as dataTypes from '../parser/data-types.js';
 import * as parser from '../parser/parser.js';
-import { wrapError } from '../utils/assert.js';
+import { AutoBind } from '../utils/auto-bind.js';
+import { WrapError } from "../utils/errors.js";
 import { KeybindManager } from '../utils/keybind.js';
-import { logger } from '../utils/logger.js';
 import { TimeoutManager } from '../utils/timeout.js';
 import { getType } from "../utils/types.js";
 import * as types from '../vars/types.js';
 import * as vars from '../vars/vars.js';
 import { ButtonsManager } from "./buttons.js";
 import { CustomData } from "./custom-data.js";
-import { error } from "./error-handler.js";
 import { Frame } from "./frame.js";
 import { Processors } from "./processors.js";
 import { ResourceManager } from "./resources.js";
 import { SaveLoadManager, SaveLoadScreen } from "./save-load.js";
 import { InfoManager, TextManager } from "./texts.js";
 
-export class UnsupportedForImported extends Error {
+class UnsupportedForImported extends Error {
     constructor(pos: number, type: string) {
         super(`Operation not supported in imported files: at line ${pos}, data type is '${type}'`);
     }
-
-    static warned<T extends never[], U>(func: (..._: T) => U) {
-        return (...args: T) => {
-            try {
-                return func(...args);
-            } catch (e) {
-                if (e instanceof this) {
-                    logger.warn(e);
-                    error.warn(e);
-                }
-                else throw e;
-            }
-        };
-    }
 }
 
+@AutoBind
 export class Manager {
     varsFrame;
     paragraph = new parser.Paragraph([]);
@@ -54,7 +40,7 @@ export class Manager {
     SLScreen = new SaveLoadScreen();
     constructor(public isMain: boolean) {
         if (!isMain) this.info.setLine = this.info.setPart
-            = this.timeout.set = this.timeout.clear = (): any => 0;
+            = this.timeout.set = this.timeout.clear = () => 0 as never;
         this.varsFrame = new vars.GalVars();
     }
     get SLManager() {
@@ -80,17 +66,12 @@ export class Manager {
             this.varsFrame.defEnumTypeIfUnexist(new types.GalEnumType(name, values));
         }
     }
+    @WrapError('Cannot open file')
     async jumpFile(path: string) {
         path = await this.resources.getRelative(path);
-        await this.resources.readFileDecrypted(path)
-            .then(async content => {
-                await this.set(content.splitLine());
-                this.resources.setFile(path);
-            }).catch(e => {
-                logger.error(e);
-                error.error(e);
-                wrapError(`Cannot open file ${path}`, e);
-            });
+        const content = await this.resources.readFileDecrypted(path);
+        await this.set(content.splitLine());
+        this.resources.setFile(path);
     }
     async process(data: dataTypes.GalData) {
         if (this.currentPos >= this.paragraph.dataList.length) return true;

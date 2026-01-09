@@ -1,12 +1,12 @@
-import { wrapError } from "../utils/assert.js";
+import { AutoBind } from "../utils/auto-bind.js";
 import { confirm } from "../utils/confirm.js";
+import { WrapError } from "../utils/errors.js";
+import { HandleError } from "../utils/errors.js";
 import { EventListener } from "../utils/event-listener.js";
 import { Files } from "../utils/files.js";
 import { KeybindManager, KeyType } from "../utils/keybind.js";
-import { logger } from "../utils/logger.js";
 import { ipcRenderer } from "../utils/runtime.js";
 import { splitWith } from "../utils/split.js";
-import { error, errorHandled } from "./error-handler.js";
 import { Frame } from "./frame.js";
 import { manager } from "./manager.js";
 
@@ -63,22 +63,16 @@ export abstract class SaveLoad<Id> extends Files {
         const content = await this.readFileDecrypted(filename);
         return SaveInfo.fromString(splitWith('\n')(content)[0]);
     }
+    @WrapError('Cannot load from file')
     async load(id: Id): Promise<LoadResult> {
         const filename = await this.getSaveFilePath(id);
         this.checkFilled(id);
-        try {
-            const content = await this.readFileDecrypted(filename);
-            const file = (await this.getInfo(id)).sourceFile;
-            return [
-                file === this.filename ? undefined : (await this.readFileDecrypted(file)).splitLine(),
-                Frame.fromString(splitWith('\n')(content)[1])
-            ];
-        }
-        catch (e) {
-            logger.error(e);
-            error.error(e);
-            wrapError(`Cannot load from ${filename}`, e);
-        }
+        const content = await this.readFileDecrypted(filename);
+        const file = (await this.getInfo(id)).sourceFile;
+        return [
+            file === this.filename ? undefined : (await this.readFileDecrypted(file)).splitLine(),
+            Frame.fromString(splitWith('\n')(content)[1])
+        ];
     }
     async deleteSave(id: Id) {
         const filename = await this.getSaveFilePath(id);
@@ -96,6 +90,7 @@ export class SaveLoadManager extends SaveLoad<number> {
     }
 }
 
+@AutoBind
 export class SaveLoadScreen {
     rows = 3;
     columns = 3;
@@ -108,7 +103,7 @@ export class SaveLoadScreen {
     keybind = new KeybindManager();
 
     constructor() {
-        this.keybind.bind(KeyType.of('Escape'), this.clear.bind(this));
+        this.keybind.bind(KeyType.of('Escape'), this.clear);
     }
 
     async getMax() {
@@ -180,8 +175,8 @@ export class SaveLoadScreen {
         this.element.style.backgroundColor = 'var(--color-alpha-1)';
         this.element.style.pointerEvents = 'all';
 
-        this.listeners.add('wheel', this.wheel.bind(this), { passive: true });
-        this.listeners.add('keyup', async event => await this.keybind.apply(event));
+        this.listeners.add('wheel', this.wheel, { passive: true });
+        this.listeners.add('keyup', this.keybind.apply);
     }
 
     clear() {
@@ -201,7 +196,7 @@ export class SaveLoadScreen {
     save(slot: number) {
         const input = document.createElement('input');
         input.className = 'container input save-notes';
-        input.addEventListener('keyup', errorHandled(async (event) => {
+        input.addEventListener('keyup', HandleError(async event => {
             if (event.key === 'Enter') {
                 const note = input.value;
                 await manager.SLManager.save(slot, manager.getFrame(), note);

@@ -1,6 +1,8 @@
 const lodash = require('lodash');
 
-import { assert, notUndefined, wrapError } from '../utils/assert.js';
+import { assert, notUndefined } from '../utils/assert.js';
+import { AutoBind } from '../utils/auto-bind.js';
+import { WrapError } from "../utils/errors.js";
 import { splitWith } from '../utils/split.js';
 import { isDiscarded, isIdentifier } from '../utils/string.js';
 import { builtinEvalFunc, Builtins } from './builtins.js';
@@ -24,6 +26,7 @@ function tried<TArgs extends unknown[], TReturn>(func: (..._: TArgs) => TReturn,
     }
 }
 
+@AutoBind
 export class GalVars extends Builtins {
     enumTypes: GalEnumType[] = [BoolType];
     vars: Record<string, GalVar> = {};
@@ -35,7 +38,7 @@ export class GalVars extends Builtins {
     }
 
     initBuiltinEvals() {
-        this.registerBuiltinFunc('eval', builtinEvalFunc(expr => this.eval(expr)));
+        this.registerBuiltinFunc('eval', builtinEvalFunc(this.eval));
         this.registerBuiltinFunc('evalInt', builtinEvalFunc(expr => {
             assert(/^-?\d+$/.test(expr), `Invalid Integer: '${expr}'`);
             return this.evalNum(expr);
@@ -59,20 +62,17 @@ export class GalVars extends Builtins {
         return enumPart + ';' + varsPart;
     }
 
+    @WrapError('Parse Error')
     static fromString(str: string) {
-        try {
-            const [enumPart, varsPart] = splitWith(';')(str);
-            const vars = new GalVars();
-            if (varsPart !== '')
-                vars.vars = Object.fromEntries(varsPart.split(',').map(entry => {
-                    const [name, value] = splitWith('=')(entry);
-                    return [name, vars.eval(value)];
-                }));
-            vars.enumTypes = enumPart.split(',').map(type => GalEnumType.fromString(type));
-            return vars;
-        } catch (e) {
-            wrapError('Parse Error', e);
-        }
+        const [enumPart, varsPart] = splitWith(';')(str);
+        const vars = new GalVars();
+        if (varsPart !== '')
+            vars.vars = Object.fromEntries(varsPart.split(',').map(entry => {
+                const [name, value] = splitWith('=')(entry);
+                return [name, vars.eval(value)];
+            }));
+        vars.enumTypes = enumPart.split(',').map(GalEnumType.fromString);
+        return vars;
     }
 
     setVar(name: string, value: GalVar) {
@@ -130,12 +130,9 @@ export class GalVars extends Builtins {
         return this.isDefinedVar(name) || this.isDefinedEnum(name);
     }
 
+    @WrapError('Cannot evaluate expression')
     eval(expr: string) {
-        try {
-            return this.evalNode(parse(expr));
-        } catch (e) {
-            wrapError(`Cannot evaluate '${expr}'`, e);
-        }
+        return this.evalNode(parse(expr));
     }
 
     evalNode(node: nodes.NodeType): GalVar {
@@ -170,7 +167,7 @@ export class GalVars extends Builtins {
     }
 
     evalArray(node: nodes.ArrayNode) {
-        return new GalArray(node.value.map(value => this.evalNode(value)));
+        return new GalArray(node.value.map(this.evalNode));
     }
 
     evalFunction(node: nodes.FunctionNode) {

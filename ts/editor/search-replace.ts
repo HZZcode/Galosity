@@ -1,4 +1,5 @@
 import { sum } from "../utils/array.js";
+import { AutoBind } from "../utils/auto-bind.js";
 import type { Searchable } from "../utils/string.js";
 import { getManager, textarea } from "./elements.js";
 import { recordInput } from "./input-record.js";
@@ -23,7 +24,7 @@ class Searcher {
     }
 
     static replaceAll(sub: Searchable, str: string, start: number = textarea.selectionEnd) {
-        const pos = textarea.value.searchAllPos(sub, start).toArray();
+        const pos = [...textarea.value.searchAllPos(sub, start)];
         if (pos.length === 0) return;
         textarea.value = textarea.value.replaceAllPos(pos, str);
         const diff = sum(pos.slice(0, -1).map(pos => pos[1] - pos[0] - str.length));
@@ -36,6 +37,7 @@ const SearchOperations = ['search', 'replace', 'replace-all'] as const;
 type SearchOperation = typeof SearchOperations[number];
 interface SearchConfigs { fromCursor: boolean, withRegex: boolean }
 
+@AutoBind
 export class SearchScreen {
     private constructor() { }
 
@@ -62,13 +64,13 @@ export class SearchScreen {
         const sub = configs.withRegex ? new RegExp(this.sub, 'g') : this.sub;
         const start = configs.fromCursor ? undefined : 0;
         switch (operation) {
-            case "search":
+            case 'search':
                 Searcher.search(sub, start);
                 break;
-            case "replace":
+            case 'replace':
                 Searcher.replace(sub, this.str, start);
                 break;
-            case "replace-all":
+            case 'replace-all':
                 Searcher.replaceAll(sub, this.str, start);
                 break;
         }

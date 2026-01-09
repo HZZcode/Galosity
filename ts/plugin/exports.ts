@@ -21,7 +21,7 @@ function exportPack(pack: string) {
     try {
         exports[pack.toIdentifier()] = require(pack);
     } catch (e) {
-        logger.error(`Error exporting ${pack}: ${e}`);
+        logger.error(new Error(`Error exporting ${pack}`, { cause: e }));
     }
 }
 
@@ -30,7 +30,7 @@ async function exportFile(space: string) {
         const path = space.split('/');
         exportObject(path, await import(`../${space}.js`));
     } catch (e) {
-        logger.error(`Error exporting ${space}: ${e}`);
+        logger.error(new Error(`Error exporting ${space}`, { cause: e }));
     }
 }
 

@@ -1,8 +1,8 @@
-import { errorHandled } from "./error-handler.js";
+import { HandleError } from "../utils/errors.js";
 
 export class ButtonData {
     constructor(public text: string, public func: () => Promise<void> | undefined, public enable = true) {
-        this.func = errorHandled(func);
+        this.func = HandleError(func);
     }
 }
 export class ButtonsManager {
@@ -44,7 +44,7 @@ export class ButtonsManager {
     drawInput(next: () => Promise<void>, func: (_: string) => void) {
         const element = document.createElement('input');
         element.className = 'container input';
-        element.addEventListener('keyup', errorHandled(async (event) => {
+        element.addEventListener('keyup', HandleError(async event => {
             if (event.key === 'Enter') await next();
         }));
         this.inputFunc = func;

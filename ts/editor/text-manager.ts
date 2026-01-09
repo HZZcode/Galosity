@@ -73,10 +73,10 @@ export class TextAreaManager {
         this.sync();
     }
     undo() {
-        textHistory.undos().forEach(edit => this.editData(edit));
+        for (const edit of textHistory.undos()) this.editData(edit);
     }
     redo() {
-        textHistory.redos().forEach(edit => this.editData(edit));
+        for (const edit of textHistory.redos()) this.editData(edit);
     }
     jumpTo(line: number): boolean {
         if (line < 0 || line >= this.lines.length) return false;

@@ -47,9 +47,7 @@ function createWindow(file: string, dataChannel: string, data: any, parent?: Bro
         }
     });
     window.loadFile(file);
-    window.webContents.on('did-finish-load', () => {
-        window.webContents.send(dataChannel, data);
-    });
+    window.webContents.on('did-finish-load', () => window.webContents.send(dataChannel, data));
     window.setMenu(null);
     if (configs.isDebug) window.webContents.openDevTools();
     handleLink(window);

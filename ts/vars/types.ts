@@ -1,5 +1,6 @@
 import { findDuplicates } from '../utils/array.js';
 import { assert } from '../utils/assert.js';
+import { AutoBind } from '../utils/auto-bind.js';
 import { splitWith } from '../utils/split.js';
 import { isIdentifier } from '../utils/string.js';
 
@@ -76,6 +77,7 @@ export class GalNum extends GalVar {
     }
 }
 
+@AutoBind
 export class GalEnumType {
     constructor(public name: string, public values: string[]) {
         const duplicates = findDuplicates(values);

@@ -66,7 +66,7 @@ class Position {
         if (founds.has(this)) return new Set();
         founds.add(this);
         return new Set([this, ...[...this.nexts].map(pos =>
-            pos.downstreams(founds)).reduce((x, y) => x.union(y), new Set())]);
+            pos.downstreams(founds)).reduce((x, y) => new Set([...x, ...y]), new Set())]);
     }
 
     equals(other: Position): boolean {
@@ -170,9 +170,9 @@ class Analyser {
         let next = new Set<Position>();
         for (const unresolved of this.unresolveds) {
             const nexts = await unresolved.findNexts(this.founds, this.positions);
-            const unioned = unresolved.nexts.union(nexts);
+            const unioned = new Set([...unresolved.nexts, ...nexts]);
             if (unioned.size === unresolved.nexts.size) continue;
-            next = next.union(nexts);
+            next = new Set([...next, ...nexts]);
             unresolved.nexts = unioned;
         }
         this.unresolveds = next;
@@ -181,8 +181,8 @@ class Analyser {
 
 export async function analyse(filename?: string) {
     switch (Runtime.environment) {
-        case "editor": filename ??= file.filename; break;
-        case "engine": filename ??= manager.resources.filename; break;
+        case 'editor': filename ??= file.filename; break;
+        case 'engine': filename ??= manager.resources.filename; break;
     }
     const analyser = new Analyser(notUndefined(filename));
     while (!analyser.isDone()) await analyser.next();

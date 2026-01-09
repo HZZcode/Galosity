@@ -4,18 +4,17 @@ import * as dataTypes from '../parser/data-types.js';
 import { assert } from '../utils/assert.js';
 import { parseBool } from '../utils/bool.js';
 import { confirm } from '../utils/confirm.js';
+import { HandleError, WrapError } from '../utils/errors.js';
 import { Files } from '../utils/files.js';
 import { KeyType } from '../utils/keybind.js';
-import { logger } from '../utils/logger.js';
 import { ipcRenderer } from '../utils/runtime.js';
 import type { DispatchFunc } from "../utils/type-dispatch.js";
 import { TypeDispatch } from "../utils/type-dispatch.js";
 import type { Constructor } from '../utils/types.js';
 import * as types from "../vars/types.js";
 import { ButtonData } from "./buttons.js";
-import { error, errorHandledAsWarning } from "./error-handler.js";
 import { escape, interpolate } from "./interpolation.js";
-import { Manager, UnsupportedForImported } from "./manager.js";
+import { Manager } from "./manager.js";
 
 export class Processors {
     private static dispatch = new TypeDispatch<[manager: Manager], boolean, dataTypes.GalData>(false);
@@ -27,21 +26,10 @@ export class Processors {
         this.dispatch.register(type, processor);
     }
 
-    static apply(data: dataTypes.GalData, manager: Manager) {
-        try {
-            return this.dispatch.call(data, manager);
-        } catch (e) {
-            if (e instanceof UnsupportedForImported) {
-                logger.warn(e);
-                error.warn(e);
-            }
-            else {
-                const e1 = new Error(`Error occured while processing line `
-                    + `${manager.currentPos}`, { cause: e });
-                logger.error(e1);
-                error.error(e1);
-            }
-        }
+    @HandleError(false)
+    @WrapError('Error occured while processing line')
+    static async apply(data: dataTypes.GalData, manager: Manager) {
+        return await this.dispatch.call(data, manager);
     }
 }
 
@@ -133,7 +121,7 @@ Processors.register(dataTypes.VarData, (data, manager) => {
 });
 Processors.register(dataTypes.InputData, (data, manager) => {
     manager.unsupportedForImported();
-    manager.buttons.drawInput(manager.next.bind(manager), expr =>
+    manager.buttons.drawInput(manager.next, expr =>
         manager.varsFrame.setVar(data.valueVar, new types.GalString(expr)));
     return true;
 });
@@ -155,14 +143,13 @@ Processors.register(dataTypes.TransformData, (data, manager) => {
 });
 Processors.register(dataTypes.DelayData, (data, manager) => {
     manager.unsupportedForImported();
-    manager.timeout.set(manager.next.bind(manager),
-        manager.varsFrame.eval(data.seconds).toNum() * 1000, 2);
+    manager.timeout.set(manager.next, manager.varsFrame.eval(data.seconds).toNum() * 1000, 2);
     return false;
 });
 Processors.register(dataTypes.PauseData, () => true);
 Processors.register(dataTypes.EvalData, async (data, manager) => {
     const expr = interpolate(data.expr, manager.varsFrame);
-    await errorHandledAsWarning(async () => await eval(expr))();
+    await HandleError('warn')(async () => await eval(expr))();
     return false;
 });
 Processors.register(dataTypes.FuncData, (_, manager) => {
@@ -218,12 +205,12 @@ Processors.register(dataTypes.TextData, (data, manager) => {
 });
 Processors.register(dataTypes.CodeData, (data, manager) => {
     manager.unsupportedForImported();
-    errorHandledAsWarning(() => manager.texts.outputCode(data.language, escape(data.code)))();
+    HandleError('warn')(() => manager.texts.outputCode(data.language, escape(data.code)))();
     return true;
 });
 Processors.register(dataTypes.MediaData, async (data, manager) => {
     manager.unsupportedForImported();
-    return await errorHandledAsWarning(async () => {
+    return await HandleError('warn')(async () => {
         const interpolated = lodash.cloneDeep(data);
         for (const [key, value] of Object.entries(data))
             interpolated[key] = interpolate(value, manager.varsFrame);

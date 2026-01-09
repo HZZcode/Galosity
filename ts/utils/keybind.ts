@@ -1,4 +1,5 @@
 import { sum } from "./array.js";
+import { AutoBind } from "./auto-bind.js";
 import type { Func } from "./types.js";
 
 export enum KeyConfig {
@@ -43,6 +44,7 @@ class KeybindData {
     }
 }
 
+@AutoBind
 export class KeybindManager {
     private binds: KeybindData[] = [];
 

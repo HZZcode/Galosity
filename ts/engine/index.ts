@@ -4,12 +4,11 @@ import { loadPlugins } from "../plugin/loader.js";
 import { bindFunction, bindInput } from "../utils/bind-events.js";
 import { themes } from "../utils/color-theme.js";
 import { isConfirming } from "../utils/confirm.js";
+import { HandleError } from "../utils/errors.js";
 import { Files } from "../utils/files.js";
 import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
-import { logger } from '../utils/logger.js';
 import { ipcRenderer, Runtime } from "../utils/runtime.js";
 import { isNum } from "../utils/string.js";
-import { error, errorHandled } from "./error-handler.js";
 import { manager } from "./manager.js";
 
 const initPromise = new Promise<void>((resolve, reject) => {
@@ -17,10 +16,7 @@ const initPromise = new Promise<void>((resolve, reject) => {
         try {
             Runtime.configs = data.configs;
             Runtime.environment = 'engine';
-            await loadPlugins(e => {
-                logger.error(e);
-                error.error(e);
-            });
+            await loadPlugins();
             const content = data.filename === undefined ? ''
                 : await new Files().readFileDecrypted(data.filename);
             await manager.set(content.splitLine());
@@ -28,8 +24,6 @@ const initPromise = new Promise<void>((resolve, reject) => {
             themes.set(Runtime.configs.theme);
             resolve();
         } catch (e) {
-            logger.error(e);
-            error.error(e);
             reject(e);
         }
     });
@@ -39,20 +33,20 @@ async function main() {
     await initPromise;
 
     const keybind = new KeybindManager();
-    keybind.bind(KeyType.of('Backspace'), manager.previous.bind(manager));
-    keybind.bind(KeyType.of('Enter'), manager.next.bind(manager));
-    keybind.bind(KeyType.of('d', KeyConfig.Ctrl), async () => await manager.SLScreen.show());
-    keybind.bind(KeyType.of('t', KeyConfig.Alt), themes.next.bind(themes));
+    keybind.bind(KeyType.of('Backspace'), manager.previous);
+    keybind.bind(KeyType.of('Enter'), manager.next);
+    keybind.bind(KeyType.of('d', KeyConfig.Ctrl), manager.SLScreen.show);
+    keybind.bind(KeyType.of('t', KeyConfig.Alt), themes.next);
 
-    window.addEventListener('keydown', errorHandled(async event => {
+    window.addEventListener('keydown', HandleError(async event => {
         if ((event.target as HTMLElement).tagName.toLowerCase() === 'input' || isConfirming) return;
         else if (manager.SLScreen.shown) await manager.SLScreen.keybind.apply(event);
         else if (await keybind.apply(event) || await manager.keybind.apply(event))
             event.preventDefault();
     }));
 
-    bindFunction('previous', errorHandled(manager.previous.bind(manager)));
-    bindFunction('next', errorHandled(manager.next.bind(manager)));
+    bindFunction('previous', HandleError(manager.previous));
+    bindFunction('next', HandleError(manager.next));
 
     if (Runtime.configs.scriptTest) bindScriptTests();
     else hideElements('script-test');
@@ -60,7 +54,7 @@ async function main() {
 
 function bindScriptTests() {
     bindInput('jump', 'line', async index => isNum(index) ? await manager.jump(parseInt(index)) : void 0);
-    bindInput('eval', 'code', async code => await manager.eval(code));
+    bindInput('eval', 'code', manager.eval);
 }
 
 function hideElements(classNames: string) {

@@ -1,3 +1,5 @@
+import { AutoBind } from "./auto-bind.js";
+
 export class ColorTheme {
     constructor(
         public background: string,
@@ -26,6 +28,7 @@ export class ColorTheme {
     }
 }
 
+@AutoBind
 class ColorThemes {
     current = 0;
 
