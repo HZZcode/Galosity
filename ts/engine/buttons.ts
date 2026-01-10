@@ -1,4 +1,4 @@
-import { HandleError } from "../runtime/errors.js";
+import { HandleError } from '../runtime/errors.js';
 
 export class ButtonData {
     constructor(public text: string, public func: () => Promise<void> | undefined, public enable = true) {

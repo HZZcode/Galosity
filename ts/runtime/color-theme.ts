@@ -1,4 +1,4 @@
-import { AutoBind } from "../utils/auto-bind.js";
+import { AutoBind } from '../utils/auto-bind.js';
 
 export class ColorTheme {
     constructor(

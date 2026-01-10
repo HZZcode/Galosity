@@ -1,11 +1,9 @@
-import type { OpenDialogOptions, SaveDialogOptions } from "electron";
-
-import type { API, Data, Environment } from "../../types.js";
-import type { Func } from "../../utils/types.js";
+import type { API, Data, DialogOptions, Environment } from '../../types.js';
+import type { Func } from '../../utils/types.js';
 
 const ipcRenderer = require('electron').ipcRenderer as API & {
-    invoke(channel: 'requestSavePath', options: SaveDialogOptions): Promise<string | undefined>;
-    invoke(channel: 'requestOpenPath', options: OpenDialogOptions): Promise<string | undefined>;
+    invoke(channel: 'requestSavePath', options: DialogOptions): Promise<string | undefined>;
+    invoke(channel: 'requestOpenPath', options: DialogOptions): Promise<string | undefined>;
     invoke(channel: `${Environment}Title`, title: string): Promise<void>;
     invoke(channel: 'copy', text: string): Promise<void>;
     invoke(channel: 'openExternal', url: string): Promise<void>;
@@ -21,10 +19,10 @@ export class ElectronAPI {
     static async invoke(channel: string, ...args: any[]) {
         return await ipcRenderer.invoke(channel as any, ...args);
     }
-    static async requestSavePath(options: SaveDialogOptions) {
+    static async requestSavePath(options: DialogOptions) {
         return await ipcRenderer.invoke('requestSavePath', options);
     }
-    static async requestOpenPath(options: OpenDialogOptions) {
+    static async requestOpenPath(options: DialogOptions) {
         return await ipcRenderer.invoke('requestOpenPath', options);
     }
     static async setTitle(environment: Environment, title: string) {

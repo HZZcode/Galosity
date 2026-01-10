@@ -1,5 +1,6 @@
-import { findDuplicates } from "../utils/array.js";
-import { parseBool } from "../utils/bool.js";
+import { findDuplicates } from '../utils/array.js';
+import { parseBool } from '../utils/bool.js';
+import { configs } from './configs.js';
 
 abstract class Arg {
     constructor(public key: string, public prefixes: string[],
@@ -99,3 +100,18 @@ export const argParser = new ArgParser()
     .addEntry(new BoolArg('encrypt', ['-c', '--encrypt'], 'Encrypt the input script', 'false'))
     .addEntry(new BoolArg('help', ['-h', '--help'], 'Show this message', 'false'))
     .addEntry(new IntArg('theme', ['-t', '--theme'], 'The index of color theme', '0'));
+
+export let filename: string | undefined;
+export function parseArgs() {
+    try {
+        // When unpackaged, `process.argv` is ['...electron...', '.', ...args]
+        // When packaged, `process.argv` is ['...Galosity...', ...args]
+        const args = process.argv.slice(configs.packed ? 1 : 2);
+        filename = argParser.parseTo(args, configs).at(0);
+    } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(e);
+        configs.help = true;
+    }
+    if (!configs.packed) filename ??= 'gal.txt';
+}

@@ -1,4 +1,4 @@
-import type { MediaDataType } from "../engine/media.js";
+import type { MediaDataType } from '../engine/media.js';
 
 export class GalData { }
 

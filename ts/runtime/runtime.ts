@@ -1,11 +1,9 @@
-import type { OpenDialogOptions, SaveDialogOptions } from "electron";
-
-import type { API, Configs, Data, Environment } from "../types.js";
-import type { Func } from "../utils/types.js";
+import type { API, Configs, Data, DialogOptions, Environment } from '../types.js';
+import type { Func } from '../utils/types.js';
 
 interface RuntimeAPI extends API {
-    requestSavePath(options: SaveDialogOptions): Promise<string | undefined>;
-    requestOpenPath(options: OpenDialogOptions): Promise<string | undefined>;
+    requestSavePath(options: DialogOptions): Promise<string | undefined>;
+    requestOpenPath(options: DialogOptions): Promise<string | undefined>;
     setTitle(environment: Environment, title: string): Promise<void>;
     initData(environment: Environment): Promise<Data>;
     copy(text: string): Promise<void>;

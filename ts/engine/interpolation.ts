@@ -1,6 +1,6 @@
-import { HandleError } from "../runtime/errors.js";
-import { isLatex, splitWith } from "../runtime/split.js";
-import type * as vars from "../vars/vars.js";
+import { HandleError } from '../runtime/errors.js';
+import { isLatex, splitWith } from '../runtime/split.js';
+import type * as vars from '../vars/vars.js';
 
 class Interpolations {
     funcs: Record<string, (_: string) => string> = {};
@@ -46,12 +46,12 @@ export function interpolate(text: string, varsFrame: vars.GalVars) {
     interpolation.register('_', sub => `<sub>${sub}</sub>`);
     interpolation.register('%', sub => {
         const [text, href] = splitWith(':')(sub);
-        return `<a href="${href}" target="_blank" rel="noopener noreferrer">${text === '' ? href : text}</a>`;
+        return `<a href='${href}' target='_blank' rel='noopener noreferrer'>${text === '' ? href : text}</a>`;
     });
     interpolation.register('~', sub => {
         const [rb, rt] = splitWith(':')(sub);
         return `<ruby><rb>${rb}</rb><rt>${rt}</rt><rp>(${rt})</rp></ruby>`;
     });
-    interpolation.register('*', sub => `<button class="function"><i class="fa-solid ${sub}"></i></button>`);
+    interpolation.register('*', sub => `<button class='function'><i class='fa-solid ${sub}'></i></button>`);
     return interpolation.process(text).replaceAll(/(?<!\\)\\n/g, '<br>').replaceAll(/\\\\/g, '\\');
 }

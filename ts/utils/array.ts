@@ -1,5 +1,5 @@
-import type { IntoType, TypeFilter } from "./types.js";
-import { typeFilter } from "./types.js";
+import type { IntoType, TypeFilter } from './types.js';
+import { typeFilter } from './types.js';
 
 export function findDuplicates<T>(array: T[]): T[] {
     return array.filter((item, index) => array.indexOf(item) !== index);

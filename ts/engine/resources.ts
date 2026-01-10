@@ -1,7 +1,7 @@
-import { Files } from "../runtime/files.js";
-import { splitWith } from "../runtime/split.js";
-import type { MediaDataType } from "./media.js";
-import { MediaManager } from "./media.js";
+import { Files } from '../runtime/files.js';
+import { splitWith } from '../runtime/split.js';
+import type { MediaDataType } from './media.js';
+import { MediaManager } from './media.js';
 
 export class ResourceManager extends Files {
     parent = document.getElementById('images') as HTMLDivElement;
@@ -52,7 +52,7 @@ export class ResourceManager extends Files {
         element.style.backgroundImage = background;
     }
     async setElementImage(element: HTMLDivElement | undefined, file: string) {
-        this.setElementBackground(element, file !== 'clear' ? `url("${await this.getSource(file)}")` : '');
+        this.setElementBackground(element, file !== 'clear' ? `url('${await this.getSource(file)}')` : '');
     }
     async setImage(pos: string, file: string) {
         if (file.trim().startsWith('@')) {

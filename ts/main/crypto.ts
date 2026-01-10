@@ -1,8 +1,8 @@
 import CryptoJS from 'crypto-js';
 
 import { AutoBind } from '../utils/auto-bind.js';
-import { getMetadata, isMetadata } from "../utils/string.js";
-import { Files } from "./files.js";
+import { getMetadata, isMetadata } from '../utils/string.js';
+import { Files } from './files.js';
 
 @AutoBind
 class CryptoHandle {

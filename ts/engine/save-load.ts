@@ -1,14 +1,14 @@
-import { confirm } from "../runtime/confirm.js";
-import { WrapError } from "../runtime/errors.js";
-import { HandleError } from "../runtime/errors.js";
-import { EventListener } from "../runtime/event-listener.js";
-import { Files } from "../runtime/files.js";
-import { KeybindManager, KeyType } from "../runtime/keybind.js";
-import { Runtime } from "../runtime/runtime.js";
-import { splitWith } from "../runtime/split.js";
-import { AutoBind } from "../utils/auto-bind.js";
-import { Frame } from "./frame.js";
-import { manager } from "./manager.js";
+import { confirm } from '../runtime/confirm.js';
+import { WrapError } from '../runtime/errors.js';
+import { HandleError } from '../runtime/errors.js';
+import { EventListener } from '../runtime/event-listener.js';
+import { Files } from '../runtime/files.js';
+import { KeybindManager, KeyType } from '../runtime/keybind.js';
+import { Runtime } from '../runtime/runtime.js';
+import { splitWith } from '../runtime/split.js';
+import { AutoBind } from '../utils/auto-bind.js';
+import { Frame } from './frame.js';
+import { manager } from './manager.js';
 
 class SaveInfo {
     time;

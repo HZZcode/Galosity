@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
-import { AutoBind } from "../utils/auto-bind.js";
-import { Runtime } from "./runtime.js";
+import { AutoBind } from '../utils/auto-bind.js';
+import { Runtime } from './runtime.js';
 
 type LogType = 'log' | 'warn' | 'error';
 

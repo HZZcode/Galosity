@@ -1,6 +1,6 @@
 const lodash = require('lodash');
 
-import { WrapError } from "../runtime/errors.js";
+import { WrapError } from '../runtime/errors.js';
 import { splitWith } from '../runtime/split.js';
 import { assert, notUndefined } from '../utils/assert.js';
 import { AutoBind } from '../utils/auto-bind.js';
@@ -163,7 +163,7 @@ export class GalVars extends Builtins {
     }
 
     evalString(node: nodes.StringNode) {
-        return new GalString(JSON.parse(`"${node.value}"`).toString());
+        return new GalString(JSON.parse(`'${node.value}'`).toString());
     }
 
     evalArray(node: nodes.ArrayNode) {

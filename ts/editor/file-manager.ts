@@ -1,8 +1,8 @@
-import { HandleError, WrapError } from "../runtime/errors.js";
-import { Files } from "../runtime/files.js";
-import { AutoBind } from "../utils/auto-bind.js";
-import { getManager, info, textarea, updateInfo } from "./elements.js";
-import { textHistory } from "./text-manager.js";
+import { HandleError, WrapError } from '../runtime/errors.js';
+import { Files } from '../runtime/files.js';
+import { AutoBind } from '../utils/auto-bind.js';
+import { getManager, info, textarea, updateInfo } from './elements.js';
+import { textHistory } from './text-manager.js';
 
 @AutoBind
 export class FileManager extends Files {

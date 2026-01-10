@@ -8,13 +8,13 @@ import { KeyType } from '../runtime/keybind.js';
 import { Runtime } from '../runtime/runtime.js';
 import { assert } from '../utils/assert.js';
 import { parseBool } from '../utils/bool.js';
-import type { DispatchFunc } from "../utils/type-dispatch.js";
-import { TypeDispatch } from "../utils/type-dispatch.js";
+import type { DispatchFunc } from '../utils/type-dispatch.js';
+import { TypeDispatch } from '../utils/type-dispatch.js';
 import type { Constructor } from '../utils/types.js';
-import * as types from "../vars/types.js";
-import { ButtonData } from "./buttons.js";
-import { escape, interpolate } from "./interpolation.js";
-import { Manager } from "./manager.js";
+import * as types from '../vars/types.js';
+import { ButtonData } from './buttons.js';
+import { escape, interpolate } from './interpolation.js';
+import { Manager } from './manager.js';
 
 export class Processors {
     private static dispatch = new TypeDispatch<[manager: Manager], boolean, dataTypes.GalData>(false);

@@ -1,6 +1,6 @@
 const { v4: uuid } = require('uuid');
 
-import type { Constructor, Func } from "./types.js";
+import type { Constructor, Func } from './types.js';
 
 export type DispatchFunc<ThisArg, TArgs extends any[], TReturn> = Func<[ThisArg, ...TArgs], TReturn>;
 

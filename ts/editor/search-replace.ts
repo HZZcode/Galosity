@@ -1,8 +1,8 @@
-import { sum } from "../utils/array.js";
-import { AutoBind } from "../utils/auto-bind.js";
-import type { Searchable } from "../utils/string.js";
-import { getManager, textarea } from "./elements.js";
-import { recordInput } from "./input-record.js";
+import { sum } from '../utils/array.js';
+import { AutoBind } from '../utils/auto-bind.js';
+import type { Searchable } from '../utils/string.js';
+import { getManager, textarea } from './elements.js';
+import { recordInput } from './input-record.js';
 
 class Searcher {
     private constructor() { }

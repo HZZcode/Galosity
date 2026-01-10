@@ -1,6 +1,8 @@
-import type { Dirent } from "fs";
+import type { Dirent } from 'fs';
 
-import type { Setupable } from "./plugin/loader";
+import type { Setupable } from './plugin/loader.js';
+
+export type Mode = 'electron' | 'web';
 
 export interface Configs {
   files: boolean,
@@ -20,6 +22,14 @@ export interface HandlerRegistry {
   channel: string;
   args: string[];
   code: string;
+}
+
+export interface DialogOptions {
+  defaultPath?: string;
+  filters?: {
+    name: string;
+    extensions: string[];
+  }[];
 }
 
 export interface API {

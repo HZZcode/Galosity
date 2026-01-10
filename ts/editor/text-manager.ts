@@ -1,4 +1,4 @@
-import { EditData, HistoryManager, Lines } from "./history.js";
+import { EditData, HistoryManager, Lines } from './history.js';
 
 export const textHistory = new HistoryManager();
 

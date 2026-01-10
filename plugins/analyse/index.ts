@@ -1,6 +1,6 @@
 // This file was /utils/analyse.ts, but later unused in Galosity, so we moved it here.
 
-/// <reference path="../../dts/exports.d.ts" />
+/// <reference path='../../dts/exports.d.ts' />
 
 // These were import statements.
 const { notUndefined } = galosity.utils.assert;

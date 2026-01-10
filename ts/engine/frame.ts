@@ -1,5 +1,5 @@
-import * as vars from "../vars/vars.js";
-import { CustomData } from "./custom-data.js";
+import * as vars from '../vars/vars.js';
+import { CustomData } from './custom-data.js';
 
 export class Frame {
     constructor(public pos: number, public varsFrame: vars.GalVars,

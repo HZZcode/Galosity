@@ -1,6 +1,6 @@
-import { notUndefined } from "../utils/assert.js";
-import type { Constructor } from "../utils/types.js";
-import { BoolType, GalArray, GalNum, GalSequence, GalString, GalVar } from "./types.js";
+import { notUndefined } from '../utils/assert.js';
+import type { Constructor } from '../utils/types.js';
+import { BoolType, GalArray, GalNum, GalSequence, GalString, GalVar } from './types.js';
 
 class UnaryOp<TBase, TReturn> {
     constructor(public op: string, public type: Constructor<TBase>, public func: (_: any) => TReturn) { }

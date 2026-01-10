@@ -1,5 +1,5 @@
-import { logger } from "./logger.js";
-import { Runtime } from "./runtime.js";
+import { logger } from './logger.js';
+import { Runtime } from './runtime.js';
 
 class TestError extends Error { }
 

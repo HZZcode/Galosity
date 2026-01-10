@@ -1,7 +1,7 @@
-import { Runtime } from "../runtime/runtime.js";
-import type { Func } from "../utils/types.js";
-import { exportAll, exportObject } from "./exports.js";
-import { MetaInfo } from "./meta-info.js";
+import { Runtime } from '../runtime/runtime.js';
+import type { Func } from '../utils/types.js';
+import { exportAll, exportObject } from './exports.js';
+import { MetaInfo } from './meta-info.js';
 
 type Setup = Func<[MetaInfo], boolean | undefined>;
 

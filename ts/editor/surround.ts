@@ -1,5 +1,5 @@
-import { getManager } from "./elements.js";
-import { editTag } from "./history.js";
+import { getManager } from './elements.js';
+import { editTag } from './history.js';
 
 export const surround = (before: string, after: string) => () => {
     const manager = getManager();

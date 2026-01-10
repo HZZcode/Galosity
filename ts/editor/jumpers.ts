@@ -1,11 +1,11 @@
-import * as dataTypes from "../parser/data-types.js";
-import { parseLine } from "../parser/parser.js";
-import { confirm } from "../runtime/confirm.js";
-import { Runtime } from "../runtime/runtime.js";
-import type { Constructor, Func } from "../utils/types.js";
-import { scanControlBlocks } from "./elements.js";
-import { file } from "./file-manager.js";
-import type { TextAreaManager } from "./text-manager.js";
+import * as dataTypes from '../parser/data-types.js';
+import { parseLine } from '../parser/parser.js';
+import { confirm } from '../runtime/confirm.js';
+import { Runtime } from '../runtime/runtime.js';
+import type { Constructor, Func } from '../utils/types.js';
+import { scanControlBlocks } from './elements.js';
+import { file } from './file-manager.js';
+import type { TextAreaManager } from './text-manager.js';
 
 export class Jumper {
     private constructor(public lineGetter: Func<[context: JumpContext], JumpResult | undefined>) { }

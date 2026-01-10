@@ -1,6 +1,6 @@
 const { v4: uuid } = require('uuid');
 
-import { assert } from "../utils/assert.js";
+import { assert } from '../utils/assert.js';
 
 export const editTag = () => `Edit #${uuid()}`;
 
