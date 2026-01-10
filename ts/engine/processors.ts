@@ -7,7 +7,7 @@ import { confirm } from '../utils/confirm.js';
 import { HandleError, WrapError } from '../utils/errors.js';
 import { Files } from '../utils/files.js';
 import { KeyType } from '../utils/keybind.js';
-import { ipcRenderer } from '../utils/runtime.js';
+import { Runtime } from '../utils/runtime.js';
 import type { DispatchFunc } from "../utils/type-dispatch.js";
 import { TypeDispatch } from "../utils/type-dispatch.js";
 import type { Constructor } from '../utils/types.js';
@@ -56,7 +56,7 @@ Processors.register(dataTypes.JumpData, async (data, manager) => {
         case dataTypes.JumpType.Link:
             manager.unsupportedForImported();
             if (await confirm(`Open '${anchor}'?`))
-                await ipcRenderer.invoke('openExternal', anchor);
+                await Runtime.api.invoke('openExternal', anchor);
             else manager.currentPos -= 2;
             break;
         default: {

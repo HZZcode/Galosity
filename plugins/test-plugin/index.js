@@ -11,7 +11,7 @@ async function handleLogger() {
 async function test(name) {
     const message = `${name} test`;
     galosity.utils.logger.logger.log(message);
-    await galosity.utils.runtime.ipcRenderer.invoke('test::logger', message);
+    await galosity.utils.runtime.Runtime.api.invoke('test::logger', message);
 }
 
 class TestData extends galosity.parser.dataTypes.GalData {
@@ -24,7 +24,7 @@ class TestData extends galosity.parser.dataTypes.GalData {
 
 /** @param {galosity.plugin.metaInfo.MetaInfo} info */
 export async function setup(info) {
-    info.version.atLeast('2.3');
+    info.version.atLeast('2.4');
 
     if (!info.isDebug) return false;
 

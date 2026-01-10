@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
 import { AutoBind } from "./auto-bind.js";
-import { ipcRenderer, Runtime } from "./runtime.js";
+import { Runtime } from "./runtime.js";
 
 type LogType = 'log' | 'warn' | 'error';
 
@@ -32,15 +32,14 @@ class Logger {
     }
 
     async export() {
-        const result = await ipcRenderer.invoke('showSaveDialog', {
+        const path = await Runtime.api.invoke('requestSavePath', {
             defaultPath: `Galosity-log${new Date().getTime()}.txt`
         });
-        if (result.canceled) return;
-        const path = result.filePath;
-        await ipcRenderer.invoke('writeFile', path, this.content);
+        if (path === undefined) return;
+        await Runtime.api.invoke('writeFile', path, this.content);
     }
     async copy() {
-        await ipcRenderer.invoke('copy', this.content);
+        await Runtime.api.invoke('copy', this.content);
     }
 
     log(message: any) {

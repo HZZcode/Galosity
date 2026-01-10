@@ -1,7 +1,5 @@
-import type { OpenDialogReturnValue, SaveDialogReturnValue } from "electron";
-
 import { AutoBind } from "./auto-bind.js";
-import { ipcRenderer } from "./runtime.js";
+import { Runtime } from "./runtime.js";
 
 @AutoBind
 export class Files {
@@ -12,7 +10,7 @@ export class Files {
     }
     async check() {
         if (this.filename === undefined) {
-            this.filename = await ipcRenderer.invoke('directory') + '/?';
+            this.filename = await Runtime.api.invoke('directory') + '/?';
             this.valid = false;
         }
     }
@@ -39,43 +37,42 @@ export class Files {
     }
 
     async requestSavePath() {
-        return await ipcRenderer.invoke('showSaveDialog', {
+        return await Runtime.api.invoke('requestSavePath', {
             defaultPath: 'gal.txt',
             filters: [
                 { name: 'Text Files', extensions: ['txt'] },
                 { name: 'All Files', extensions: ['*'] }
             ]
-        }).then((result: SaveDialogReturnValue) =>
-            result.canceled ? undefined : result.filePath);
+        });
     }
     async requestOpenPath() {
-        return await ipcRenderer.invoke('showOpenDialog', {
+        return await Runtime.api.invoke('requestOpenPath', {
             filters: [
                 { name: 'Text Files', extensions: ['txt'] },
                 { name: 'All Files', extensions: ['*'] }
             ]
-        }).then((result: OpenDialogReturnValue) => result.canceled ? undefined : result.filePaths[0]);
+        });
     }
 
     async writeFile(path: string, content: string) {
-        await ipcRenderer.invoke('writeFile', path, content);
+        await Runtime.api.invoke('writeFile', path, content);
     }
     async writeFileEncrypted(path: string, content: string) {
-        await ipcRenderer.invoke('writeFileEncrypted', path, content);
+        await Runtime.api.invoke('writeFileEncrypted', path, content);
     }
     async readFile(path: string) {
-        return await ipcRenderer.invoke('readFile', path);
+        return await Runtime.api.invoke('readFile', path);
     }
     async readFileDecrypted(path: string) {
-        return await ipcRenderer.invoke('readFileDecrypted', path);
+        return await Runtime.api.invoke('readFileDecrypted', path);
     }
     async resolve(path: string, directory?: string) {
-        return await ipcRenderer.invoke('resolve', path, directory);
+        return await Runtime.api.invoke('resolve', path, directory);
     }
     async hasFile(path: string) {
-        return await ipcRenderer.invoke('exists', path);
+        return await Runtime.api.invoke('exists', path);
     }
     async delete(path: string) {
-        await ipcRenderer.invoke('delete', path);
+        await Runtime.api.invoke('delete', path);
     }
 }

@@ -1,4 +1,4 @@
-import { ipcRenderer } from "../utils/runtime.js";
+import { Runtime } from "../utils/runtime.js";
 
 export abstract class AbstractComplete {
     chosenFoundIndex = 0;
@@ -55,8 +55,8 @@ export class FileComplete extends AbstractComplete {
         return this;
     }
     override async getList() {
-        const path = await ipcRenderer.invoke('resolve', await this.pathGetter());
-        const dir = await ipcRenderer.invoke('readdir', path);
+        const path = await Runtime.api.invoke('resolve', await this.pathGetter());
+        const dir = await Runtime.api.invoke('readdir', path);
         return dir.filter(file => this.fileType === undefined
             || file.endsWith('.' + this.fileType)).concat(this.extra);
     }

@@ -26,10 +26,14 @@ export class Handlers {
     }
 }
 
-Handlers.add('showSaveDialog', (event, options: SaveDialogOptions) =>
-    dialog.showSaveDialog(BrowserWindow.fromWebContents(event.sender)!, options));
-Handlers.add('showOpenDialog', (event, options: OpenDialogOptions) =>
-    dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender)!, options));
+Handlers.add('requestSavePath', async (event, options: SaveDialogOptions) => {
+    const result = await dialog.showSaveDialog(BrowserWindow.fromWebContents(event.sender)!, options);
+    return result.canceled ? undefined : result.filePath;
+});
+Handlers.add('requestOpenPath', async (event, options: OpenDialogOptions) => {
+    const result = await dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender)!, options);
+    return result.canceled ? undefined : result.filePaths[0];
+});
 
 Handlers.add('writeFile', (_, pathname: string, content: string) => Files.write(pathname, content));
 Handlers.add('writeFileEncrypted', (_, pathname: string, content: string) =>

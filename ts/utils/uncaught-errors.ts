@@ -1,5 +1,5 @@
 import { logger } from "./logger.js";
-import { ipcRenderer, Runtime } from "./runtime.js";
+import { Runtime } from "./runtime.js";
 
 class TestError extends Error { }
 
@@ -25,7 +25,7 @@ async function handler(error: any) {
         ].join('\n');
         exit = confirm(message);
     });
-    if (exit) await ipcRenderer.invoke('exit', -1);
+    if (exit) await Runtime.api.invoke('exit', -1);
 }
 
 window.onerror = async (...args) => await handler(args.at(-1));

@@ -5,7 +5,7 @@ import { bindFunction } from "../utils/bind-events.js";
 import { themes } from "../utils/color-theme.js";
 import { isConfirming } from "../utils/confirm.js";
 import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
-import { ipcRenderer, Runtime } from "../utils/runtime.js";
+import { Runtime } from "../utils/runtime.js";
 import type { Func } from "../utils/types.js";
 import { getManager, textarea, updateInfo } from "./elements.js";
 import { FileManager } from "./file-manager.js";
@@ -108,7 +108,7 @@ function comment() {
 
 async function test(fileManager = file) {
     await file.autoSave();
-    await ipcRenderer.invoke('engine-data', {
+    await Runtime.api.invoke('engine-data', {
         filename: fileManager.filename,
         configs: Runtime.configs
     });
@@ -118,13 +118,8 @@ async function help() {
     await test(await new FileManager().ofFile(tutorial));
 }
 
-ipcRenderer.on('before-close', async () => {
-    await file.save();
-    ipcRenderer.send('before-close-complete');
-});
-
 const initPromise = new Promise<void>((resolve, reject) => {
-    ipcRenderer.on('editor-data', async (_, data) => {
+    Runtime.api.on('editor-data', async (_, data) => {
         try {
             Runtime.configs = data.configs;
             Runtime.environment = 'editor';
@@ -144,6 +139,10 @@ const initPromise = new Promise<void>((resolve, reject) => {
 
 async function main() {
     await initPromise;
+    Runtime.api.on('before-close', async () => {
+        await file.save();
+        Runtime.api.send('before-close-complete');
+    });
 }
 
 // eslint-disable-next-line floatingPromise/no-floating-promise

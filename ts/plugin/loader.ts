@@ -1,4 +1,3 @@
-import { ipcRenderer } from "../utils/runtime.js";
 import { Runtime } from "../utils/runtime.js";
 import type { Func } from "../utils/types.js";
 import { exportAll, exportObject } from "./exports.js";
@@ -7,8 +6,8 @@ import { MetaInfo } from "./meta-info.js";
 type Setup = Func<[MetaInfo], boolean | undefined>;
 
 async function getPlugins() {
-    const plugins = await ipcRenderer.invoke('readdir', 'plugins');
-    return plugins.filter(async plugin => await ipcRenderer.invoke('exists', getPath(plugin)));
+    const plugins = await Runtime.api.invoke('readdir', 'plugins');
+    return plugins.filter(async plugin => await Runtime.api.invoke('exists', getPath(plugin)));
 }
 
 function getPath(plugin: string) {
@@ -75,7 +74,7 @@ export async function loadPlugins() {
 
 async function setInfo(loaded: string[]) {
     const env = Runtime.environment;
-    await ipcRenderer.invoke(`${env}Title`, `Galosity ${env.capitalize()} (${info(loaded)})`);
+    await Runtime.api.invoke(`${env}Title`, `Galosity ${env.capitalize()} (${info(loaded)})`);
 }
 
 function info(loaded: string[]) {

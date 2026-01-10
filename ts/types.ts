@@ -1,7 +1,4 @@
-import type {
-  IpcRenderer, IpcRendererEvent, OpenDialogOptions, OpenDialogReturnValue,
-  SaveDialogOptions, SaveDialogReturnValue
-} from "electron";
+import type { OpenDialogOptions, SaveDialogOptions } from "electron";
 import type { Dirent } from "fs";
 
 import type { Setupable } from "./plugin/loader";
@@ -28,9 +25,9 @@ export interface HandlerRegistry {
   code: string;
 }
 
-export interface GalIpcRenderer extends IpcRenderer {
-  invoke(channel: 'showSaveDialog', options: SaveDialogOptions): Promise<SaveDialogReturnValue>;
-  invoke(channel: 'showOpenDialog', options: OpenDialogOptions): Promise<OpenDialogReturnValue>;
+export interface API {
+  invoke(channel: 'requestSavePath', options: SaveDialogOptions): Promise<string | undefined>;
+  invoke(channel: 'requestOpenPath', options: OpenDialogOptions): Promise<string | undefined>;
 
   invoke(channel: 'writeFile', path: string, content: string): Promise<void>;
   invoke(channel: 'writeFileEncrypted', path: string, content: string): Promise<void>;
@@ -55,9 +52,11 @@ export interface GalIpcRenderer extends IpcRenderer {
 
   invoke(channel: 'add-handler', registry: HandlerRegistry): Promise<void>;
 
-  on(channel: 'editor-data', handler: Func<[IpcRendererEvent, data: EditorData], void>): this;
-  on(channel: 'engine-data', handler: Func<[IpcRendererEvent, data: EngineData], void>): this;
-  on(channel: 'before-close', handler: Func<[IpcRendererEvent], void>): this;
+  on(channel: 'editor-data', handler: Func<[unknown, data: EditorData], void>): this;
+  on(channel: 'engine-data', handler: Func<[unknown, data: EngineData], void>): this;
+  on(channel: 'before-close', handler: Func<[unknown], void>): this;
+
+  send(channel: 'before-close-complete'): void;
 }
 
 declare global {

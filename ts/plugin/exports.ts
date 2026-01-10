@@ -25,7 +25,7 @@ const exportFile = HandleError(WrapError('Error exporting pack')(
     async (space: string) => exportObject(space.split('/'), await import(`../${space}.js`))
 ));
 
-const packs = ['electron', 'lodash', 'uuid', 'crypto-js', 'highlight.js'];
+const packs = ['lodash', 'uuid', 'crypto-js', 'highlight.js'];
 
 async function getExportFiles() {
     return (await file.readFile('exports.txt')).splitLine().map(path => path.replace(/^\//, ''));

@@ -7,12 +7,12 @@ import { isConfirming } from "../utils/confirm.js";
 import { HandleError } from "../utils/errors.js";
 import { Files } from "../utils/files.js";
 import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
-import { ipcRenderer, Runtime } from "../utils/runtime.js";
+import { Runtime } from "../utils/runtime.js";
 import { isNum } from "../utils/string.js";
 import { manager } from "./manager.js";
 
 const initPromise = new Promise<void>((resolve, reject) => {
-    ipcRenderer.on('engine-data', async (_, data) => {
+    Runtime.api.on('engine-data', async (_, data) => {
         try {
             Runtime.configs = data.configs;
             Runtime.environment = 'engine';

@@ -5,7 +5,7 @@ import { HandleError } from "../utils/errors.js";
 import { EventListener } from "../utils/event-listener.js";
 import { Files } from "../utils/files.js";
 import { KeybindManager, KeyType } from "../utils/keybind.js";
-import { ipcRenderer } from "../utils/runtime.js";
+import { Runtime } from "../utils/runtime.js";
 import { splitWith } from "../utils/split.js";
 import { Frame } from "./frame.js";
 import { manager } from "./manager.js";
@@ -49,7 +49,7 @@ export abstract class SaveLoad<Id> extends Files {
         if (!await this.isFilled(id)) throw new Error(`No save data in ${filename}`);
     }
     async getSaveFiles() {
-        return await ipcRenderer.invoke('readdir', await this.getSavePath());
+        return await Runtime.api.invoke('readdir', await this.getSavePath());
     }
     async save(id: Id, frame: Frame, note: string) {
         const filename = await this.getSaveFilePath(id);

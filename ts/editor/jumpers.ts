@@ -1,7 +1,7 @@
 import * as dataTypes from "../parser/data-types.js";
 import { parseLine } from "../parser/parser.js";
 import { confirm } from "../utils/confirm.js";
-import { ipcRenderer } from "../utils/runtime.js";
+import { Runtime } from "../utils/runtime.js";
 import type { Constructor, Func } from "../utils/types.js";
 import { scanControlBlocks } from "./elements.js";
 import { file } from "./file-manager.js";
@@ -69,7 +69,7 @@ export class JumpResult {
             else if (this.file !== undefined) await file.openFile(this.file);
             else if (this.link !== undefined) {
                 if (await confirm(`Open '${this.link}'?`))
-                    await ipcRenderer.invoke('openExternal', this.link);
+                    await Runtime.api.invoke('openExternal', this.link);
             }
             else return false;
         }

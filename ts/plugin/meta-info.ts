@@ -85,6 +85,7 @@ class Versions {
         [Version.fromString('2.1'), 'Plugin Dev'],
         [Version.fromString('2.2'), 'UI+S&L!!'],
         [Version.fromString('2.3'), 'Colorful Voices'],
+        [Version.fromString('2.4'), 'Web Server'],
     ];
 
     private constructor() { }
