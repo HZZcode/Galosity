@@ -45,7 +45,7 @@ def to_iden(file: File) -> str:
 
 def import_part(files: Files) -> Lines:
     return [f'import * as {to_iden(file)} from "{trim_dts(file)}";'
-            for file in files if len(list(find_symbols(file))) != 0]
+            for file in files if len(set(find_symbols(file))) != 0]
 
 
 def find_symbols(file: File) -> Iterable[Symbol]:
@@ -58,7 +58,7 @@ def find_symbols(file: File) -> Iterable[Symbol]:
 
 
 def single_symbol_part(file: File) -> Lines:
-    symbols = list(find_symbols(file))
+    symbols = set(find_symbols(file))
     return [f'export import {symbol} = {to_iden(file)}.{symbol};' for symbol in symbols]
 
 
