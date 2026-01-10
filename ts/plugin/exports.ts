@@ -1,5 +1,5 @@
 import { file } from "../editor/file-manager.js";
-import { logger } from "../utils/logger.js";
+import { HandleError, WrapError } from "../utils/errors.js";
 
 type Exports = Record<string, any>;
 
@@ -17,22 +17,13 @@ export function exportObject(path: string[], object: any, root: Exports = export
     exportObject(path.slice(1), object, root[path[0]]);
 }
 
-function exportPack(pack: string) {
-    try {
-        exports[pack.toIdentifier()] = require(pack);
-    } catch (e) {
-        logger.error(new Error(`Error exporting ${pack}`, { cause: e }));
-    }
-}
+const exportPack = HandleError(WrapError('Error exporting pack')(
+    (pack: string) => exports[pack.toIdentifier()] = require(pack)
+));
 
-async function exportFile(space: string) {
-    try {
-        const path = space.split('/');
-        exportObject(path, await import(`../${space}.js`));
-    } catch (e) {
-        logger.error(new Error(`Error exporting ${space}`, { cause: e }));
-    }
-}
+const exportFile = HandleError(WrapError('Error exporting pack')(
+    async (space: string) => exportObject(space.split('/'), await import(`../${space}.js`))
+));
 
 const packs = ['electron', 'lodash', 'uuid', 'crypto-js', 'highlight.js'];
 
