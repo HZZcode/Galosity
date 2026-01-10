@@ -1,6 +1,6 @@
+import { HandleError, WrapError } from "../runtime/errors.js";
+import { Files } from "../runtime/files.js";
 import { AutoBind } from "../utils/auto-bind.js";
-import { HandleError, WrapError } from "../utils/errors.js";
-import { Files } from "../utils/files.js";
 import { getManager, info, textarea, updateInfo } from "./elements.js";
 import { textHistory } from "./text-manager.js";
 

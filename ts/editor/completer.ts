@@ -1,4 +1,4 @@
-import { Runtime } from "../utils/runtime.js";
+import { Runtime } from "../runtime/runtime.js";
 
 export abstract class AbstractComplete {
     chosenFoundIndex = 0;

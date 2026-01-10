@@ -32,6 +32,7 @@ function register(part, text) {
 
 /** @param {galosity.plugin.metaInfo.MetaInfo} info */
 export function setup(info) {
+    info.version.atLeast('2.4');
     if (info.environment !== 'editor') return false;
     register('\\se', '[Select]\n[Case]:\n[End]');
     register('\\sw', '[Switch]\n[Case]:\n[End]');

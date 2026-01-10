@@ -1,13 +1,13 @@
 const lodash = require('lodash');
 
 import * as dataTypes from '../parser/data-types.js';
+import { confirm } from '../runtime/confirm.js';
+import { HandleError, WrapError } from '../runtime/errors.js';
+import { Files } from '../runtime/files.js';
+import { KeyType } from '../runtime/keybind.js';
+import { Runtime } from '../runtime/runtime.js';
 import { assert } from '../utils/assert.js';
 import { parseBool } from '../utils/bool.js';
-import { confirm } from '../utils/confirm.js';
-import { HandleError, WrapError } from '../utils/errors.js';
-import { Files } from '../utils/files.js';
-import { KeyType } from '../utils/keybind.js';
-import { Runtime } from '../utils/runtime.js';
 import type { DispatchFunc } from "../utils/type-dispatch.js";
 import { TypeDispatch } from "../utils/type-dispatch.js";
 import type { Constructor } from '../utils/types.js';

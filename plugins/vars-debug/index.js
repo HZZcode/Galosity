@@ -5,6 +5,7 @@ let enabled = false;
 
 /** @param {galosity.plugin.metaInfo.MetaInfo} info */
 export function setup(info) {
+    info.version.atLeast('2.4');
     if (info.environment !== 'engine' || !info.isDebug) return false;
 
     const GalVars = galosity.vars.vars.GalVars;

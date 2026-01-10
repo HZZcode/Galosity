@@ -1,7 +1,7 @@
+import { splitWith } from '../runtime/split.js';
 import { findDuplicates } from '../utils/array.js';
 import { assert } from '../utils/assert.js';
 import { AutoBind } from '../utils/auto-bind.js';
-import { splitWith } from '../utils/split.js';
 import { isIdentifier } from '../utils/string.js';
 
 export abstract class GalVar {

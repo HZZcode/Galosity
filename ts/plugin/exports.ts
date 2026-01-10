@@ -1,5 +1,5 @@
 import { file } from "../editor/file-manager.js";
-import { HandleError, WrapError } from "../utils/errors.js";
+import { HandleError, WrapError } from "../runtime/errors.js";
 
 type Exports = Record<string, any>;
 

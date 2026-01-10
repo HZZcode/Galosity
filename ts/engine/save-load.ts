@@ -1,12 +1,12 @@
+import { confirm } from "../runtime/confirm.js";
+import { WrapError } from "../runtime/errors.js";
+import { HandleError } from "../runtime/errors.js";
+import { EventListener } from "../runtime/event-listener.js";
+import { Files } from "../runtime/files.js";
+import { KeybindManager, KeyType } from "../runtime/keybind.js";
+import { Runtime } from "../runtime/runtime.js";
+import { splitWith } from "../runtime/split.js";
 import { AutoBind } from "../utils/auto-bind.js";
-import { confirm } from "../utils/confirm.js";
-import { WrapError } from "../utils/errors.js";
-import { HandleError } from "../utils/errors.js";
-import { EventListener } from "../utils/event-listener.js";
-import { Files } from "../utils/files.js";
-import { KeybindManager, KeyType } from "../utils/keybind.js";
-import { Runtime } from "../utils/runtime.js";
-import { splitWith } from "../utils/split.js";
 import { Frame } from "./frame.js";
 import { manager } from "./manager.js";
 

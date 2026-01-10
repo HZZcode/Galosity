@@ -1,6 +1,6 @@
+import { Runtime } from "../runtime/runtime.js";
 import type { Comparism } from "../utils/comparing.js";
 import { falsy, greater, less, notEquals } from "../utils/comparing.js";
-import { Runtime } from "../utils/runtime.js";
 
 export class MetaInfo {
     isDebug;

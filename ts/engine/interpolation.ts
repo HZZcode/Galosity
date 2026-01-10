@@ -1,5 +1,5 @@
-import { HandleError } from "../utils/errors.js";
-import { isLatex, splitWith } from "../utils/split.js";
+import { HandleError } from "../runtime/errors.js";
+import { isLatex, splitWith } from "../runtime/split.js";
 import type * as vars from "../vars/vars.js";
 
 class Interpolations {

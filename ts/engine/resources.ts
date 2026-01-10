@@ -1,5 +1,5 @@
-import { Files } from "../utils/files.js";
-import { splitWith } from "../utils/split.js";
+import { Files } from "../runtime/files.js";
+import { splitWith } from "../runtime/split.js";
 import type { MediaDataType } from "./media.js";
 import { MediaManager } from "./media.js";
 

@@ -1,5 +1,5 @@
 import { MetaInfo } from '../plugin/meta-info.js';
-import { logger } from '../utils/logger.js';
+import { logger } from '../runtime/logger.js';
 import { Random } from '../utils/random.js';
 import type { GalVar } from './types.js';
 import { BoolType, GalArray, GalNum, GalString, isEnum, isNum, isString } from './types.js';

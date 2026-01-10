@@ -1,13 +1,13 @@
-import "../utils/uncaught-errors.js";
+import "../runtime/uncaught-errors.js";
 
 import { loadPlugins } from "../plugin/loader.js";
-import { bindFunction, bindInput } from "../utils/bind-events.js";
-import { themes } from "../utils/color-theme.js";
-import { isConfirming } from "../utils/confirm.js";
-import { HandleError } from "../utils/errors.js";
-import { Files } from "../utils/files.js";
-import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
-import { Runtime } from "../utils/runtime.js";
+import { bindFunction, bindInput } from "../runtime/bind-events.js";
+import { themes } from "../runtime/color-theme.js";
+import { isConfirming } from "../runtime/confirm.js";
+import { HandleError } from "../runtime/errors.js";
+import { Files } from "../runtime/files.js";
+import { KeybindManager, KeyConfig, KeyType } from "../runtime/keybind.js";
+import { Runtime } from "../runtime/runtime.js";
 import { isNum } from "../utils/string.js";
 import { manager } from "./manager.js";
 

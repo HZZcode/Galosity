@@ -1,9 +1,9 @@
 const lodash = require('lodash');
 
+import { WrapError } from "../runtime/errors.js";
+import { splitWith } from '../runtime/split.js';
 import { assert, notUndefined } from '../utils/assert.js';
 import { AutoBind } from '../utils/auto-bind.js';
-import { WrapError } from "../utils/errors.js";
-import { splitWith } from '../utils/split.js';
 import { isDiscarded, isIdentifier } from '../utils/string.js';
 import { builtinEvalFunc, Builtins } from './builtins.js';
 import { parse } from './grammar/grammar.js';

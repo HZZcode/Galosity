@@ -2,10 +2,10 @@ const lodash = require('lodash');
 
 import * as dataTypes from '../parser/data-types.js';
 import * as parser from '../parser/parser.js';
+import { WrapError } from "../runtime/errors.js";
+import { KeybindManager } from '../runtime/keybind.js';
+import { TimeoutManager } from '../runtime/timeout.js';
 import { AutoBind } from '../utils/auto-bind.js';
-import { WrapError } from "../utils/errors.js";
-import { KeybindManager } from '../utils/keybind.js';
-import { TimeoutManager } from '../utils/timeout.js';
 import { getType } from "../utils/types.js";
 import * as types from '../vars/types.js';
 import * as vars from '../vars/vars.js';

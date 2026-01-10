@@ -1,11 +1,11 @@
-import "../utils/uncaught-errors.js";
+import "../runtime/uncaught-errors.js";
 
 import { loadPlugins } from "../plugin/loader.js";
-import { bindFunction } from "../utils/bind-events.js";
-import { themes } from "../utils/color-theme.js";
-import { isConfirming } from "../utils/confirm.js";
-import { KeybindManager, KeyConfig, KeyType } from "../utils/keybind.js";
-import { Runtime } from "../utils/runtime.js";
+import { bindFunction } from "../runtime/bind-events.js";
+import { themes } from "../runtime/color-theme.js";
+import { isConfirming } from "../runtime/confirm.js";
+import { KeybindManager, KeyConfig, KeyType } from "../runtime/keybind.js";
+import { Runtime } from "../runtime/runtime.js";
 import type { Func } from "../utils/types.js";
 import { getManager, textarea, updateInfo } from "./elements.js";
 import { FileManager } from "./file-manager.js";

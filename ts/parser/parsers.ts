@@ -1,4 +1,4 @@
-import { splitWith } from "../utils/split.js";
+import { splitWith } from "../runtime/split.js";
 import { isIdentifier, parseConfig } from "../utils/string.js";
 import type { GalData } from "./data-types.js";
 import * as dataTypes from "./data-types.js";

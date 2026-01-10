@@ -1,6 +1,6 @@
-import { sum } from "./array.js";
-import { AutoBind } from "./auto-bind.js";
-import type { Func } from "./types.js";
+import { sum } from "../utils/array.js";
+import { AutoBind } from "../utils/auto-bind.js";
+import type { Func } from "../utils/types.js";
 
 export enum KeyConfig {
     Ctrl = 1 << 0,

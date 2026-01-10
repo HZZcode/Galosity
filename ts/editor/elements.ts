@@ -1,5 +1,5 @@
 import * as parser from "../parser/parser.js";
-import { clearError, HandleError } from "../utils/errors.js";
+import { clearError, HandleError } from "../runtime/errors.js";
 import { file } from "./file-manager.js";
 import { TextAreaManager } from "./text-manager.js";
 

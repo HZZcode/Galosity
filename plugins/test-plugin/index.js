@@ -10,8 +10,8 @@ async function handleLogger() {
 
 async function test(name) {
     const message = `${name} test`;
-    galosity.utils.logger.logger.log(message);
-    await galosity.utils.runtime.Runtime.api.invoke('test::logger', message);
+    galosity.runtime.logger.logger.log(message);
+    await galosity.runtime.runtime.Runtime.api.invoke('test::logger', message);
 }
 
 class TestData extends galosity.parser.dataTypes.GalData {

@@ -4,10 +4,10 @@
 
 // These were import statements.
 const { notUndefined } = galosity.utils.assert;
-const { Files } = galosity.utils.files;
+const { Files } = galosity.runtime.files;
 const { TypeDispatch } = galosity.utils.typeDispatch;
-const { Runtime } = galosity.utils.runtime;
-const { logger } = galosity.utils.logger;
+const { Runtime } = galosity.runtime.runtime;
+const { logger } = galosity.runtime.logger;
 const dataTypes = galosity.parser.dataTypes;
 const { Paragraph } = galosity.parser.parser;
 const { file } = galosity.editor.fileManager;
@@ -193,4 +193,7 @@ export async function analyseLog(filename?: string) {
     logger.log((await analyse(filename)).root.debugString());
 }
 
-export const setup = () => true;
+export const setup = (info: galosity.plugin.metaInfo.MetaInfo) => {
+    info.version.atLeast('2.4');
+    return true;
+};

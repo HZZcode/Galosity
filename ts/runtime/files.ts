@@ -1,4 +1,4 @@
-import { AutoBind } from "./auto-bind.js";
+import { AutoBind } from "../utils/auto-bind.js";
 import { Runtime } from "./runtime.js";
 
 @AutoBind
