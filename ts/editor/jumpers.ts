@@ -69,7 +69,7 @@ export class JumpResult {
             else if (this.file !== undefined) await file.openFile(this.file);
             else if (this.link !== undefined) {
                 if (await confirm(`Open '${this.link}'?`))
-                    await Runtime.api.invoke('openExternal', this.link);
+                    await Runtime.api.openExternal(this.link);
             }
             else return false;
         }

@@ -4,6 +4,7 @@ import { loadPlugins } from "../plugin/loader.js";
 import { bindFunction } from "../runtime/bind-events.js";
 import { themes } from "../runtime/color-theme.js";
 import { isConfirming } from "../runtime/confirm.js";
+import { HandleError } from "../runtime/errors.js";
 import { KeybindManager, KeyConfig, KeyType } from "../runtime/keybind.js";
 import { Runtime } from "../runtime/runtime.js";
 import type { Func } from "../utils/types.js";
@@ -108,7 +109,7 @@ function comment() {
 
 async function test(fileManager = file) {
     await file.autoSave();
-    await Runtime.api.invoke('engine-data', {
+    await Runtime.api.engine({
         filename: fileManager.filename,
         configs: Runtime.configs
     });
@@ -118,32 +119,18 @@ async function help() {
     await test(await new FileManager().ofFile(tutorial));
 }
 
-const initPromise = new Promise<void>((resolve, reject) => {
-    Runtime.api.on('editor-data', async (_, data) => {
-        try {
-            Runtime.configs = data.configs;
-            Runtime.environment = 'editor';
-            await loadPlugins();
-            if (data.filename !== undefined)
-                await file.read(data.filename);
-            update();
-            recordInput();
-            themes.set(Runtime.configs.theme);
-            binds();
-            resolve();
-        } catch (e) {
-            reject(e);
-        }
-    });
+const main = HandleError(async () => {
+    if (Runtime.environment !== 'editor') return;
+    await Runtime.initAPI();
+    const data = await Runtime.api.initData('editor');
+    Runtime.configs = data.configs;
+    await loadPlugins();
+    if (data.filename !== undefined) await file.read(data.filename);
+    update();
+    recordInput();
+    themes.set(Runtime.configs.theme);
+    binds();
+    Runtime.api.onClose(file.save);
 });
 
-async function main() {
-    await initPromise;
-    Runtime.api.on('before-close', async () => {
-        await file.save();
-        Runtime.api.send('before-close-complete');
-    });
-}
-
-// eslint-disable-next-line floatingPromise/no-floating-promise
 main();

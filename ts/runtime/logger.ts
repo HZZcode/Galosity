@@ -28,18 +28,18 @@ class Logger {
     print(type: LogType, message: any) {
         message = this.format(type.toUpperCase(), message);
         this.logs.push(message);
-        if (Runtime.configs.isDebug) console[type](message);
+        if (Runtime.configs?.isDebug ?? true) console[type](message);
     }
 
     async export() {
-        const path = await Runtime.api.invoke('requestSavePath', {
+        const path = await Runtime.api.requestSavePath({
             defaultPath: `Galosity-log${new Date().getTime()}.txt`
         });
         if (path === undefined) return;
         await Runtime.api.invoke('writeFile', path, this.content);
     }
     async copy() {
-        await Runtime.api.invoke('copy', this.content);
+        await Runtime.api.copy(this.content);
     }
 
     log(message: any) {

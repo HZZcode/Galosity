@@ -37,7 +37,7 @@ export class Files {
     }
 
     async requestSavePath() {
-        return await Runtime.api.invoke('requestSavePath', {
+        return await Runtime.api.requestSavePath({
             defaultPath: 'gal.txt',
             filters: [
                 { name: 'Text Files', extensions: ['txt'] },
@@ -46,7 +46,7 @@ export class Files {
         });
     }
     async requestOpenPath() {
-        return await Runtime.api.invoke('requestOpenPath', {
+        return await Runtime.api.requestOpenPath({
             filters: [
                 { name: 'Text Files', extensions: ['txt'] },
                 { name: 'All Files', extensions: ['*'] }

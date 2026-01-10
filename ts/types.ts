@@ -1,8 +1,6 @@
-import type { OpenDialogOptions, SaveDialogOptions } from "electron";
 import type { Dirent } from "fs";
 
 import type { Setupable } from "./plugin/loader";
-import type { Func } from "./utils/types";
 
 export interface Configs {
   files: boolean,
@@ -15,8 +13,7 @@ export interface Configs {
   encrypt: boolean,
   help: boolean
 }
-export interface EditorData { configs: Configs, filename?: string }
-export interface EngineData { configs: Configs, filename?: string }
+export interface Data { configs: Configs, filename?: string }
 export type Environment = 'editor' | 'engine';
 
 export interface HandlerRegistry {
@@ -26,9 +23,6 @@ export interface HandlerRegistry {
 }
 
 export interface API {
-  invoke(channel: 'requestSavePath', options: SaveDialogOptions): Promise<string | undefined>;
-  invoke(channel: 'requestOpenPath', options: OpenDialogOptions): Promise<string | undefined>;
-
   invoke(channel: 'writeFile', path: string, content: string): Promise<void>;
   invoke(channel: 'writeFileEncrypted', path: string, content: string): Promise<void>;
   invoke(channel: 'readFile', path: string): Promise<string>;
@@ -39,24 +33,7 @@ export interface API {
   invoke(channel: 'readdir', path: string, withFileTypes: true): Promise<Dirent[]>;
   invoke(channel: 'exists', path: string): Promise<boolean>;
   invoke(channel: 'delete', path: string): Promise<void>;
-
-  invoke(channel: 'copy', text: string): Promise<void>;
-
-  invoke(channel: 'openExternal', url: string): Promise<void>;
-
-  invoke(channel: `${Environment}Title`, title: string): Promise<void>;
-
-  invoke(channel: 'engine-data', data: EngineData): Promise<void>;
-
-  invoke(channel: 'exit', code?: number | string): Promise<void>;
-
   invoke(channel: 'add-handler', registry: HandlerRegistry): Promise<void>;
-
-  on(channel: 'editor-data', handler: Func<[unknown, data: EditorData], void>): this;
-  on(channel: 'engine-data', handler: Func<[unknown, data: EngineData], void>): this;
-  on(channel: 'before-close', handler: Func<[unknown], void>): this;
-
-  send(channel: 'before-close-complete'): void;
 }
 
 declare global {

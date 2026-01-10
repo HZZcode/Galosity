@@ -73,8 +73,8 @@ export async function loadPlugins() {
 }
 
 async function setInfo(loaded: string[]) {
-    const env = Runtime.environment;
-    await Runtime.api.invoke(`${env}Title`, `Galosity ${env.capitalize()} (${info(loaded)})`);
+    const environment = Runtime.environment;
+    await Runtime.api.setTitle(environment, `Galosity ${environment.capitalize()} (${info(loaded)})`);
 }
 
 function info(loaded: string[]) {

@@ -11,26 +11,18 @@ import { Runtime } from "../runtime/runtime.js";
 import { isNum } from "../utils/string.js";
 import { manager } from "./manager.js";
 
-const initPromise = new Promise<void>((resolve, reject) => {
-    Runtime.api.on('engine-data', async (_, data) => {
-        try {
-            Runtime.configs = data.configs;
-            Runtime.environment = 'engine';
-            await loadPlugins();
-            const content = data.filename === undefined ? ''
-                : await new Files().readFileDecrypted(data.filename);
-            await manager.set(content.splitLine());
-            manager.resources.filename = data.filename;
-            themes.set(Runtime.configs.theme);
-            resolve();
-        } catch (e) {
-            reject(e);
-        }
-    });
-});
-
-async function main() {
-    await initPromise;
+const main = HandleError(async () => {
+    if (Runtime.environment !== 'engine') return;
+    await Runtime.initAPI();
+    const data = await Runtime.api.initData('engine');
+    Runtime.configs = data.configs;
+    await loadPlugins();
+    const content = data.filename === undefined ? ''
+        : await new Files().readFileDecrypted(data.filename);
+    await manager.set(content.splitLine());
+    manager.resources.filename = data.filename;
+    themes.set(Runtime.configs.theme);
+    Runtime.api.onClose();
 
     const keybind = new KeybindManager();
     keybind.bind(KeyType.of('Backspace'), manager.previous);
@@ -50,7 +42,7 @@ async function main() {
 
     if (Runtime.configs.scriptTest) bindScriptTests();
     else hideElements('script-test');
-}
+});
 
 function bindScriptTests() {
     bindInput('jump', 'line', async index => isNum(index) ? await manager.jump(parseInt(index)) : void 0);
@@ -62,5 +54,4 @@ function hideElements(classNames: string) {
         .forEach(element => (element as HTMLElement).style.display = 'none');
 }
 
-// eslint-disable-next-line floatingPromise/no-floating-promise
 main();

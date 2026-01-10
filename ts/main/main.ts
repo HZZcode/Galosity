@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 
-import type { EngineData } from '../types.js';
+import type { Data, Environment } from '../types.js';
 import { argParser } from './arg-parser.js';
 import { configs } from './configs.js';
 import { Crypto } from './crypto.js';
@@ -36,7 +36,7 @@ function handleLink(window: BrowserWindow) {
     });
 }
 
-function createWindow(file: string, dataChannel: string, data: any, parent?: BrowserWindow) {
+function createWindow(environment: Environment, data: any, parent?: BrowserWindow) {
     const window = new BrowserWindow({
         width: 1200,
         height: 800,
@@ -46,25 +46,25 @@ function createWindow(file: string, dataChannel: string, data: any, parent?: Bro
             contextIsolation: false
         }
     });
-    window.loadFile(file);
-    window.webContents.on('did-finish-load', () => window.webContents.send(dataChannel, data));
+    Handlers.doHandle(`${environment}-data`, () => data);
+    window.loadFile(`./html/${environment}.html`);
     window.setMenu(null);
     if (configs.isDebug) window.webContents.openDevTools();
     handleLink(window);
+    window.on('close', event => {
+        event.preventDefault();
+        window.webContents.send('before-close');
+        ipcMain.once('before-close-complete', () => window.destroy());
+    });
     return window;
 }
 
 function createEditorWindow() {
-    editorWindow = createWindow('./html/editor.html', 'editor-data', { filename, configs });
-    editorWindow.on('close', event => {
-        event.preventDefault();
-        editorWindow!.webContents.send('before-close');
-        ipcMain.once('before-close-complete', () => editorWindow!.destroy());
-    });
+    editorWindow = createWindow('editor', { filename, configs });
 }
 
-function createEngineWindow(parent: BrowserWindow | undefined, data: EngineData) {
-    engineWindow = createWindow('./html/engine.html', 'engine-data', data, parent);
+function createEngineWindow(data: Data, parent?: BrowserWindow) {
+    engineWindow = createWindow('engine', data, parent);
 }
 
 app.whenReady().then(async () => {
@@ -77,9 +77,9 @@ app.whenReady().then(async () => {
     }
     if (configs.edit) {
         createEditorWindow();
-        Handlers.add('engine-data', (_, data: EngineData) => createEngineWindow(editorWindow, data));
+        Handlers.add('engine', (_, data: Data) => createEngineWindow(data, editorWindow));
     }
-    else createEngineWindow(undefined, { configs, filename });
+    else createEngineWindow({ configs, filename });
     Handlers.add('editorTitle', (_, title: string) => editorWindow?.setTitle(title));
     Handlers.add('engineTitle', (_, title: string) => engineWindow?.setTitle(title));
     Handlers.handle();

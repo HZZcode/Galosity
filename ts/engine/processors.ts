@@ -56,7 +56,7 @@ Processors.register(dataTypes.JumpData, async (data, manager) => {
         case dataTypes.JumpType.Link:
             manager.unsupportedForImported();
             if (await confirm(`Open '${anchor}'?`))
-                await Runtime.api.invoke('openExternal', anchor);
+                await Runtime.api.openExternal(anchor);
             else manager.currentPos -= 2;
             break;
         default: {
