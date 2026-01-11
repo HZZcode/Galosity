@@ -30,9 +30,9 @@ def download(url: str, filename: str):
         with open(filename, 'wb') as file:
             file.write(data)
 
-download('https://cdn.bootcdn.net/ajax/libs/core-js/3.45.1/minified.min.js', 'core.js')
 download('https://github.com/mathjax/MathJax/archive/refs/tags/3.2.2.zip', 'mathjax.zip')
-download('https://cdn.bootcdn.net/ajax/libs/lodash.js/4.17.21/lodash.min.js', 'lodash.js')
+download('https://cdnjs.cloudflare.com/ajax/libs/core-js/3.45.1/minified.min.js', 'core.js')
+download('https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js', 'lodash.js')
 download('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js', 'highlight.js')
 download('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css', 'highlight.css')
 download('https://use.fontawesome.com/releases/v6.4.0/fontawesome-free-6.4.0-web.zip', 'font-awesome.zip')
