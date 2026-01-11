@@ -17,7 +17,7 @@
   "description": "Lite Hypertext Galgame Script Editor & Engine",
   "devDependencies": {
     "@eslint/js": "^9.30.1",
-    "@eslint/json": "^0.12.0",
+    "@eslint/json": "^0.14.0",
     "@types/crypto-js": "^4.2.2",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^24.0.10",

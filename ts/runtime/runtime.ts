@@ -1,5 +1,5 @@
 import type { Configs, Environment, RuntimeAPI } from '../types.js';
-import { switchMode } from '../utils/mode.js';
+import { switchMode } from '../mode.js';
 
 function addStylesheet(url: string) {
     const link = document.createElement('link');

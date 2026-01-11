@@ -12,13 +12,18 @@ export class WebAPI {
             body: JSON.stringify(args)
         })).json();
     }
+    private static requestPath() {
+        const name = prompt('Input text file name');
+        if (name === null) return undefined;
+        if (['.', '/'].some(c => name.includes(c))) 
+            throw new Error('Invalid file name!');
+        return `web-files/${name}.txt`;
+    }
     static requestSavePath() {
-        const name = prompt('Input save file path');
-        return name === null ? undefined : name;
+        return this.requestPath();
     }
     static requestOpenPath() {
-        const name = prompt('Input open file path');
-        return name === null ? undefined : name;
+        return this.requestPath();
     }
     static setTitle(_: Environment, title: string) {
         document.title = title;

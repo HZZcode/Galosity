@@ -1,5 +1,5 @@
 import type { HandlerRegistry, Handlers } from '../types.js';
-import { switchMode } from '../utils/mode.js';
+import { switchMode } from '../mode.js';
 import { Crypto } from './crypto.js';
 import { Files } from './files.js';
 
