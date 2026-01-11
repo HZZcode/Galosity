@@ -1,9 +1,28 @@
 import urllib.request
 import zipfile
 import os
+from functools import wraps
 
+os.makedirs('dependencies', exist_ok=True)
 os.chdir('dependencies')
 
+def Retry(max_retries):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            last_error = None
+            for _ in range(max_retries + 1):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    last_error = e
+                    print(f"Attempt failed: {e}. Retrying...")
+            if last_error is not None:
+                raise last_error
+        return wrapper
+    return decorator
+
+@Retry(5)
 def download(url: str, filename: str):
     print(f'Downloading {url} to {filename}')
     with urllib.request.urlopen(url) as response:
