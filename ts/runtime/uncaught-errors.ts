@@ -10,7 +10,7 @@ function noExcept(func: () => void) {
 }
 
 async function handler(error: any) {
-    let exit = true, popup = true;
+    let exit = false, popup = true;
     noExcept(() => {
         logger.error(error);
         popup = exit = !Runtime.configs.isDebug || error instanceof TestError;

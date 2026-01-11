@@ -55,7 +55,8 @@
       "!merge.ps1",
       "!src",
       "!dts",
-      "!web-files"
+      "!web-files",
+      "!launch.bat"
     ],
     "extraFiles": [
       "tutorial",
@@ -75,9 +76,6 @@
   },
   "dependencies": {
     "crypto-js": "^4.2.0",
-    "highlight.js": "^11.11.1",
-    "lodash": "^4.17.21",
-    "mathjax": "^3.2.2",
     "mime-types": "^3.0.2"
   }
 }

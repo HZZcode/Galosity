@@ -82,8 +82,8 @@ export class GalVars extends Builtins {
 
     copy() {
         const clone = new GalVars();
-        clone.enumTypes = lodash.cloneDeep(this.enumTypes);
-        clone.vars = lodash.cloneDeep(this.vars);
+        clone.enumTypes = _.cloneDeep(this.enumTypes);
+        clone.vars = _.cloneDeep(this.vars);
         return clone;
     }
 

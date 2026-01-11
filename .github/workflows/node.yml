@@ -25,9 +25,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      
-      - name: Install Python Requests
-        run: pip3 install requests
 
       - name: Set GH_TOKEN environment variable (Linux/Mac)
         if: ${{ matrix.os != 'windows-latest' }}
@@ -42,33 +39,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Copy Highlight.js
-        run: import shutil; shutil.copytree('./node_modules/highlight.js', './highlight', dirs_exist_ok=True)
-        shell: python
-
-      - name: Copy MathJax
-        run: import shutil; shutil.copytree('./node_modules/mathjax', './mathjax', dirs_exist_ok=True)
-        shell: python
-
-      - name: Download Font Awesome
-        run: |
-          import requests
-          import zipfile
-          import os
-
-          url = 'https://use.fontawesome.com/releases/v6.7.2/fontawesome-free-6.7.2-web.zip'
-          response = requests.get(url)
-          with open('font-awesome.zip', 'wb') as f:
-            f.write(response.content)
-
-          with zipfile.ZipFile('font-awesome.zip', 'r') as zip_ref:
-            zip_ref.extractall('.')
-
-          for folder_name in os.listdir('.'):
-            if folder_name.startswith('fontawesome-free-'):
-              os.rename(folder_name, 'font-awesome')
-              break
-        shell: python
+      - name: Download Frontend dependencies
+        run: python get-dependencies.py
 
       - name: Run Peggy.js
         run: npm run grammar
@@ -105,12 +77,12 @@ jobs:
         run: import os; print(os.listdir('.'))
         shell: python
 
-      - name: Check if build output exists
-        run: import os; exit(1) if not os.path.exists('build') else print(os.listdir('build'))
+      - name: List dependencies
+        run: import os; print(os.listdir('dependencies'))
         shell: python
 
-      - name: Check if tex-mml-chtml.js exists
-        run: import os; exit(1) if not os.path.isfile('./mathjax/es5/tex-mml-chtml.js') else print("File exists")
+      - name: Check if build output exists
+        run: import os; exit(1) if not os.path.exists('build') else print(os.listdir('build'))
         shell: python
 
       - name: Upload exports artifact for ${{ matrix.os }}

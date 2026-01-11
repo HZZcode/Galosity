@@ -39,11 +39,7 @@ export class WebAPI {
         window.open(url, '_blank');
     }
     static onClose(handler?: Func<[], void>) {
-        window.addEventListener('beforeunload', async event => {
-            event.preventDefault();
-            event.returnValue = '';
-            await handler?.();
-        });
+        window.addEventListener('beforeunload', handler ?? (() => void 0));
     }
     static engine(data: Data) {
         sessionStorage.setItem('galosity-data', JSON.stringify(data));

@@ -133,7 +133,7 @@ Processors.register(dataTypes.ImageData, async (data, manager) => {
 });
 Processors.register(dataTypes.TransformData, (data, manager) => {
     manager.unsupportedForImported();
-    const interpolated = lodash.cloneDeep(data);
+    const interpolated = _.cloneDeep(data) as any;
     for (const [key, value] of Object.entries(data))
         interpolated[key] = interpolate(value, manager.varsFrame);
     manager.resources.transformImage(interpolated.imageType, interpolated);
@@ -209,7 +209,7 @@ Processors.register(dataTypes.CodeData, (data, manager) => {
 Processors.register(dataTypes.MediaData, async (data, manager) => {
     manager.unsupportedForImported();
     return await HandleError('warn')(async () => {
-        const interpolated = lodash.cloneDeep(data);
+        const interpolated = _.cloneDeep(data) as any;
         for (const [key, value] of Object.entries(data))
             interpolated[key] = interpolate(value, manager.varsFrame);
         interpolated.block = parseBool(interpolated.block);

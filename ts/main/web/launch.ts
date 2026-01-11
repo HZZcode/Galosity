@@ -21,10 +21,13 @@ const server = http.createServer(async (req, res) => {
                 try {
                     const args = (JSON.parse(body) as any[]).map(value => value === null ? undefined : value);
                     const result = await WebHandlers.handlers[channel](...args);
-                    res.writeHead(200, { 'content-type': 'application/json' });
+                    res.writeHead(200, {
+                        'content-type': 'application/json',
+                        'access-control-allow-origin': '*'
+                    });
                     res.end(result === undefined ? '{}' : JSON.stringify(result));
                 } catch (error) {
-                    res.writeHead(404);
+                    res.writeHead(404, { 'access-control-allow-origin': '*' });
                     res.end(`Error: ${error}`);
                     // eslint-disable-next-line no-console
                     console.error(error);
@@ -33,7 +36,7 @@ const server = http.createServer(async (req, res) => {
         }
         else {
             const redirect = (location: string) => {
-                res.writeHead(302, { location });
+                res.writeHead(302, { location, 'access-control-allow-origin': '*' });
                 res.end();
             };
             if (url === '') return redirect(configs.edit ? '/html/editor.html' : '/html/engine.html');
@@ -41,13 +44,13 @@ const server = http.createServer(async (req, res) => {
             if (url === '/engine') return redirect('/html/engine.html');
             const path = './' + url;
             const type = mime.contentType(path.split('/').at(-1)!) || 'application/octet-stream';
-            const content = await fs.promises.readFile(path, 'utf-8');
+            const content = await fs.promises.readFile(path);
             logger.log(`Requesting ${url}, type ${type}`);
-            res.writeHead(200, { 'content-type': type });
-            res.end(content, 'utf-8');
+            res.writeHead(200, { 'content-type': type, 'access-control-allow-origin': '*' });
+            res.end(content);
         }
     } catch (error) {
-        res.writeHead(404);
+        res.writeHead(404, { 'access-control-allow-origin': '*' });
         res.end(`Error: ${error}`);
         logger.error(error);
     }

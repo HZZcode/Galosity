@@ -51,7 +51,7 @@
     left: 50%;
     width: 60%;
     height: 5%;
-    font-family: Consolas, sans-serif;
+    font-family: var(--font);
     font-size: medium;
     transform: translate(-50%, -50%);
 }
@@ -65,7 +65,7 @@
     background-color: var(--color-alpha-2);
     padding: 10px;
     border-radius: 5px;
-    font-family: Consolas, sans-serif;
+    font-family: var(--font);
     font-size: medium;
     text-align: center;
 }
@@ -75,7 +75,7 @@
     height: 100%;
     box-sizing: border-box;
     padding: 10px;
-    font-family: Consolas, sans-serif;
+    font-family: var(--font);
     font-size: medium;
     display: inline-block;
     justify-content: center;
@@ -91,7 +91,7 @@
 }
 
 #texts {
-    font-family: Consolas, sans-serif;
+    font-family: var(--font);
     font-size: large;
     padding-left: 5%;
     padding-right: 5%;
@@ -167,7 +167,7 @@
     border-radius: 15px;
     box-shadow: 0 4px 8px var(--shadow-alpha);
     color: var(--color-4);
-    font-family: Consolas, sans-serif;
+    font-family: var(--font);
     font-size: medium;
     border-radius: 10px;
     overflow-wrap: break-word;

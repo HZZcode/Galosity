@@ -126,7 +126,7 @@ export class Manager {
             this.currentPos,
             this.varsFrame.copy(),
             this.resources.toString(),
-            lodash.clone(this.customData)
+            _.clone(this.customData)
         );
     }
 }

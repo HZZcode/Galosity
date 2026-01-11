@@ -17,7 +17,7 @@ export class TextManager {
         MathJax.typeset();
     }
     outputCode(language: string, code: string) {
-        this.outputTexts(highlight.highlight(code, { language }).value);
+        this.outputTexts(hljs.highlight(code, { language }).value);
     }
     clear() {
         this.outputTexts('');

@@ -21,15 +21,17 @@
 
     --function-size: 30px;
     --functions-gap: 3px;
+
+    --font: "Consolas", "Menlo", "DejaVu Sans Mono", "Ubuntu Mono", monospace;
 }
 
 body {
-    font-family: Consolas, sans-serif;
+    font-family: var(--font);
     background-color: var(--page-background);
     color: var(--color-4);
     height: 100vh;
     margin: 0;
-    overflow: hidden;
+    overflow: hidden auto;
     position: relative;
 }
 
@@ -119,7 +121,7 @@ input {
     border-radius: 5px;
     box-shadow: 0 4px 8px var(--shadow-alpha);
     margin: auto;
-    font-family: Consolas, sans-serif;
+    font-family: var(--font);
     font-size: small;
 }
 

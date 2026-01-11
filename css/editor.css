@@ -8,6 +8,7 @@
 
 #header {
     display: flex;
+    flex-wrap: wrap-reverse;
     margin-top: 10px;
     margin-left: 10%;
     margin-right: 10%;
@@ -30,16 +31,18 @@ textarea {
     border-radius: 4px;
     resize: none;
     margin-bottom: 10px;
-    font-family: Consolas, sans-serif;
+    font-family: var(--font);
     font-size: large;
 }
 
 #info,
-#error {
+#error,
+#warning {
     margin-left: 10%;
     width: 80%;
-    font-family: Consolas, sans-serif;
+    font-family: var(--font);
     font-size: medium;
+    padding-bottom: 10px;
 }
 
 #functions {
