@@ -6,7 +6,6 @@ save
 /import-test.txt
 /.VSCodeCounter
 /js
-/get-exports.py
 /exports.txt
 /merge.ps1
 /src
