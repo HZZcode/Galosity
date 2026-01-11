@@ -1,6 +1,7 @@
 import type { Dirent } from 'fs';
 
 import type { Setupable } from './plugin/loader.js';
+import type { Func } from './utils/types.js';
 
 export type Mode = 'electron' | 'web';
 
@@ -44,6 +45,23 @@ export interface API {
   invoke(channel: 'exists', path: string): Promise<boolean>;
   invoke(channel: 'delete', path: string): Promise<void>;
   invoke(channel: 'add-handler', registry: HandlerRegistry): Promise<void>;
+}
+
+export interface RuntimeAPI extends API {
+    requestSavePath(options: DialogOptions): Promise<string | undefined>;
+    requestOpenPath(options: DialogOptions): Promise<string | undefined>;
+    setTitle(environment: Environment, title: string): Promise<void>;
+    initData(environment: Environment): Promise<Data>;
+    copy(text: string): Promise<void>;
+    openExternal(url: string): Promise<void>;
+    onClose(handler?: Func<[], void>): void;
+    engine(data: Data): Promise<void>;
+    exit(code?: number | string): Promise<void>;
+}
+
+export type Listener = (...args: any[]) => any;
+export interface Handlers {
+  add(channel: string, listener: Listener): void;
 }
 
 declare global {

@@ -1,8 +1,7 @@
-const { v4: uuid } = require('uuid');
-
 import { assert } from '../utils/assert.js';
 
-export const editTag = () => `Edit #${uuid()}`;
+let id = 0;
+export const editTag = () => `Edit #${id++}`;
 
 export class Lines {
     get length() {

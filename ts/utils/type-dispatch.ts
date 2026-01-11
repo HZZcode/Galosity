@@ -1,16 +1,15 @@
-const { v4: uuid } = require('uuid');
-
 import type { Constructor, Func } from './types.js';
 
 export type DispatchFunc<ThisArg, TArgs extends any[], TReturn> = Func<[ThisArg, ...TArgs], TReturn>;
 
 export class TypeDispatch<TArgs extends any[], TReturn, ThisBase = unknown> {
+    static id = 0;
     funcName;
     defaultValue?: TReturn;
 
     constructor(defaultValue?: TReturn) {
         if (defaultValue !== undefined) this.defaultTo(defaultValue);
-        this.funcName = `dispatch_ZZ_func_${uuid().replaceAll('-', '_')}`;
+        this.funcName = `dispatch_ZZ_func_${TypeDispatch.id++}`;
     }
 
     defaultTo(defaultValue: TReturn) {

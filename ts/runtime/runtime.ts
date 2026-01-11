@@ -1,16 +1,12 @@
-import type { API, Configs, Data, DialogOptions, Environment } from '../types.js';
-import type { Func } from '../utils/types.js';
+import type { Configs, Environment, RuntimeAPI } from '../types.js';
+import { switchMode } from '../utils/mode.js';
 
-interface RuntimeAPI extends API {
-    requestSavePath(options: DialogOptions): Promise<string | undefined>;
-    requestOpenPath(options: DialogOptions): Promise<string | undefined>;
-    setTitle(environment: Environment, title: string): Promise<void>;
-    initData(environment: Environment): Promise<Data>;
-    copy(text: string): Promise<void>;
-    openExternal(url: string): Promise<void>;
-    onClose(handler?: Func<[], void>): void;
-    engine(data: Data): Promise<void>;
-    exit(code?: number | string): Promise<void>;
+function addStylesheet(url: string) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = url;
+    document.head.appendChild(link);
 }
 
 export class Runtime {
@@ -19,11 +15,34 @@ export class Runtime {
     static configs: Configs = undefined!;
     static readonly environment: Environment = environment;
     static async initAPI() {
-        this.api = (await import('./api/electron.js')).ElectronAPI as any;
+        await switchMode({
+            electron: async () => {
+                this.api = (await import('./api/electron.js')).ElectronAPI as any;
+                window.lodash = require('lodash');
+                window.highlight = require('highlight.js');
+                addStylesheet('../font-awesome/css/all.min.css');
+            },
+            web: async () => {
+                this.api = (await import('./api/web.js')).WebAPI as any;
+                await import('https://cdn.bootcdn.net/ajax/libs/lodash.js/4.17.21/lodash.min.js' as any);
+                window.lodash = (window as any)._;
+                window.highlight = (await import('https://cdn.bootcdn.net/ajax/libs/'
+                    + 'highlight.js/11.11.1/es/highlight.min.js' as any)).default;
+                addStylesheet('https://cdn.bootcdn.net/ajax/libs/font-awesome/7.0.1/css/all.min.css');
+            }
+        });
     }
 }
 
 declare global {
     // This is set in HTML
     const environment: Environment;
+
+    const lodash: any;
+    const highlight: any;
+
+    interface Window {
+        lodash: any;
+        highlight: any;
+    }
 }

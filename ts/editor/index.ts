@@ -42,7 +42,7 @@ function binds() {
     bindFunctions('open', KeyType.of('o', KeyConfig.Ctrl), file.open);
     bindFunctions('save', KeyType.of('s', KeyConfig.Ctrl), file.save);
     bindFunctions('save-as', KeyType.of('s', KeyConfig.Ctrl | KeyConfig.Shift), file.saveAs);
-    bindFunctions('test', KeyType.of('F5'), test);
+    bindTextFunctions('test', KeyType.of('F5'), test);
     bindFunctions('help', KeyType.of('h', KeyConfig.Ctrl), help);
 
     bindTextFunctions('undo', KeyType.of('z', KeyConfig.Ctrl), () => getManager().undo());
@@ -124,13 +124,13 @@ const main = HandleError(async () => {
     await Runtime.initAPI();
     const data = await Runtime.api.initData('editor');
     Runtime.configs = data.configs;
-    await loadPlugins();
-    if (data.filename !== undefined) await file.read(data.filename);
+    await file.read(data.filename);
     update();
     recordInput();
     themes.set(Runtime.configs.theme);
     binds();
     Runtime.api.onClose(file.save);
+    await loadPlugins();
 });
 
 main();

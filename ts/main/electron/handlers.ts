@@ -1,8 +1,7 @@
 import { clipboard, dialog, ipcMain, shell } from 'electron';
 
-import type { DialogOptions } from '../../types.js';
+import type { DialogOptions, Listener } from '../../types.js';
 
-type Listener = (...args: any[]) => any;
 export class ElectronHandlers {
     private constructor() { }
 

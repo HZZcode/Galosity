@@ -1,3 +1,6 @@
-await import('./electron/launch.js');
+import { switchMode } from '../utils/mode.js';
 
-export { };
+await switchMode({
+    electron: async () => await import('./electron/launch.js'),
+    web: async () => await import('./web/launch.js')
+});

@@ -67,9 +67,9 @@ export async function loadPlugins() {
     await Promise.all(plugins.map(plugin => plugin.setup()));
     const results = plugins.map(plugin => plugin.result!);
     await setInfo(results.filter(result => result.loaded).map(result => result.plugin));
-    const errors = results.filter(result => !result.loaded && result.error !== undefined)
-        .map(result => `Failed to load plugin '${result.plugin}': ${result.error}`);
-    if (errors.length !== 0) throw new Error(errors.join('\n'));
+    const errors = results.filter(result => !result.loaded
+        && result.error !== undefined).map(result => result.error);
+    if (errors.length !== 0) throw new Error('Failed to load plugins', { cause: errors });
 }
 
 async function setInfo(loaded: string[]) {

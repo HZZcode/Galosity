@@ -1,0 +1,50 @@
+import type { Data, Environment } from '../../types';
+import type { Func } from '../../utils/types';
+
+export class WebAPI {
+    private constructor() { }
+    static async invoke(channel: string, ...args: any[]) {
+        return await (await fetch(`/api/${channel}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(args)
+        })).json();
+    }
+    static requestSavePath() {
+        const name = prompt('Input save file path');
+        return name === null ? undefined : name;
+    }
+    static requestOpenPath() {
+        const name = prompt('Input open file path');
+        return name === null ? undefined : name;
+    }
+    static setTitle(_: Environment, title: string) {
+        document.title = title;
+    }
+    static async initData(environment: Environment) {
+        if (environment === 'editor') return await this.invoke('get-data');
+        return JSON.parse(sessionStorage.getItem('galosity-data')!);
+    }
+    static async copy(text: string) {
+        await navigator.clipboard.writeText(text);
+    }
+    static openExternal(url: string) {
+        window.open(url, '_blank');
+    }
+    static onClose(handler?: Func<[], void>) {
+        window.addEventListener('beforeunload', async event => {
+            event.preventDefault();
+            event.returnValue = '';
+            await handler?.();
+        });
+    }
+    static engine(data: Data) {
+        sessionStorage.setItem('galosity-data', JSON.stringify(data));
+        this.openExternal('/engine');
+    }
+    static exit() {
+        // Does nothing. Users can close the tab on their own.
+    }
+}

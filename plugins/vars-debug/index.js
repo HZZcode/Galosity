@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-/// <reference path="../../dts/exports.d.ts" />
+/// <reference path='../../dts/exports.d.ts' />
 
 let enabled = false;
 

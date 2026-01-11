@@ -1,4 +1,4 @@
-/// <reference path="../../dts/exports.d.ts" />
+/// <reference path='../../dts/exports.d.ts' />
 
 async function handleLogger() {
     await galosity.plugin.handlers.Handlers.add({

@@ -1,36 +1,14 @@
-/* eslint-disable no-console */
-
 import { AutoBind } from '../utils/auto-bind.js';
+import { AbstractLogger } from '../utils/logger.js';
 import { Runtime } from './runtime.js';
 
-type LogType = 'log' | 'warn' | 'error';
+export type LogType = 'log' | 'warn' | 'error';
 
 @AutoBind
-class Logger {
-    private logs: string[] = [];
-
-    get content() {
-        return this.logs.join('\n');
+class Logger extends AbstractLogger {
+    override get isDebug() {
+        return Runtime.configs.isDebug;
     }
-
-    fullString(object: any): string {
-        if (object instanceof Error) {
-            if (object.cause === undefined) return object.stack!;
-            return `${object.stack}\nCaused by: ${object.cause}`;
-        }
-        return object.toString();
-    }
-
-    format(type: string, message: any) {
-        return `[${type}] (${new Date().toUTCString()}) ${this.fullString(message)}`;
-    }
-
-    print(type: LogType, message: any) {
-        message = this.format(type.toUpperCase(), message);
-        this.logs.push(message);
-        if (Runtime.configs?.isDebug ?? true) console[type](message);
-    }
-
     async export() {
         const path = await Runtime.api.requestSavePath({
             defaultPath: `Galosity-log${new Date().getTime()}.txt`
@@ -40,16 +18,6 @@ class Logger {
     }
     async copy() {
         await Runtime.api.copy(this.content);
-    }
-
-    log(message: any) {
-        this.print('log', message);
-    }
-    warn(message: any) {
-        this.print('warn', message);
-    }
-    error(message: any) {
-        this.print('error', message);
     }
 }
 

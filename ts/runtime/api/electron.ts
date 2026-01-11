@@ -1,7 +1,7 @@
 import type { API, Data, DialogOptions, Environment } from '../../types.js';
 import type { Func } from '../../utils/types.js';
 
-const ipcRenderer = require('electron').ipcRenderer as API & {
+export const ipcRenderer = require('electron').ipcRenderer as API & {
     invoke(channel: 'requestSavePath', options: DialogOptions): Promise<string | undefined>;
     invoke(channel: 'requestOpenPath', options: DialogOptions): Promise<string | undefined>;
     invoke(channel: `${Environment}Title`, title: string): Promise<void>;

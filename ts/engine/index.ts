@@ -16,7 +16,6 @@ const main = HandleError(async () => {
     await Runtime.initAPI();
     const data = await Runtime.api.initData('engine');
     Runtime.configs = data.configs;
-    await loadPlugins();
     const content = data.filename === undefined ? ''
         : await new Files().readFileDecrypted(data.filename);
     await manager.set(content.splitLine());
@@ -42,6 +41,8 @@ const main = HandleError(async () => {
 
     if (Runtime.configs.scriptTest) bindScriptTests();
     else hideElements('script-test');
+    
+    await loadPlugins();
 });
 
 function bindScriptTests() {

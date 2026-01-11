@@ -1,5 +1,3 @@
-const hljs = require('highlight.js');
-
 export class TextManager {
     readonly character = document.getElementById('character') as HTMLDivElement;
     readonly speech = document.getElementById('speech') as HTMLDivElement;
@@ -19,7 +17,7 @@ export class TextManager {
         MathJax.typeset();
     }
     outputCode(language: string, code: string) {
-        this.outputTexts(hljs.highlight(code, { language }).value);
+        this.outputTexts(highlight.highlight(code, { language }).value);
     }
     clear() {
         this.outputTexts('');

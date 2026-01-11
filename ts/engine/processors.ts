@@ -1,5 +1,3 @@
-const lodash = require('lodash');
-
 import * as dataTypes from '../parser/data-types.js';
 import { confirm } from '../runtime/confirm.js';
 import { HandleError, WrapError } from '../runtime/errors.js';

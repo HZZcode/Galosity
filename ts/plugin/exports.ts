@@ -17,21 +17,14 @@ export function exportObject(path: string[], object: any, root: Exports = export
     exportObject(path.slice(1), object, root[path[0]]);
 }
 
-const exportPack = HandleError(WrapError('Error exporting pack')(
-    (pack: string) => exports[pack.toIdentifier()] = require(pack)
-));
-
-const exportFile = HandleError(WrapError('Error exporting pack')(
+const exportFile = HandleError(WrapError('Error exporting file')(
     async (space: string) => exportObject(space.split('/'), await import(`../${space}.js`))
 ));
-
-const packs = ['lodash', 'uuid', 'crypto-js', 'highlight.js'];
 
 async function getExportFiles() {
     return (await file.readFile('exports.txt')).splitLine().map(path => path.replace(/^\//, ''));
 }
 
 export async function exportAll() {
-    for (const pack of packs) exportPack(pack);
     for (const file of await getExportFiles()) await exportFile(file);
 }

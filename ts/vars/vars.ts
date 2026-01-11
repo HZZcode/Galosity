@@ -1,5 +1,3 @@
-const lodash = require('lodash');
-
 import { WrapError } from '../runtime/errors.js';
 import { splitWith } from '../runtime/split.js';
 import { assert, notUndefined } from '../utils/assert.js';

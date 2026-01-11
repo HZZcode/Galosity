@@ -1,4 +1,4 @@
-/// <reference path="../../dts/exports.d.ts" />
+/// <reference path='../../dts/exports.d.ts' />
 
 class SimpleComplete extends galosity.editor.completer.AbstractComplete {
     text;
