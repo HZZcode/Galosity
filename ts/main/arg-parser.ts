@@ -1,5 +1,5 @@
-import { findDuplicates } from '../utils/array.js';
 import { parseBool } from '../utils/bool.js';
+import { findDuplicates } from '../utils/collections.js';
 import { configs } from './configs.js';
 
 abstract class Arg {

@@ -1,5 +1,5 @@
-import { sum } from '../utils/array.js';
 import { AutoBind } from '../utils/auto-bind.js';
+import { sum } from '../utils/collections.js';
 import type { Searchable } from '../utils/string.js';
 import { getManager, textarea } from './elements.js';
 import { recordInput } from './input-record.js';
@@ -24,7 +24,7 @@ class Searcher {
     }
 
     static replaceAll(sub: Searchable, str: string, start: number = textarea.selectionEnd) {
-        const pos = [...textarea.value.searchAllPos(sub, start)];
+        const pos = textarea.value.searchAllPos(sub, start).toArray();
         if (pos.length === 0) return;
         textarea.value = textarea.value.replaceAllPos(pos, str);
         const diff = sum(pos.slice(0, -1).map(pos => pos[1] - pos[0] - str.length));

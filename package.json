@@ -22,7 +22,6 @@
     "@types/mime-types": "^3.0.1",
     "@types/node": "^24.0.10",
     "cross-env": "^7.0.3",
-    "electron": "^35.2.1",
     "electron-builder": "^26.0.12",
     "eslint": "^9.30.1",
     "eslint-plugin-no-floating-promise": "^2.0.0",
@@ -31,6 +30,11 @@
     "peggy": "^5.0.6",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.35.1"
+  },
+  "dependencies": {
+    "crypto-js": "^4.2.0",
+    "electron": "^39.2.7",
+    "mime-types": "^3.0.2"
   },
   "build": {
     "appId": "galosity.zz_404",
@@ -73,9 +77,5 @@
     "linux": {
       "target": "AppImage"
     }
-  },
-  "dependencies": {
-    "crypto-js": "^4.2.0",
-    "mime-types": "^3.0.2"
   }
 }

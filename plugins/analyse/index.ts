@@ -46,7 +46,7 @@ class FileCaches {
 }
 
 class Position {
-    nexts = new Set<Position>();
+    nexts = Set.of<Position>();
 
     constructor(public files: FileCaches, public filename: string,
         public line: number, public callStack: Position[] = []) { }
@@ -62,11 +62,11 @@ class Position {
         return this.callStack.at(-1)!;
     }
 
-    downstreams(founds = new Set<Position>()): Set<Position> {
-        if (founds.has(this)) return new Set();
+    downstreams(founds = Set.of<Position>()): Set<Position> {
+        if (founds.has(this)) return Set.of();
         founds.add(this);
-        return new Set([this, ...[...this.nexts].map(pos =>
-            pos.downstreams(founds)).reduce((x, y) => new Set([...x, ...y]), new Set())]);
+        return Set.of(this, ...this.nexts.toArray().map(pos => pos.downstreams(founds))
+            .reduce((x, y) => x.union(y), Set.of()));
     }
 
     equals(other: Position): boolean {
@@ -114,9 +114,9 @@ class Position {
         return this.findIn(allFounds) ?? this;
     }
     async findNexts(founds: Set<Position>, allFounds: Set<Position>): Promise<Set<Position>> {
-        if (this.findIn(founds) !== undefined) return new Set();
+        if (this.findIn(founds) !== undefined) return Set.of();
         const length = (await this.getDataList()).length;
-        if (this.line >= length) return new Set();
+        if (this.line >= length) return Set.of();
         const result = await analyseNext.call(await this.getData(), this);
         return new Set((result instanceof Position ? [result] : [...result])
             .map(pos => pos.mapIn(allFounds)));
@@ -159,7 +159,7 @@ class Analyser {
 
     constructor(public rootFile: string) {
         this.root = new Position(this.files, rootFile, 0);
-        this.unresolveds = new Set([this.root]);
+        this.unresolveds = Set.of(this.root);
     }
 
     isDone() {
@@ -167,12 +167,12 @@ class Analyser {
     }
 
     async next() {
-        let next = new Set<Position>();
+        let next = Set.of<Position>();
         for (const unresolved of this.unresolveds) {
             const nexts = await unresolved.findNexts(this.founds, this.positions);
-            const unioned = new Set([...unresolved.nexts, ...nexts]);
+            const unioned = unresolved.nexts.union(nexts);
             if (unioned.size === unresolved.nexts.size) continue;
-            next = new Set([...next, ...nexts]);
+            next = next.union(nexts);
             unresolved.nexts = unioned;
         }
         this.unresolveds = next;

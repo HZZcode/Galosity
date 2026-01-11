@@ -88,14 +88,14 @@ function scanSymbols(dataList: dataTypes.GalData[]) {
     const frame = new GalVars();
     const enums = dataList.filterType(dataTypes.EnumData);
 
-    return [... new Set([
+    return [
         ...dataList.filterType(dataTypes.VarData).map(data => data.name),
         ...enums.map(data => data.name),
         ...enums.map(data => data.values).flat(),
         ...dataList.filterType(dataTypes.ImportData).map(data => data.names).flat(),
         ...Object.keys(frame.builtins),
         ...Object.keys(frame.builtinFuncs)
-    ])].filter(symbol => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(symbol));
+    ].filter(symbol => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(symbol)).unique();
 }
 
 TabCompleters.register(new TabCompleter(

@@ -1,5 +1,5 @@
-import { sum } from '../utils/array.js';
 import { AutoBind } from '../utils/auto-bind.js';
+import { sum } from '../utils/collections.js';
 import type { Func } from '../utils/types.js';
 
 export enum KeyConfig {

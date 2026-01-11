@@ -22,6 +22,14 @@ declare global {
         repeat(count: number): T[];
 
         pushAndReturn(value: T): T;
+
+        unique(): T[];
+    }
+    interface SetConstructor {
+        of<T>(...items: T[]): Set<T>
+    }
+    interface Set<T> {
+        toArray(): T[];
     }
 }
 
@@ -63,6 +71,18 @@ Array.prototype.repeat = function (count: number) {
 Array.prototype.pushAndReturn = function (value: any) {
     this.push(value);
     return this.at(-1);
+};
+
+Array.prototype.unique = function () {
+    return [...new Set(this)];
+};
+
+Set.of = <T>(...items: T[]) => {
+    return new Set(items);
+};
+
+Set.prototype.toArray = function () {
+    return [...this];
 };
 
 export function sum(nums: number[]) {

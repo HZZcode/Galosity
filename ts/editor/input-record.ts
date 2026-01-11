@@ -1,4 +1,4 @@
-import { firstDifferents, lastDifferents } from '../utils/array.js';
+import { firstDifferents, lastDifferents } from '../utils/collections.js';
 import { getManager } from './elements.js';
 import { EditData, Lines } from './history.js';
 import type { TextAreaManager } from './text-manager.js';
