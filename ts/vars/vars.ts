@@ -19,7 +19,7 @@ function tried<TArgs extends unknown[], TReturn>(func: (..._: TArgs) => TReturn,
     try {
         func(...args);
         return true;
-    } catch (_) {
+    } catch {
         return false;
     }
 }

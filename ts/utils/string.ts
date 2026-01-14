@@ -18,8 +18,6 @@ declare global {
 
         toIdentifier(): string;
 
-        toRegex(flags?: string): RegExp;
-
         searchPos(sub: Searchable, startPos?: number): SlicePos | undefined;
         searchAllPos(sub: Searchable, startPos?: number): Generator<SlicePos>;
 
@@ -32,14 +30,18 @@ declare global {
         capitalize(): string;
         uncapitalize(): string;
     }
+
+    interface RegExpConstructor {
+        // No one knows why typescript isn't providing this in `lib.esnext`.
+        // It was already an issue almost a year earlier but they're not fixing it.
+        // F*ck Microsoft.
+        // See: https://github.com/microsoft/TypeScript/issues/61321
+        escape(str: string): string;
+    }
 }
 
 String.prototype.splitLine = function () {
     return this.split(/\r?\n/);
-};
-
-String.prototype.toRegex = function (flags?: string) {
-    return new RegExp(this.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
 };
 
 String.prototype.toIdentifier = function () {
@@ -48,8 +50,7 @@ String.prototype.toIdentifier = function () {
 };
 
 String.prototype.searchPos = function (sub: Searchable, startPos = 0) {
-    if (typeof sub === 'string')
-        return this.searchPos(sub.toRegex('g'), startPos);
+    if (typeof sub === 'string') sub = new RegExp(RegExp.escape(sub), 'g');
     sub.lastIndex = startPos;
     const match = sub.exec(this.valueOf());
     if (match !== null && match[0].length !== 0)

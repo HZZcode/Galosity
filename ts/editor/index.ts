@@ -1,3 +1,4 @@
+import '../runtime/element.js';
 import '../runtime/uncaught-errors.js';
 
 import { loadPlugins } from '../plugin/loader.js';

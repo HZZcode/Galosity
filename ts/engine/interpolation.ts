@@ -30,7 +30,7 @@ class Interpolations {
     }
 }
 
-export function escape(text: string) {
+export function escapeLineFeed(text: string) {
     return text.replaceAll(/(?<!\\)\\n/g, '\n').replaceAll(/\\\\/g, '\\');
 }
 

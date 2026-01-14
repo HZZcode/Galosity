@@ -94,7 +94,7 @@ export class SaveLoadManager extends SaveLoad<number> {
 export class SaveLoadScreen {
     rows = 3;
     columns = 3;
-    element = document.getElementById('save-load') as HTMLDivElement;
+    element = $('save-load', 'div', 'engine');
 
     start = 1;
     shown = false;

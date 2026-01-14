@@ -1,12 +1,12 @@
 import type { Func } from '../utils/types.js';
 
 export const bindFunction = (id: string, func: Func<[], void>) =>
-    document.getElementById(id)?.addEventListener('click', func);
+    $_(id)?.addEventListener('click', func);
 
 export const bindInput = (button: HTMLButtonElement | string,
     input: HTMLInputElement | string, func: Func<[content: string], void>) => {
-    if (typeof button === 'string') button = document.getElementById(button) as HTMLButtonElement;
-    if (typeof input === 'string') input = document.getElementById(input) as HTMLInputElement;
+    if (typeof button === 'string') button = $(button, 'button');
+    if (typeof input === 'string') input = $(input, 'input');
     button.addEventListener('click', async () => await func(input.value));
     input.addEventListener('keyup', async event => {
         if (event.key !== 'Enter') return;

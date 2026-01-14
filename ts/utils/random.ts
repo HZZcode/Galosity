@@ -3,7 +3,7 @@ const mod = (a: number, b: number) => (a % b + b) % b;
 class RNG {
     static readonly a = 1664525;
     static readonly c = 1013904223;
-    static readonly m = Math.pow(2, 32);
+    static readonly m = 2 ** 32;
     private seed = mod(Date.now(), RNG.m);
 
     setSeed(seed: number) {

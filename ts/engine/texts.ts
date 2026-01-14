@@ -1,7 +1,7 @@
 export class TextManager {
-    readonly character = document.getElementById('character') as HTMLDivElement;
-    readonly speech = document.getElementById('speech') as HTMLDivElement;
-    readonly texts = document.getElementById('texts') as HTMLDivElement;
+    readonly character = $('character', 'div', 'engine');
+    readonly speech = $('speech', 'div', 'engine');
+    readonly texts = $('texts', 'div', 'engine');
 
     outputSpeech(name: string, text: string, color = 'var(--color-4)') {
         this.character.innerHTML = name;
@@ -25,8 +25,8 @@ export class TextManager {
 }
 
 export class InfoManager {
-    readonly part = document.getElementById('part') as HTMLDivElement;
-    readonly currentLine = document.getElementById('current-line') as HTMLDivElement;
+    readonly part = $('part', 'div', 'engine');
+    readonly currentLine = $('current-line', 'div', 'engine');
 
     setPart(name: string) {
         this.part.innerText = name;

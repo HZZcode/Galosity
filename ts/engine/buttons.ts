@@ -6,7 +6,7 @@ export class ButtonData {
     }
 }
 export class ButtonsManager {
-    parent = document.getElementById('buttons') as HTMLDivElement;
+    parent = $('buttons', 'div', 'engine');
     inputFunc?: (_: string) => void;
     clear() {
         const inputs = this.getInput();

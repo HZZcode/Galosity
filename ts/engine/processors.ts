@@ -11,7 +11,7 @@ import { TypeDispatch } from '../utils/type-dispatch.js';
 import type { Constructor } from '../utils/types.js';
 import * as types from '../vars/types.js';
 import { ButtonData } from './buttons.js';
-import { escape, interpolate } from './interpolation.js';
+import { escapeLineFeed, interpolate } from './interpolation.js';
 import { Manager } from './manager.js';
 
 export class Processors {
@@ -203,7 +203,7 @@ Processors.register(dataTypes.TextData, (data, manager) => {
 });
 Processors.register(dataTypes.CodeData, (data, manager) => {
     manager.unsupportedForImported();
-    HandleError('warn')(() => manager.texts.outputCode(data.language, escape(data.code)))();
+    HandleError('warn')(() => manager.texts.outputCode(data.language, escapeLineFeed(data.code)))();
     return true;
 });
 Processors.register(dataTypes.MediaData, async (data, manager) => {

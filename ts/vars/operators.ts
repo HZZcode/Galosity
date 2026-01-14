@@ -72,7 +72,7 @@ operators.registerBinary('*', [GalNum, GalSequence], (x, y) => y.repeat(x.value)
 operators.registerBinary('/', [GalNum, GalNum], (x, y) => new GalNum(x.value / y.value));
 operators.registerBinary('//', [GalNum, GalNum], (x, y) => new GalNum(Math.floor(x.value / y.value)));
 operators.registerBinary('%', [GalNum, GalNum], (x, y) => new GalNum(x.value % y.value));
-operators.registerBinary('^', [GalNum, GalNum], (x, y) => new GalNum(Math.pow(x.value, y.value)));
+operators.registerBinary('^', [GalNum, GalNum], (x, y) => new GalNum(x.value ** y.value));
 
 operators.registerBinary('&', [GalVar, GalVar], (x, y) => BoolType.ofBool(x.toBool() && y.toBool()));
 operators.registerBinary('|', [GalVar, GalVar], (x, y) => BoolType.ofBool(x.toBool() || y.toBool()));

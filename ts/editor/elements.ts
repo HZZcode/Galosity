@@ -3,10 +3,10 @@ import { clearError, HandleError } from '../runtime/errors.js';
 import { file } from './file-manager.js';
 import { TextAreaManager } from './text-manager.js';
 
-export const textarea = document.getElementById('input') as HTMLTextAreaElement;
+export const textarea = $('input', 'textarea', 'editor');
 export const getManager = () => new TextAreaManager(textarea);
 
-export const info = document.getElementById('info') as HTMLDivElement;
+export const info = $('info', 'div', 'editor');
 
 export function updateInfo() {
     clearError();

@@ -4,7 +4,7 @@ import type { MediaDataType } from './media.js';
 import { MediaManager } from './media.js';
 
 export class ResourceManager extends Files {
-    parent = document.getElementById('images') as HTMLDivElement;
+    parent = $('images', 'div', 'engine');
     media = new MediaManager();
     constructor(filename = undefined) {
         super(filename);
@@ -20,8 +20,7 @@ export class ResourceManager extends Files {
         ] as HTMLDivElement[];
     }
     getElement(pos: string) {
-        const element = document.getElementById(`${pos}-image`);
-        return element === null ? undefined : element as HTMLDivElement;
+        return $_(`${pos}-image`, 'div', 'engine');
     }
 
     async clear() {

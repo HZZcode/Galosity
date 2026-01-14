@@ -1,7 +1,7 @@
 import { logger } from './logger.js';
 
-const errorElement = document.getElementById('error') as HTMLDivElement;
-const warnElement = document.getElementById('warning') as HTMLDivElement;
+const errorElement = $('error', 'div');
+const warnElement = $('warning', 'div');
 
 function fullString(msg: any): string {
     if (msg instanceof Error && msg.cause !== undefined)

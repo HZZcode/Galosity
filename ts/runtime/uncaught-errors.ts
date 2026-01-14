@@ -6,7 +6,7 @@ class TestError extends Error { }
 function noExcept(func: () => void) {
     try {
         func();
-    } catch (_) { /* Ignore */ }
+    } catch { /* Ignore */ }
 }
 
 async function handler(error: any) {

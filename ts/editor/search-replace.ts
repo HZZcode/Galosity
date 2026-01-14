@@ -42,21 +42,21 @@ export class SearchScreen {
     private constructor() { }
 
     static get element() {
-        return document.getElementById('search') as HTMLDialogElement;
+        return $('search', 'dialog', 'editor');
     }
 
     static get sub() {
-        return (document.getElementById('search-from') as HTMLInputElement).value;
+        return $('search-from', 'input', 'editor').value;
     }
 
     static get str() {
-        return (document.getElementById('search-to') as HTMLInputElement).value;
+        return $('search-to', 'input', 'editor').value;
     }
 
     static get configs(): SearchConfigs {
         return {
-            fromCursor: (document.getElementById('search-from-cursor') as HTMLInputElement).checked,
-            withRegex: (document.getElementById('search-with-regex') as HTMLInputElement).checked
+            fromCursor: $('search-from-cursor', 'input', 'editor').checked,
+            withRegex: $('search-with-regex', 'input', 'editor').checked
         };
     }
 
@@ -78,8 +78,8 @@ export class SearchScreen {
 
     static show() {
         this.element.show();
-        document.getElementById('search-close')?.addEventListener('click', () => this.element.close());
-        for (const op of SearchOperations) document.getElementById(`search-${op}`)
-            ?.addEventListener('click', () => this.operate(op, this.configs));
+        $('search-close', 'i', 'editor').addEventListener('click', () => this.element.close());
+        for (const op of SearchOperations) $(`search-${op}`, 'button', 'editor')
+            .addEventListener('click', () => this.operate(op, this.configs));
     }
 }

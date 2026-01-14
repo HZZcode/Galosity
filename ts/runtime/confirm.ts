@@ -1,17 +1,19 @@
-const confirmDialog = document.getElementById('confirm') as HTMLDialogElement;
-const confirmText = document.getElementById('confirm-text') as HTMLParagraphElement;
-const confirmYes = document.getElementById('confirm-yes') as HTMLButtonElement;
-const confirmNo = document.getElementById('confirm-no') as HTMLButtonElement;
+const confirmDialog = $('confirm', 'dialog');
+const confirmText = $('confirm-text', 'p');
+const confirmYes = $('confirm-yes', 'button');
+const confirmNo = $('confirm-no', 'button');
 
 export let isConfirming = false;
 
-export const confirm = (text: string) => new Promise<boolean>(resolve => {
+export const confirm = (text: string) => {
+    const { promise, resolve } = Promise.withResolvers<boolean>();
+
     const resolveConfirm = (value: boolean) => () => {
         confirmDialog.close();
         isConfirming = false;
         resolve(value);
     };
-    
+
     confirmText.innerText = text;
     confirmDialog.showModal();
     isConfirming = true;
@@ -22,4 +24,6 @@ export const confirm = (text: string) => new Promise<boolean>(resolve => {
     confirmYes.onclick = resolveConfirm(true);
     confirmNo.onclick = resolveConfirm(false);
     confirmDialog.addEventListener('close', resolveConfirm(false));
-});
+
+    return promise;
+};
