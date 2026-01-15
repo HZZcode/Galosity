@@ -19,9 +19,9 @@ Galosity can be run either as an Electron app, or as a web server. Jump to [Depl
 3. Install node.js dependencies:
    `npm install`
 4. Install frontend dependencies:
-   `python get-dependencies.py`
+   `python scripts/get-dependencies.py`
 5. Generate `exports.txt`:
-   `python get-exports.py`
+   `python scripts/get-exports.py`
 6. *(If you need to run as web server)* Change mode:
    Open `ts/mode.ts`, and modify `mode` from `'electron'` to `'web'`.
 7. *(Optional)* Run ESLint:

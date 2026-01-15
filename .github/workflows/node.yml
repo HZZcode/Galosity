@@ -10,7 +10,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [20]
-        python-version: ['3.12']
+        python-version: ["3.12"]
 
     steps:
       - name: Checkout code
@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      
+
       - name: Use Python ${{ matrix.python-version }} as shell
         uses: actions/setup-python@v5
         with:
@@ -40,44 +40,25 @@ jobs:
         run: npm install
 
       - name: Download Frontend dependencies
-        run: python get-dependencies.py
+        run: python scripts/get-dependencies.py
 
       - name: Run Peggy.js
         run: npm run grammar
-      
+
       - name: Compile Main Typescript files
         run: npm run tsc-main
 
-      - name: Copy gen-plugin-dts.py
-        run: cp gen-plugin-dts.py dts/
+      - name: Generate exports.d.ts
+        run: python scripts/gen-plugin-dts.py
 
-      - name: Run gen-plugin-dts.py
-        run: python gen-plugin-dts.py
-        working-directory: dts
-
-      - name: Remove gen-plugin-dts.py
-        run: rm dts/gen-plugin-dts.py
-      
       - name: Compile Typescript files
         run: npm run tsc
 
       - name: List export files
-        run: python get-exports.py
+        run: python scripts/get-exports.py
 
       - name: Build the application
         run: npm run build --if-present
-
-      - name: List files
-        run: import os; print(os.listdir('.'))
-        shell: python
-
-      - name: List dependencies
-        run: import os; print(os.listdir('dependencies'))
-        shell: python
-
-      - name: Check if build output exists
-        run: import os; exit(1) if not os.path.exists('build') else print(os.listdir('build'))
-        shell: python
 
       - name: Upload exports artifact for ${{ matrix.os }}
         uses: actions/upload-artifact@v4
@@ -90,26 +71,6 @@ jobs:
         with:
           name: galosity-build-${{ matrix.os }}
           path: build/
-          
-  lint:
-    name: ESLint
-    runs-on: ubuntu-latest
-    if: always()
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Use Node.js 20
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm install
-      
-      - name: Install ESLint
-        run: npm install eslint --save-dev
 
       - name: Run ESLint
         run: npx eslint . --max-warnings=0

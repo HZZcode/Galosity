@@ -54,7 +54,7 @@
       "!import-test.txt",
       "!ts",
       "!exports.txt",
-      "!get-exports.py",
+      "!scripts",
       "!plugins",
       "!merge.ps1",
       "!src",
