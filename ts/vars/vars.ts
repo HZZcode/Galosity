@@ -8,7 +8,7 @@ import { parse } from './grammar/grammar.js';
 import type * as nodes from './node-types.js';
 import { operators } from './operators.js';
 import type { GalEnum, GalVar } from './types.js';
-import { BoolType, GalArray, GalEnumType, GalNum, GalString } from './types.js';
+import { BoolType, GalArray, GalEnumType, GalNum, GalString, isString } from './types.js';
 
 function notNaN(num: number) {
     assert(!isNaN(num));
@@ -49,6 +49,10 @@ export class GalVars extends Builtins {
             assert(/^-?[0-9a-fA-F]+$/.test(expr), `Invalid Hexagon Number: '${expr}'`);
             return this.evalHexNum(expr);
         }));
+        this.registerBuiltinFunc('hasVar', value => {
+            assert(isString(value), `Function 'hasVar' can only be applied on string`);
+            return BoolType.ofBool(tried(() => this.evalIdentifier(value.value)));
+        });
     }
 
     override toString() {
@@ -88,8 +92,8 @@ export class GalVars extends Builtins {
     }
 
     defEnumType(enumType: GalEnumType) {
-        if (this.enumTypes.some(type => type.name === enumType.name))
-            throw new Error(`Multiple definition of enum type named ${enumType.name}`);
+        assert(this.enumTypes.every(type => type.name !== enumType.name),
+            `Multiple definition of enum type named ${enumType.name}`);
         this.enumTypes.push(enumType);
     }
 
@@ -152,8 +156,8 @@ export class GalVars extends Builtins {
         return notUndefined(enumType, `No such enum: ${node.enumType.value}`).getValue(node.value.value);
     }
 
-    evalIdentifier(node: nodes.IdentifierNode) {
-        const name = node.value;
+    evalIdentifier(node: nodes.IdentifierNode | string) {
+        const name = typeof node === 'string' ? node : node.value;
         assert(!isDiscarded(name), `${name} is discarded`);
         if (name in this.builtins) return this.builtins[name].get();
         if (name in this.vars) return this.vars[name];
@@ -161,7 +165,9 @@ export class GalVars extends Builtins {
     }
 
     evalString(node: nodes.StringNode) {
-        return new GalString(JSON.parse(`'${node.value}'`).toString());
+        const value = node.quote === 'double' ? node.value
+            : node.value.replaceAll("\\'", "'").replaceAll('"', '\\"');
+        return new GalString(JSON.parse(`"${value}"`).toString());
     }
 
     evalArray(node: nodes.ArrayNode) {
@@ -170,12 +176,6 @@ export class GalVars extends Builtins {
 
     evalFunction(node: nodes.FunctionNode) {
         const func = node.func.value;
-        if (func === 'hasVar') {
-            const value = node.value;
-            if (value.type !== 'identifier')
-                throw new Error(`Function 'hasVar' can only be applied on identifier`);
-            return BoolType.ofBool(tried(() => this.evalIdentifier(value)));
-        }
         const value = this.evalNode(node.value);
         if (func in this.builtinFuncs) return this.builtinFuncs[func].apply(value);
         return notUndefined(this.getEnumType(func), `No such function: ${func}`).apply(value);

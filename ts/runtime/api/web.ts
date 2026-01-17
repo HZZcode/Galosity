@@ -1,5 +1,6 @@
-import type { Data, Environment } from '../../types';
-import type { Func } from '../../utils/types';
+import type { Data, Environment } from '../../types.js';
+import { assert } from '../../utils/assert.js';
+import type { Func } from '../../utils/types.js';
 
 export class WebAPI {
     private constructor() { }
@@ -15,8 +16,7 @@ export class WebAPI {
     private static requestPath() {
         const name = prompt('Input text file name');
         if (name === null) return undefined;
-        if (['.', '/'].some(c => name.includes(c))) 
-            throw new Error('Invalid file name!');
+        assert(['.', '/'].every(c => !name.includes(c)), 'Invalid file name!');
         return `web-files/${name}.txt`;
     }
     static requestSavePath() {

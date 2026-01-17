@@ -12,10 +12,9 @@ type EvenKey = 0 | 'even';
 type OddKey = 1 | 'odd';
 type AlterKey = EvenKey | OddKey;
 type AlterMap<Even, Odd> = Record<EvenKey, Even> & Record<OddKey, Odd>;
-export interface AlterArray<Even, Odd> extends Array<Even | Odd> {
+interface AlterArray<Even, Odd> extends Array<Even | Odd> {
     at<Key extends AlterKey = AlterKey>(index: number): AlterMap<Even, Odd>[Key];
 }
-
 
 export type TriConditionNode = TriConditionOpNode | LogicalNode;
 
@@ -88,6 +87,7 @@ export interface ArrayNode {
 
 export interface StringNode {
     type: 'string';
+    quote: 'single' | 'double';
     value: string;
 }
 

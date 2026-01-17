@@ -1,3 +1,4 @@
+import { assert } from '../utils/assert.js';
 import { parseBool } from '../utils/bool.js';
 import { findDuplicates } from '../utils/collections.js';
 import { configs } from './configs.js';
@@ -28,7 +29,7 @@ class IntArg extends Arg {
 
     parseValue(str: string) {
         const num = parseInt(str);
-        if (isNaN(num)) throw new Error(`Invalid Integer: '${str}'`);
+        assert(!isNaN(num), `Invalid Integer: '${str}'`);
         return num;
     }
 }
@@ -49,7 +50,7 @@ class ArgParser {
 
     check() {
         const duplicates = findDuplicates(this.args.flatMap(arg => arg.prefixes));
-        if (duplicates.length !== 0) throw new Error(`Duplicate Arg Prefix: ${duplicates[0]}`);
+        assert(duplicates.length === 0, `Duplicate Arg Prefix: ${duplicates[0]}`);
     }
 
     parseSingle(part: string): [key: string, value: any] | [undefined, string] {
@@ -74,7 +75,7 @@ class ArgParser {
     }
 
     get helpString() {
-        return [this.description, ...this.args.map(arg => '  ' + arg.helpString).sort()].join('\n');
+        return [this.description, ...this.args.map(arg => '  ' + arg.helpString).toSorted()].join('\n');
     }
 
     printHelp() {

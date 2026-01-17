@@ -2,16 +2,19 @@
   "compilerOptions": {
     "target": "es2017",
     "lib": ["esnext", "DOM", "DOM.Iterable"],
+    
     "module": "esnext",
     "moduleResolution": "node",
+    "moduleDetection": "force",
+
+    "strict": true,
+    "noImplicitOverride": true,
+    "useUnknownInCatchVariables": true,
+
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "useUnknownInCatchVariables": true,
-    "noImplicitOverride": true,
-    "strict": true,
-    "strictNullChecks": true,
     "skipLibCheck": true,
-    "allowJs": true,
-    "checkJs": false
+
+    "allowJs": true
   }
 }

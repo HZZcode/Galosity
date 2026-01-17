@@ -1,5 +1,6 @@
 import { MetaInfo } from '../plugin/meta-info.js';
 import { logger } from '../runtime/logger.js';
+import { notUndefined } from '../utils/assert.js';
 import { Random } from '../utils/random.js';
 import type { GalVar } from './types.js';
 import { BoolType, GalArray, GalNum, GalString, isEnum, isNum, isString } from './types.js';
@@ -10,9 +11,7 @@ class BuiltinVar {
         return this.getter();
     }
     set(value: GalVar) {
-        if (this.setter === undefined)
-            throw new Error('Cannot assign to readonly builtin var');
-        this.setter(value);
+        notUndefined(this.setter, 'Cannot assign to readonly builtin var')(value);
     }
 }
 

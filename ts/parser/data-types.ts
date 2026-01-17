@@ -111,7 +111,7 @@ export class TransformData extends GalData {
     }
     getAllArgs() {
         return this.getArgs().flatMap(key => ['X', 'Y'].includes(key.at(-1)!)
-            ? [key] : [key, key.slice(0, -1)]).unique().sort();
+            ? [key] : [key, key.slice(0, -1)]).unique().toSorted();
     }
     constructor(public imageType: string, transformations?: Record<string, any>) {
         super();

@@ -3,6 +3,7 @@ import * as parser from '../parser/parser.js';
 import { WrapError } from '../runtime/errors.js';
 import { KeybindManager } from '../runtime/keybind.js';
 import { TimeoutManager } from '../runtime/timeout.js';
+import { assert } from '../utils/assert.js';
 import { AutoBind } from '../utils/auto-bind.js';
 import { getType } from '../utils/types.js';
 import * as types from '../vars/types.js';
@@ -45,8 +46,7 @@ export class Manager {
         return new SaveLoadManager(this.resources.filename);
     }
     unsupportedForImported() {
-        if (this.isMain) return;
-        throw new UnsupportedForImported(this.currentPos, getType(this.currentData));
+        assert(this.isMain, new UnsupportedForImported(this.currentPos, getType(this.currentData)));
     }
     async set(lines: string[]) {
         this.paragraph = new parser.Paragraph(lines);

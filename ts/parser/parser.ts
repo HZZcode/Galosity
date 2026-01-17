@@ -1,3 +1,4 @@
+import { assert, notUndefined } from '../utils/assert.js';
 import * as dataTypes from './data-types.js';
 import { Parsers } from './parsers.js';
 
@@ -47,21 +48,16 @@ export class Paragraph {
         const stack = [];
         for (const [index, data] of this.dataList.entries()) {
             if (isControlTag(data)) stack.push(new ControlBlock(index, [], -1));
-            else if (data instanceof dataTypes.CaseData) {
-                if (stack.length === 0)
-                    throw new Error(`[Case] tag out of control block at line ${index}`);
-                stack[stack.length - 1].casesPosList.push(index);
-            }
+            else if (data instanceof dataTypes.CaseData)
+                notUndefined(stack.at(stack.length - 1),
+                    `[Case] tag out of control block at line ${index}`).casesPosList.push(index);
             else if (data instanceof dataTypes.EndData) {
-                if (stack.length === 0)
-                    throw new Error(`Extra [End] found at line ${index}`);
-                const block = stack.pop()!;
+                const block = notUndefined(stack.pop(), `Extra [End] found at line ${index}`);
                 block.endPos = index;
                 ans.push(block);
             }
         }
-        if (stack.length !== 0)
-            throw new Error(`Control block ([Select]-[End] or [Switch]-[End]) not closed`);
+        assert(stack.length === 0, `Control block ([Select]-[End] or [Switch]-[End]) not closed`);
         return ans;
     }
     scanEnumsAt(pos: number) {

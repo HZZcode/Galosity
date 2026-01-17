@@ -1,10 +1,10 @@
 import * as dataTypes from '../parser/data-types.js';
 import { confirm } from '../runtime/confirm.js';
-import { HandleError, WrapError } from '../runtime/errors.js';
+import { clearError, HandleError, WrapError } from '../runtime/errors.js';
 import { Files } from '../runtime/files.js';
 import { KeyType } from '../runtime/keybind.js';
 import { Runtime } from '../runtime/runtime.js';
-import { assert } from '../utils/assert.js';
+import { assert, notUndefined } from '../utils/assert.js';
 import { parseBool } from '../utils/bool.js';
 import type { DispatchFunc } from '../utils/type-dispatch.js';
 import { TypeDispatch } from '../utils/type-dispatch.js';
@@ -27,6 +27,7 @@ export class Processors {
     @HandleError(false)
     @WrapError('Error occured while processing line')
     static async apply(data: dataTypes.GalData, manager: Manager) {
+        clearError();
         return await this.dispatch.call(data, manager);
     }
 }
@@ -158,8 +159,8 @@ Processors.register(dataTypes.CallData, (data, manager) => {
     manager.callStack.push(manager.getFrame());
     const pos = manager.paragraph.findFuncPos(data.name);
     const funcData = manager.paragraph.dataList[pos] as dataTypes.FuncData;
-    if (funcData.args.length !== data.args.length)
-        throw new Error(`Args doesn't match func ${funcData.name} at line ${manager.currentPos}`);
+    assert(funcData.args.length === data.args.length,
+        `Args doesn't match func ${funcData.name} at line ${manager.currentPos}`);
     for (const [i, expr] of data.args.entries())
         manager.varsFrame.setVar(funcData.args[i], manager.varsFrame.eval(expr));
     manager.currentPos = pos;
@@ -167,8 +168,7 @@ Processors.register(dataTypes.CallData, (data, manager) => {
 });
 Processors.register(dataTypes.ReturnData, (data, manager) => {
     const value = data.value === '' ? new types.GalNum(0) : manager.varsFrame.eval(data.value);
-    assert(manager.callStack.length !== 0, 'Call stack is empty');
-    const frame = manager.callStack.pop()!;
+    const frame = notUndefined(manager.callStack.pop(), 'Call stack is empty');
     manager.currentPos = frame.pos;
     manager.varsFrame = frame.varsFrame;
     const varName = (manager.paragraph.dataList[frame.pos] as dataTypes.CallData).returnVar;

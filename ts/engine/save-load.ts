@@ -6,6 +6,7 @@ import { Files } from '../runtime/files.js';
 import { KeybindManager, KeyType } from '../runtime/keybind.js';
 import { Runtime } from '../runtime/runtime.js';
 import { splitWith } from '../runtime/split.js';
+import { assert } from '../utils/assert.js';
 import { AutoBind } from '../utils/auto-bind.js';
 import { Frame } from './frame.js';
 import { manager } from './manager.js';
@@ -46,7 +47,7 @@ export abstract class SaveLoad<Id> extends Files {
     }
     async checkFilled(id: Id) {
         const filename = await this.getSaveFilePath(id);
-        if (!await this.isFilled(id)) throw new Error(`No save data in ${filename}`);
+        assert(await this.isFilled(id), `No save data in ${filename}`);
     }
     async getSaveFiles() {
         return await Runtime.api.invoke('readdir', await this.getSavePath());

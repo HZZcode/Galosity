@@ -1,5 +1,5 @@
 import { splitWith } from '../runtime/split.js';
-import { assert } from '../utils/assert.js';
+import { assert, notUndefined } from '../utils/assert.js';
 import { AutoBind } from '../utils/auto-bind.js';
 import { findDuplicates } from '../utils/collections.js';
 import { isIdentifier } from '../utils/string.js';
@@ -81,13 +81,10 @@ export class GalNum extends GalVar {
 export class GalEnumType {
     constructor(public name: string, public values: string[]) {
         const duplicates = findDuplicates(values);
-        if (duplicates.length !== 0)
-            throw new Error(`Found duplicate enum value: ${name}.${duplicates[0]}`);
-
-        if (!isIdentifier(name)) throw new Error(`Name of enum ${name} is invalid`);
+        assert(duplicates.length === 0, `Found duplicate enum value: ${name}.${duplicates[0]}`);
+        assert(isIdentifier(name), `Name of enum ${name} is invalid`);
         const nonIdentifiers = values.filter(value => !isIdentifier(value));
-        if (nonIdentifiers.length !== 0)
-            throw new Error(`Name of enum value ${name}.${nonIdentifiers[0]} is invalid`);
+        assert(nonIdentifiers.length === 0, `Name of enum value ${name}.${nonIdentifiers[0]} is invalid`);
     }
 
     toString() {
@@ -104,12 +101,12 @@ export class GalEnumType {
     }
 
     ofIndex(index: number) {
-        if (index >= this.values.length) throw new Error(`Enum index out of bound: ${index}`);
-        return GalEnum.fromString(this, this.values[index]);
+        return GalEnum.fromString(this, notUndefined(this.values.at(index),
+            `Enum index out of bound: ${index}`));
     }
 
     apply(value: GalVar) {
-        if (!isNum(value)) throw new Error(`Cannot convert from ${value.getType()} to ${this.name}`);
+        assert(isNum(value), `Cannot convert from ${value.getType()} to ${this.name}`);
         const num = value.value;
         const index = Math.round(num);
         if (Math.abs(num - index) < 1e-5) return this.ofIndex(index);
@@ -124,9 +121,8 @@ export class GalEnum extends GalVar {
 
     static fromString(enumType: GalEnumType, value: string) {
         const index = enumType.values.indexOf(value);
-        if (index === -1)
-            throw new Error(`value ${value} is not a legal value for enum ${enumType.name}: `
-                + `must be a value in ${enumType.values}`);
+        assert(index !== -1, `value ${value} is not a legal value for enum ${enumType.name}: `
+            + `must be a value in ${enumType.values}`);
         return new GalEnum(enumType, index);
     }
 
@@ -178,7 +174,7 @@ export class GalString extends GalSequence {
     }
 
     override reprString() {
-        return `'${this.value}'`;
+        return JSON.stringify(this.value);
     }
 
     override equals(other: GalVar) {
@@ -198,8 +194,7 @@ export class GalString extends GalSequence {
     }
 
     override setIndex(index: number, value: GalVar) {
-        if (!isString(value))
-            throw new Error(`Cannot set index of ${this.getType()} into ${value.getType()}`);
+        assert(isString(value), `Cannot set index of ${this.getType()} into ${value.getType()}`);
         const char = value.value;
         assert(char.length === 1,
             `Cannot set index of ${this.getType()} into string with length ${char.length}`);

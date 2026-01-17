@@ -24,6 +24,11 @@ declare global {
         pushAndReturn(value: T): T;
 
         unique(): T[];
+
+        asyncMap<U>(func: (value: T) => Promise<U>): Promise<Awaited<U>[]>;
+
+        sortBy(key: (value: T) => number): T[];
+        sortBy(key: (value: T) => number | Promise<number>): Promise<T[]>;
     }
     interface SetConstructor {
         of<T>(...items: T[]): Set<T>
@@ -75,6 +80,19 @@ Array.prototype.pushAndReturn = function (value: any) {
 
 Array.prototype.unique = function () {
     return [...new Set(this)];
+};
+
+Array.prototype.asyncMap = async function <U>(func: (value: any) => Promise<U>) {
+    return await Promise.all(this.map(func));
+};
+
+Array.prototype.sortBy = function (key: (value: any) => any): any {
+    const sortItems = (items: { key: number, value: any }[]) =>
+        items.sort((x, y) => x.key - y.key).map(item => item.value);
+    const items = this.map(value => ({ value, key: key(value) }));
+    if (items.every(item => typeof item.key === 'number')) return sortItems(items);
+    return (async () => sortItems(await items.asyncMap(async item => 
+        ({ key: await item.key, value: item.value }))))();
 };
 
 Set.of = <T>(...items: T[]) => {

@@ -1,4 +1,5 @@
 import { Runtime } from '../runtime/runtime.js';
+import { assert } from '../utils/assert.js';
 import type { Func } from '../utils/types.js';
 import { exportAll, exportObject } from './exports.js';
 import { MetaInfo } from './meta-info.js';
@@ -64,12 +65,12 @@ export async function loadPlugins() {
     window.galosity.pluginSetups = setups;
     const plugins = Object.values(setups);
 
-    await Promise.all(plugins.map(plugin => plugin.setup()));
+    await plugins.asyncMap(plugin => plugin.setup());
     const results = plugins.map(plugin => plugin.result!);
     await setInfo(results.filter(result => result.loaded).map(result => result.plugin));
     const errors = results.filter(result => !result.loaded
         && result.error !== undefined).map(result => result.error);
-    if (errors.length !== 0) throw new Error('Failed to load plugins', { cause: errors });
+    assert(errors.length === 0, 'Failed to load plugins', errors);
 }
 
 async function setInfo(loaded: string[]) {
@@ -79,8 +80,7 @@ async function setInfo(loaded: string[]) {
 
 function info(loaded: string[]) {
     const maxInfo = 2;
-    const length = loaded.length;
-    loaded.sort();
+    const length = loaded.sort().length;
     if (length === 0) return 'Vanilla';
     if (length === 1) return `Loaded Plugin: ${loaded[0]}`;
     if (length <= maxInfo + 1) return `Loaded ${length} Plugins: ${loaded.join(', ')}`;

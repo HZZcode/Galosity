@@ -1,4 +1,5 @@
 import { Runtime } from '../runtime/runtime.js';
+import { assert } from '../utils/assert.js';
 import type { Comparism } from '../utils/comparing.js';
 import { falsy, greater, less, notEquals } from '../utils/comparing.js';
 
@@ -23,7 +24,7 @@ export class Version {
     static fromString(str: string) {
         const parts = str.split('.').map(part => parseInt(part));
         const nan = parts.findIndex(isNaN);
-        if (nan !== -1) throw new Error(`Not a num: '${str.split('.')[nan]}'`);
+        assert(nan === -1, `Not a num: '${str.split('.')[nan]}'`);
         return new Version(parts);
     }
 
@@ -57,8 +58,7 @@ export class Version {
     }
 
     expect(other: VersionLike, condition: boolean, operator: string) {
-        if (!condition)
-            throw new Error(`requires Galosity version ${operator} ${other}; found version ${this}`);
+        assert(condition, `requires Galosity version ${operator} ${other}; found version ${this}`);
         return this;
     }
 

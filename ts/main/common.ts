@@ -1,3 +1,4 @@
+import { notUndefined } from '../utils/assert.js';
 import { argParser, filename, parseArgs } from './arg-parser.js';
 import { configs } from './configs.js';
 import { Crypto } from './crypto.js';
@@ -9,9 +10,7 @@ export async function launch() {
         return true;
     }
     if (configs.encrypt) {
-        if (filename === undefined)
-            throw new Error('Encrypt needs input file');
-        await Crypto.encrypt(filename);
+        await Crypto.encrypt(notUndefined(filename, 'Encrypt needs input file'));
         return true;
     }
     return false;

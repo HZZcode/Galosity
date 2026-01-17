@@ -1,15 +1,15 @@
 import type { Environment } from '../types.js';
+import { assert } from '../utils/assert.js';
 import { Runtime } from './runtime.js';
 
 function getNullableElement<Tag extends keyof HTMLElementTagNameMap>
     (id: string, tag?: Tag, environment?: Environment) {
     const element = document.getElementById(id);
     if (element === null) {
-        if (Runtime.environment !== environment) return undefined;
-        else throw new Error(`Element ${id} cannot be null in ${environment}`);
+        assert(Runtime.environment !== environment, `Element ${id} cannot be null in ${environment}`);
+        return undefined;
     }
-    if (element.tagName.toLowerCase() !== tag && tag !== undefined)
-        throw new Error(`Element ${id} has a wrong type`);
+    assert(element.tagName.toLowerCase() === tag || tag === undefined, `Element ${id} has a wrong type`);
     return element as HTMLElementTagNameMap[Tag];
 }
 function getElement<Tag extends keyof HTMLElementTagNameMap>

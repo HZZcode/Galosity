@@ -13,10 +13,6 @@ const { Paragraph } = galosity.parser.parser;
 const { file } = galosity.editor.fileManager;
 const { manager } = galosity.engine.manager;
 
-// We need to do this due to an issue; see https://github.com/microsoft/TypeScript/issues/41047.
-const assert: (condition: boolean, error?: Error | string)
-    => asserts condition = galosity.utils.assert.assert;
-
 type Files = InstanceType<typeof Files>;
 type GalData = InstanceType<typeof dataTypes.GalData>;
 
@@ -58,8 +54,7 @@ class Position {
         return new Position(this.files, this.filename, this.line, [...this.callStack, top]);
     }
     top() {
-        assert(this.callStack.length !== 0, 'Call stack is empty');
-        return this.callStack.at(-1)!;
+        return notUndefined(this.callStack.at(-1), 'Call stack is empty');
     }
 
     downstreams(founds = Set.of<Position>()): Set<Position> {
@@ -83,8 +78,7 @@ class Position {
         return '{' + [...this.nexts].map(pos => pos.line).toSorted().join(', ') + '}';
     }
     debugString() {
-        return [...this.downstreams()].toSorted((x, y) => x.line - y.line)
-            .map(pos => pos.toString()).join('\n');
+        return [...this.downstreams()].sortBy(pos => pos.line).map(pos => pos.toString()).join('\n');
     }
 
     async getContent() {

@@ -24,8 +24,7 @@ export class ResourceManager extends Files {
     }
 
     async clear() {
-        await Promise.all(this.getElements().map(async element =>
-            await this.setElementImage(element, 'clear')));
+        await this.getElements().asyncMap(async element => await this.setElementImage(element, 'clear'));
     }
 
     defImagePos(pos: string, left: string, bottom: string) {
