@@ -1,8 +1,10 @@
 import { Files } from '../runtime/files.js';
 import { splitWith } from '../runtime/split.js';
+import { Serializable } from '../utils/serialize.js';
 import type { MediaDataType } from './media.js';
 import { MediaManager } from './media.js';
 
+@Serializable
 export class ResourceManager extends Files {
     parent = $('images', 'div', 'engine');
     media = new MediaManager();
@@ -67,7 +69,7 @@ export class ResourceManager extends Files {
 
     transformElement(element: HTMLDivElement | undefined, transform: string) {
         if (element === undefined || element.style === undefined) return;
-        element.style.transform = transform.toString();
+        element.style.transform = transform;
     }
     transformImage(pos: string, transform: string) {
         this.transformElement(this.getElement(pos), transform);

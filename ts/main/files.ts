@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { forbidden } from '../utils/assert.js';
 import { configs } from './configs.js';
 
 class FilesClass {
@@ -43,11 +44,7 @@ class FilesClass {
     }
 }
 
-const NoFiles = new Proxy({}, {
-    get: () => {
-        throw new Error(`File Operation is Disabled`);
-    }
-});
+const NoFiles = forbidden('File Operation is Disabled');
 
 interface FilesInterface {
     readDir(pathname: string, withFileTypes?: false): Promise<string[]>;

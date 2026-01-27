@@ -1,4 +1,5 @@
 import type { MediaDataType } from '../engine/media.js';
+import type { Copy } from '../utils/serialize.js';
 
 export class GalData { }
 
@@ -97,7 +98,7 @@ export class ImageData extends GalData {
         super();
     }
 }
-export class TransformData extends GalData {
+export class TransformData extends GalData implements Copy {
     translateX = '0px';
     translateY = '0px';
     scaleX = 1;
@@ -128,6 +129,9 @@ export class TransformData extends GalData {
     }
     override toString() {
         return this.getArgs().map(arg => `${arg}(${this[arg]})`).map(s => s.replace(' ', '')).join(' ');
+    }
+    copy() {
+        return new TransformData(this.imageType, this) as this;
     }
 }
 export class DelayData extends GalData {
@@ -171,7 +175,7 @@ export class CodeData extends GalData {
         super();
     }
 }
-export class MediaData extends GalData implements MediaDataType {
+export class MediaData extends GalData implements MediaDataType, Copy {
     volume = 1;
     pos: 'background' | 'foreground' = 'background';
     block = false;
@@ -185,5 +189,9 @@ export class MediaData extends GalData implements MediaDataType {
         if (configs === undefined) return;
         for (const key of this.getArgs())
             if (key in configs) this[key] = configs[key].trim() as this[keyof this & string];
+    }
+
+    copy() {
+        return new MediaData(this.file, this as any) as this;
     }
 }

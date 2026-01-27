@@ -2,6 +2,7 @@ import { Runtime } from '../runtime/runtime.js';
 import { assert } from '../utils/assert.js';
 import type { Comparism } from '../utils/comparing.js';
 import { falsy, greater, less, notEquals } from '../utils/comparing.js';
+import { Serializable } from '../utils/serialize.js';
 
 export class MetaInfo {
     isDebug;
@@ -18,15 +19,9 @@ export class MetaInfo {
 
 type VersionLike = string | Version;
 
+@Serializable
 export class Version {
     constructor(public parts: number[]) { }
-
-    static fromString(str: string) {
-        const parts = str.split('.').map(part => parseInt(part));
-        const nan = parts.findIndex(isNaN);
-        assert(nan === -1, `Not a num: '${str.split('.')[nan]}'`);
-        return new Version(parts);
-    }
 
     static from(version: VersionLike) {
         return typeof version === 'string' ? Version.fromString(version) : version;
@@ -76,6 +71,13 @@ export class Version {
 
     toString() {
         return this.parts.join('.');
+    }
+
+    static fromString(str: string) {
+        const parts = str.split('.').map(part => parseInt(part));
+        const nan = parts.findIndex(isNaN);
+        assert(nan === -1, `Not a num: '${str.split('.')[nan]}'`);
+        return new Version(parts);
     }
 }
 

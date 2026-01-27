@@ -4,6 +4,8 @@ export function getType(object: any) {
 
 export type Constructor<T> = abstract new (..._: any[]) => T;
 
+export interface ClassOf<Type> { prototype: Type; };
+
 export type Func<TArgs extends any[], TReturn> = (...args: TArgs) => TReturn | Promise<TReturn>;
 
 interface Types {

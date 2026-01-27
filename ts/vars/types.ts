@@ -2,9 +2,10 @@ import { splitWith } from '../runtime/split.js';
 import { assert, notUndefined } from '../utils/assert.js';
 import { AutoBind } from '../utils/auto-bind.js';
 import { findDuplicates } from '../utils/collections.js';
+import { type Copy, copy, Serializable } from '../utils/serialize.js';
 import { isIdentifier } from '../utils/string.js';
 
-export abstract class GalVar {
+export abstract class GalVar implements Copy {
     constructor(public type: string) { }
 
     getType() {
@@ -31,7 +32,9 @@ export abstract class GalVar {
 
     get len(): number {
         throw new Error(`Cannot get length of ${this.getType()}`);
-    } // Note: naming this to `length` confuses lodash
+    }
+
+    abstract copy(): this;
 }
 
 export abstract class GalSequence extends GalVar {
@@ -75,9 +78,14 @@ export class GalNum extends GalVar {
     override get matches() {
         return ['num'];
     }
+
+    override copy() {
+        return new GalNum(this.value) as this;
+    }
 }
 
 @AutoBind
+@Serializable
 export class GalEnumType {
     constructor(public name: string, public values: string[]) {
         const duplicates = findDuplicates(values);
@@ -151,6 +159,10 @@ export class GalEnum extends GalVar {
     override get len() {
         return this.enumType.values.length;
     }
+
+    override copy() {
+        return new GalEnum(this.enumType, this.valueIndex) as this;
+    }
 }
 class GalBoolEnumType extends GalEnumType {
     constructor() {
@@ -210,6 +222,10 @@ export class GalString extends GalSequence {
     override repeat(count: number) {
         return new GalString(this.value.repeat(count));
     }
+
+    override copy() {
+        return new GalString(this.value) as this;
+    }
 }
 
 export class GalArray extends GalSequence {
@@ -254,6 +270,10 @@ export class GalArray extends GalSequence {
 
     override repeat(count: number) {
         return new GalArray(this.value.repeat(count));
+    }
+
+    override copy() {
+        return new GalArray(this.value.map(copy)) as this;
     }
 }
 

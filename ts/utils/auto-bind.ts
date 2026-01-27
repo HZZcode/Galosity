@@ -1,8 +1,7 @@
+import type { ClassOf } from "./types";
+
 const classSpecials = ['constructor'];
 const staticSpecials = ['length', 'name', 'prototype'];
-
-// We don't use `abstract new (..._: any[]) => object` to support classes with non-public constructors
-interface ClassOf<Type> { prototype: Type };
 
 export function AutoBind<Type extends object, Class extends ClassOf<Type>>(target: Class) {
     class NewClass extends (target as any) {

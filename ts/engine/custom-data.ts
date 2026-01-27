@@ -1,4 +1,7 @@
-export class CustomData {
+import { type Copy, Serializable } from '../utils/serialize.js';
+
+@Serializable
+export class CustomData implements Copy {
     [key: string]: unknown;
 
     constructor(object: object = {}) {
@@ -13,5 +16,9 @@ export class CustomData {
 
     static fromString(str: string) {
         return new CustomData(JSON.parse(str));
+    }
+
+    copy() {
+        return CustomData.fromString(this.toString()) as this;
     }
 }

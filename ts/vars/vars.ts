@@ -2,6 +2,7 @@ import { WrapError } from '../runtime/errors.js';
 import { splitWith } from '../runtime/split.js';
 import { assert, notUndefined } from '../utils/assert.js';
 import { AutoBind } from '../utils/auto-bind.js';
+import { copy, Serializable } from '../utils/serialize.js';
 import { isDiscarded, isIdentifier } from '../utils/string.js';
 import { builtinEvalFunc, Builtins } from './builtins.js';
 import { parse } from './grammar/grammar.js';
@@ -25,6 +26,7 @@ function tried<TArgs extends unknown[], TReturn>(func: (..._: TArgs) => TReturn,
 }
 
 @AutoBind
+@Serializable
 export class GalVars extends Builtins {
     enumTypes: GalEnumType[] = [BoolType];
     vars: Record<string, GalVar> = {};
@@ -86,8 +88,8 @@ export class GalVars extends Builtins {
 
     copy() {
         const clone = new GalVars();
-        clone.enumTypes = _.cloneDeep(this.enumTypes);
-        clone.vars = _.cloneDeep(this.vars);
+        clone.enumTypes = [...this.enumTypes];
+        clone.vars = copy(this.vars);
         return clone;
     }
 

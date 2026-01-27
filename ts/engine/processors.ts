@@ -6,6 +6,7 @@ import { KeyType } from '../runtime/keybind.js';
 import { Runtime } from '../runtime/runtime.js';
 import { assert, notUndefined } from '../utils/assert.js';
 import { parseBool } from '../utils/bool.js';
+import { copy } from '../utils/serialize.js';
 import type { DispatchFunc } from '../utils/type-dispatch.js';
 import { TypeDispatch } from '../utils/type-dispatch.js';
 import type { Constructor } from '../utils/types.js';
@@ -134,10 +135,10 @@ Processors.register(dataTypes.ImageData, async (data, manager) => {
 });
 Processors.register(dataTypes.TransformData, (data, manager) => {
     manager.unsupportedForImported();
-    const interpolated = _.cloneDeep(data) as any;
+    const interpolated = copy(data) as any;
     for (const [key, value] of Object.entries(data))
         interpolated[key] = interpolate(value, manager.varsFrame);
-    manager.resources.transformImage(interpolated.imageType, interpolated);
+    manager.resources.transformImage(interpolated.imageType, interpolated.toString());
     return false;
 });
 Processors.register(dataTypes.DelayData, (data, manager) => {
@@ -209,7 +210,7 @@ Processors.register(dataTypes.CodeData, (data, manager) => {
 Processors.register(dataTypes.MediaData, async (data, manager) => {
     manager.unsupportedForImported();
     return await HandleError('warn')(async () => {
-        const interpolated = _.cloneDeep(data) as any;
+        const interpolated = copy(data) as any;
         for (const [key, value] of Object.entries(data))
             interpolated[key] = interpolate(value, manager.varsFrame);
         interpolated.block = parseBool(interpolated.block);

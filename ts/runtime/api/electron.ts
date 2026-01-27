@@ -1,7 +1,9 @@
+import { switchMode } from '../../mode.js';
 import type { API, Data, DialogOptions, Environment } from '../../types.js';
+import { forbidden } from '../../utils/assert.js';
 import type { Func } from '../../utils/types.js';
 
-export const ipcRenderer = require('electron').ipcRenderer as API & {
+type Renderer = API & {
     invoke(channel: 'requestSavePath', options: DialogOptions): Promise<string | undefined>;
     invoke(channel: 'requestOpenPath', options: DialogOptions): Promise<string | undefined>;
     invoke(channel: `${Environment}Title`, title: string): Promise<void>;
@@ -14,39 +16,49 @@ export const ipcRenderer = require('electron').ipcRenderer as API & {
     send(channel: 'before-close-complete'): void;
 };
 
-export class ElectronAPI {
+class ElectronAPIClass {
     private constructor() { }
+    private static cache?: Renderer;
+    private static get ipcRenderer() {
+        this.cache ??= require('electron').ipcRenderer;
+        return this.cache!;
+    }
     static async invoke(channel: string, ...args: any[]) {
-        return await ipcRenderer.invoke(channel as any, ...args);
+        return await this.ipcRenderer.invoke(channel as any, ...args);
     }
     static async requestSavePath(options: DialogOptions) {
-        return await ipcRenderer.invoke('requestSavePath', options);
+        return await this.ipcRenderer.invoke('requestSavePath', options);
     }
     static async requestOpenPath(options: DialogOptions) {
-        return await ipcRenderer.invoke('requestOpenPath', options);
+        return await this.ipcRenderer.invoke('requestOpenPath', options);
     }
     static async setTitle(environment: Environment, title: string) {
-        await ipcRenderer.invoke(`${environment}Title`, title);
+        await this.ipcRenderer.invoke(`${environment}Title`, title);
     }
     static async initData(environment: Environment) {
-        return await ipcRenderer.invoke(`${environment}-data`);
+        return await this.ipcRenderer.invoke(`${environment}-data`);
     }
     static async copy(text: string) {
-        await ipcRenderer.invoke('copy', text);
+        await this.ipcRenderer.invoke('copy', text);
     }
     static async openExternal(url: string) {
-        await ipcRenderer.invoke('openExternal', url);
+        await this.ipcRenderer.invoke('openExternal', url);
     }
     static onClose(handler?: Func<[], void>) {
-        ipcRenderer.on('before-close', async () => {
+        this.ipcRenderer.on('before-close', async () => {
             await handler?.();
-            ipcRenderer.send('before-close-complete');
+            this.ipcRenderer.send('before-close-complete');
         });
     }
     static async engine(data: Data) {
-        await ipcRenderer.invoke('engine', data);
+        await this.ipcRenderer.invoke('engine', data);
     }
     static async exit(code?: number | string) {
-        await ipcRenderer.invoke('exit', code);
+        await this.ipcRenderer.invoke('exit', code);
     }
 }
+
+export const ElectronAPI = switchMode({
+    electron: () => ElectronAPIClass,
+    web: () => forbidden('Cannot access Electron API under Web mode')
+}) as typeof ElectronAPIClass;

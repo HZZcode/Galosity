@@ -5,6 +5,7 @@ import { KeybindManager } from '../runtime/keybind.js';
 import { TimeoutManager } from '../runtime/timeout.js';
 import { assert } from '../utils/assert.js';
 import { AutoBind } from '../utils/auto-bind.js';
+import { copy } from '../utils/serialize.js';
 import { getType } from '../utils/types.js';
 import * as types from '../vars/types.js';
 import * as vars from '../vars/vars.js';
@@ -126,7 +127,7 @@ export class Manager {
             this.currentPos,
             this.varsFrame.copy(),
             this.resources.toString(),
-            _.clone(this.customData)
+            copy(this.customData)
         );
     }
 }

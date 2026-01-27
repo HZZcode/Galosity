@@ -19,8 +19,7 @@ const exportFile = HandleError(WrapError('Error exporting file')(
 ));
 
 async function getExportFiles() {
-    return (await file.readFile('exports.txt')).splitLine()
-        .filter(line => line !== '').map(path => path.replace(/^\//, ''));
+    return (await file.readFile('exports.txt')).splitLine().filter(line => line !== '');
 }
 
 export async function exportAll() {

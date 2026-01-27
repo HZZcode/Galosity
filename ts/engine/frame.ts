@@ -1,6 +1,8 @@
+import { Serializable } from '../utils/serialize.js';
 import * as vars from '../vars/vars.js';
 import { CustomData } from './custom-data.js';
 
+@Serializable
 export class Frame {
     constructor(public pos: number, public varsFrame: vars.GalVars,
         public resources: string, public customData: CustomData) { }

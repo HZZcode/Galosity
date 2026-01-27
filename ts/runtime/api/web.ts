@@ -1,8 +1,9 @@
+import { switchMode } from '../../mode.js';
 import type { Data, Environment } from '../../types.js';
-import { assert } from '../../utils/assert.js';
+import { assert, forbidden } from '../../utils/assert.js';
 import type { Func } from '../../utils/types.js';
 
-export class WebAPI {
+class WebAPIClass {
     private constructor() { }
     static async invoke(channel: string, ...args: any[]) {
         return await (await fetch(`/api/${channel}`, {
@@ -49,3 +50,8 @@ export class WebAPI {
         // Does nothing. Users can close the tab on their own.
     }
 }
+
+export const WebAPI = switchMode({
+    electron: () => forbidden('Cannot access Electron API under Web mode'),
+    web: () => WebAPIClass
+}) as typeof WebAPIClass;

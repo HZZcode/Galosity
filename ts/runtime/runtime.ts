@@ -22,10 +22,6 @@ declare global {
     // This is set in HTML
     const environment: Environment;
 
-    const _: {
-        clone: <T>(object: T) => T;
-        cloneDeep: <T>(object: T) => T;
-    };
     const hljs: {
         highlight: (code: string, options: { language: string }) => { value: string };
     };

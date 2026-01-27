@@ -8,9 +8,11 @@ import { Runtime } from '../runtime/runtime.js';
 import { splitWith } from '../runtime/split.js';
 import { assert } from '../utils/assert.js';
 import { AutoBind } from '../utils/auto-bind.js';
+import { Serializable } from '../utils/serialize.js';
 import { Frame } from './frame.js';
 import { manager } from './manager.js';
 
+@Serializable
 class SaveInfo {
     time;
     note;
