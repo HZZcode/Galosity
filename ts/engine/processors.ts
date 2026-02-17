@@ -204,7 +204,7 @@ Processors.register(dataTypes.TextData, (data, manager) => {
 });
 Processors.register(dataTypes.CodeData, (data, manager) => {
     manager.unsupportedForImported();
-    HandleError('warn')(() => manager.texts.outputCode(data.language, escapeLineFeed(data.code)))();
+    HandleError('warn')(() => manager.texts.outputCode(data.language, escapeLineFeed(data.code, '\n')))();
     return true;
 });
 Processors.register(dataTypes.MediaData, async (data, manager) => {

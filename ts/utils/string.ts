@@ -58,7 +58,7 @@ String.prototype.searchPos = function (sub: Searchable, startPos = 0) {
 };
 
 String.prototype.searchAllPos = function* (sub: Searchable, startPos?: number) {
-    let result: [number, number] | undefined;
+    let result: SlicePos | undefined;
     while ((result = this.searchPos(sub, startPos)) !== undefined) {
         yield result;
         startPos = result[1];

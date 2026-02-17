@@ -30,8 +30,9 @@ class Interpolations {
     }
 }
 
-export function escapeLineFeed(text: string) {
-    return text.replaceAll(/(?<!\\)\\n/g, '\n').replaceAll(/\\\\/g, '\\');
+export function escapeLineFeed(text: string, feed: string) {
+    const pos = text.searchAllPos(/(?<!\\)\\n/g).filter(([start]) => !isLatex(text, start));
+    return text.replaceAllPos(pos.toArray(), feed).replaceAll(/\\\\/g, '\\');
 }
 
 export function interpolate(text: string, varsFrame: vars.GalVars) {
@@ -53,5 +54,5 @@ export function interpolate(text: string, varsFrame: vars.GalVars) {
         return `<ruby><rb>${rb}</rb><rt>${rt}</rt><rp>(${rt})</rp></ruby>`;
     });
     interpolation.register('*', sub => `<button class='function'><i class='fa-solid ${sub}'></i></button>`);
-    return interpolation.process(text).replaceAll(/(?<!\\)\\n/g, '<br>').replaceAll(/\\\\/g, '\\');
+    return escapeLineFeed(interpolation.process(text), '<br>');
 }
