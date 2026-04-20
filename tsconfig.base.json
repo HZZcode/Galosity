@@ -3,8 +3,8 @@
     "target": "es2017",
     "lib": ["esnext", "DOM", "DOM.Iterable"],
     
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "node16",
+    "moduleResolution": "node16",
     "moduleDetection": "force",
 
     "strict": true,

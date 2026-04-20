@@ -4,7 +4,8 @@
     "outDir": "."
   },
   "include": [
-    "./*.ts"
+    "./*.ts",
+    "../../dts/**/*.d.ts"
   ],
   "exclude": []
 }

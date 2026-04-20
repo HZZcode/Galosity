@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "rootDir": "./ts",
     "outDir": "./js",
     "declaration": true,
     "declarationDir": "./dts"

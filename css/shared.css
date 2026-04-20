@@ -22,7 +22,7 @@
     --function-size: 30px;
     --functions-gap: 3px;
 
-    --font: "Consolas", "Menlo", "DejaVu Sans Mono", "Ubuntu Mono", monospace;
+    --font: "Consolas", "Menlo", "DejaVu Sans Mono", "Ubuntu Mono", "Microsoft YaHei", "PingFang SC", monospace;
 }
 
 body {

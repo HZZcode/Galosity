@@ -1,4 +1,4 @@
-import type { ClassOf } from "./types";
+import type { ClassOf } from "./types.js";
 
 const classSpecials = ['constructor'];
 const staticSpecials = ['length', 'name', 'prototype'];

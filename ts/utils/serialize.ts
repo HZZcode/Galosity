@@ -1,4 +1,4 @@
-import type { ClassOf } from "./types";
+import type { ClassOf } from "./types.js";
 
 interface Serializable {
     toString(): string;

@@ -42,7 +42,7 @@ class Tree:
     def import_lines(self):
         if self.children is None:
             if len(set(self.symbols)) == 0: return
-            yield f'import * as {self.module_name} from "{self.path[:-5]}";'
+            yield f'import * as {self.module_name} from "{self.path}";'
         else:
             for child in self.children:
                 yield from child.import_lines
